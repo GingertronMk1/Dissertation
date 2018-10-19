@@ -1,0 +1,107 @@
+\title{Project Proposal\\Project Title: Implementing Frogger Using Functional Programming}
+\author{
+  G54IPP\\
+  Jack Ellis\\
+  psyje5@nottingham.ac.uk\\
+  4262333
+}
+\date{}
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\graphicspath{ {Images/} }
+\usepackage{mathtools}
+\usepackage{pgfgantt}
+
+\begin{document}
+\maketitle
+
+\section{Background and Motivation}
+Background: Increasingly Functional Programming is being used to create video games\cite{ivanperez}.
+
+Motivation: Functional Programming is something that I find is easy to work with, as well as useful.
+It is seeing far greater usage in the public sector than ever before, largely due to the ease with which it can be checked for correctness (compared to imperative or object-oriented languages), and its efficiency.\cite{grahamsbook}
+Implementing a previously imperatively written program within the paradigm of Functional Programming could have great consequences, showing that it is possible to create things using Functional Programming that previously could only be implemented imperatively or using Object-Oriented.
+This would open Functional Programming to a whole new range of applications.
+
+\section{Aims and Objectives}
+The aim of this project is to recreate, as faithfully as possible (initially), Frogger using purely functional programming.
+
+The key objectives of this project are:
+\begin{enumerate}
+  \item To establish appropriate mapping methodologies, using Frogger as an implementation tool.
+  \item To establish a set of criteria for comparisons of implementations.\\
+        This will be done in two key areas:
+    \begin{itemize}
+      \item Architecture\\
+        Does the Functional Programming implementation essentially imitate the exact nature of the Object-Oriented one?
+      \item Experience\\
+        Does the Functional Programming implementation correctly mimic the function of the Object-Oriented one?
+    \end{itemize}
+  \item To design and conduct a user study in which a user will compare two implementations.
+  \item To demonstrate benefits of Functional Programming by either extending or refining the implementation.
+\end{enumerate}
+
+\section{External Aspect}
+Within the School of Computer Science there is a module, Programming Paradigms, which aims to educate students as to the differences between Functional and Object-Oriented programming.
+I believe that either of the module convenors could find this project useful in terms of demonstrating that two programs, whilst appearing similar, can be constructed in entirely different ways.
+At some stage in the project I intend to create a "handbook" of the techniques and methodologies I implement that could be used in some teaching capacity.
+
+An alternative external usage could be within an educational setting, demonstrating to primary-school-age children safe road crossing techniques.
+
+\section{Work Plan}
+\subsection{Methodologies}
+The bulk of the project will be spent researching and determining the correct combination of specifications and requirements for the project, as well as the exact kind of workflow I intend to use.
+This will involve large amounts of reading into Frogger to determine the most important components of the game and gameplay experience, and will likely be ongoing throughout the Autumn term.
+Beyond this, I will be investigating proper testing methodologies, both on a software and user level.
+Spring Term will be spent implementing the concepts and ideas researched.
+
+\subsection{Proposed Schedule of Work}
+Below is a Gantt Chart of my proposed workflow.
+I intend to use the Autumn term as a planning time, learning as much as I can about the game itself and the techniques I intend to use to recreate it.
+The time allocated to learning about the game is long, however I believe this is realistic for me to be able to go further than the base level of "you have to cross the road".
+
+Weeks 1-12 are the remainder of the Autumn term, plus the Christmas holidays.
+Weeks 13-30 are the entire Spring Term, including the January exams.
+Week 25 is the date of report hand-in, and 26-30 I will be spending planning the presentation.
+Weeks 13 and 14 will be my January exams, and given that I currently do not know when exactly my exams will be I feel that I cannot reasonably plan for those two weeks at this time.
+
+\begin{ganttchart}[expand chart=\textwidth]{1}{12}
+\gantttitle{Week}{12} \\
+\gantttitlelist{1,...,12}{1} \\
+\ganttgroup{Planning and Research}{1}{12} \\
+\ganttbar{Research FRP}{1}{2} \\
+\ganttbar{Research Frogger}{1}{12} \\
+\ganttbar{Investigate Haskell testing tools}{8}{12} \\
+\ganttmilestone{Interim Report Due In}{7} \ganttnewline
+\end{ganttchart}
+
+\begin{ganttchart}[expand chart=\textwidth]{13}{30}
+\gantttitle{Week}{18} \\
+\gantttitlelist{13,...,30}{1} \\
+\ganttgroup{Development}{15}{24} \\
+\ganttbar{Base Game}{15}{18} \\
+\ganttbar{Documentation}{15}{24} \\
+\ganttbar{Additional Easter Eggs}{18}{20} \\
+\ganttbar{User Testing and Evaluation}{21}{22} \\
+\ganttbar{Refinements based on user testing}{22}{23} \\
+\ganttmilestone{Dissertation Hand-In}{25} \ganttnewline
+\ganttmilestone{Demonstration}{30} \ganttnewline
+\end{ganttchart}
+
+\begin{thebibliography}{0}
+  \bibitem{ivanperez}
+    Ivan Perez' website\\
+    http://www.cs.nott.ac.uk/~psxip1/\\
+    Accessed 2018-10-12
+  \bibitem{fpcreditsuisse}
+    Why Functional Programming matters to Credit Suisse\\
+    http://cufp.org/archive/2006/slides/HowardMansell.pdf\\
+    Accessed 2018-10-11
+  \bibitem{grahamsbook}
+    Hutton, Graham\\
+    Programming in Haskell - 2nd Edition\\
+    Chapter 1.3
+\end{thebibliography}
+
+
+\end{document}
