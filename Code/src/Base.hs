@@ -1,6 +1,6 @@
-module Base where
-
-{-
+module Base (
+draw
+) where
 
 import Graphics.UI.GLUT
 
@@ -21,6 +21,10 @@ playerPoints x y s = let n = 50 in [ (x + (s*(sin (2*pi*k/n))), y + (s*(cos (2*p
 
 drawPlayerChar :: Float -> Float -> IO()
 drawPlayerChar x y = (renderPrimitive TriangleFan . mapM_ (\(x, y, z) -> vertex $ Vertex3 x y z)) (playerPoints x y 0.1)
--}
 
-flatten ass = [a | as <- ass, a <- as]
+draw :: IO()
+draw = do
+  (_progName, _args) <- getArgsAndInitialize
+  _window <- createWindow "Frogger"
+  displayCallback $= display
+  mainLoop
