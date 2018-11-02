@@ -1,4 +1,4 @@
 /bin/
 *.hi
 *.o
-Code/dist
+Code/dist/
