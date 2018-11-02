@@ -1,0 +1,327 @@
+\title{Research Into An Existing \textit{Frogger} Implementation}
+\author{
+  Jack Ellis \\
+  psyje5@nottingham.ac.uk\\
+  4262333
+}
+\date{}
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\graphicspath{ {Images/} }
+\usepackage{mathtools}
+\usepackage{listings}
+\lstset{
+  language=Java,
+  basicstyle=\ttfamily\small,
+  showstringspaces=false
+}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+There exist online a great number of Object-Oriented (OO) implementations of the game \textit{Frogger}.
+I have chosen GitHub user \verb|vitalius|' implementation (available at \verb|https://github.com/vitalius/frogger|) as the basis of my comparison, because of the number of additional features it has over and above the base "road crossing simulator" idea of Frogger.
+In this document I will analyse and discuss these features.
+
+\section{Experience Analysis}
+\begin{figure}
+  \caption{A screenshot of vitalius' \textit{Frogger} implementation}
+  \includegraphics[width=\textwidth]{vitalius.png}
+\end{figure}
+
+The basic gameplay revolves around getting a frog from one side of a river to another, via a busy highway and a series of logs.
+If the player is hit by a car or falls into the river they lose a life (starting from 5), and must restart from the beginning.
+The game is in full colour with smooth animation (meaning the non-player elements that move do so smoothly as opposed to the player, who operates in steps).
+Contrary to my original understanding of the game, the player can move in all four directions, meaning they can double back if their current position is unfavourable.
+There is a countdown timer set to 60 seconds. If the player does not complete a level within these 60 seconds they lose a life.
+The game has two main states: paused and playing; it is not a "true" pause state as all it does is return the game to the initial state as if opened anew.
+
+\subsection{The Road}
+There are 6 highway lanes, with alternating vehicle directions, and 2 types of regular vehicle (car and truck), and a special police car which traverses the width of the screen much more quickly than any other object.
+Occasionally a heatwave will strike, which causes a particle effect around the player sprite, and causes said sprite to move in a random direction if the player does not move within some timeframe (this will be examined more closely in the source code analysis).
+
+\subsection{The River}
+The river stage is much more complex and demanding of the player.
+Here the player must navigate a series of moving logs, which carry the player laterally.
+If the player is on a log which moves beyond the bounds of the screen the player will fall into the river and lose a life.
+Additionally to the logs the river contains turtles and crocodiles, which will carry the player from side to side in the same way as the logs.
+However, both carry dangers; while you can move laterally on a crocodile, moving onto its head will see the player "eaten" and lose a life.
+The turtles, being of width equal to the players' step size, cannot be moved on.
+There is an environmental effect similar to the "heatwave" of the road section, here it is sudden gusts of wind.
+This effect has some particle effects shown on screen, but more importantly it slowly moves the player in the direction of the blowing wind.
+
+\section{Source Code Analysis}
+
+The Java project contains 20 files; in this section I will go through each of them individually, in alphabetical order.
+
+The game is built using the Java Instructional Game (JIG) engine, an educational tool developed in response to the fact that, at the time of its release in 2007, \textit{"most of today’s game engines rely on advanced knowledge of the C++ programming language"}\cite{jig-tutorial}
+
+\subsection{AudioEfx.java}
+This file is responsible for the audio effects in the game.
+
+\subsubsection{public void playGameMusic(), 108-110}
+This function simply loops the main game theme.
+
+\subsubsection{public void playCompleteLevel(), 112-115}
+This function first pauses the game music, then plays the "level complete" sound effect.
+
+\subsubsection{public void playRandomAmbientSound(final long deltaMs), 117-129}
+\verb|playRandomAmbientSound| plays, after a predetermined delay, an ambient sound effect.
+This effect differs depending on whether the player is on road or on water, and from looking at the resource files can be either a car horn, car passing, or siren if the player is on the road, or a water splash, frog noise, or another kind of splash if they are on the river.
+
+\subsubsection{public void update(final long deltaMs), 131-140}
+\verb|update| calls \verb|playRandomAmbientSound|, passing in the current game time, and controls the audio (playing or pausing it depending upon the music's state).
+
+\subsection{Car.java, CopCar.java, Truck.java}
+I have bundled these files into one section because they are road-based extensions of \verb|MovingObject|, with largely similar file definitions.
+
+\verb|CopCar| is the most "boring" of the three, having length of one unit, and only one possible sprite to represent it.
+\verb|Car| again has length one unit, however has 3 options for representative sprites.
+Finally, \verb|Truck| has length of two units, and consequently requires two \verb|CollisionObject|s.
+
+In all cases the constructor sets the correct sprite, the position, adds the objects' \verb|CollisionObject| variable/s to the \verb|collisionObjects| variable, and ensures that the object is in fact drawn on the screen, i.e. making sure that if the objects' \verb|x| position is outside the screen boundaries, drawing is not even attempted.
+
+\subsection{CollisionObject.java}
+\verb|CollisionObject| extends a JIG class called \verb|VanillaSphere|, editing it such that its position is offset to the centre of the object to which it relates.
+
+\subsection{Crocodile.java}
+This is another extension of \verb|MovingEntity|, with a length of 3 units (as declared in the file).
+Interestingly, it sets up 4 \verb|collisionObject|s for use in the \verb|collisionObjects| variable.
+Beyond this, the class constructor is much the same as it is for the other \verb|MovingEntity| extensions, with the exception of some variables relating to the current and next frame, as well as the \verb|animationTime| and \verb|animationDelay|, used in the \verb|animate| function.
+
+\subsubsection{public void animate(long deltaMs), 65-72}
+This function sets the correct sprite on a per-frame basis such that the crocodile appears to be opening and closing its mouth.
+It first adds the current amount of time the game has been running for to the animation time.
+If that is now greater than the \verb|animationDelay| (set to 300 by default), it is reset, and the next sprite is chosen.
+This occurs in sequence to give the impression of continuous animation.
+
+\subsection{Frogger.java}
+This is the main file relating to the player-controlled entity, the eponymous \verb|Frogger|.
+It extends \verb|MovingEntity| with a number of variables:
+\begin{itemize}
+  \item \verb|int MOVE_STEP|\\
+    Initialised to 0, this variable appears to denote the length of one player "hop", and is equal to the unit lengths of the cars, trucks, and other obstacles.
+  \item \verb|int ANIMATION_STEP|\\
+    Initialised to 4, this denotes the length of movement per frame within a hop; a hop takes 8 frames and the player moves a total of 32 pixels per hop.
+  \item \verb|int curAnimationFrame|\\
+    Initialised to 0, this is used in animation steps to determine whether or not the animation is finished.
+  \item \verb|int finalAnimationFrame|\\
+    Initialised to \verb|MOVE_STEP/ANIMATION_STEP| (so 8 by default), this is the total number of frames one animation should take.
+  \item \verb|long animationDelay|\\
+    Initialised to 10, this denotes the number of milliseconds before an animation should begin.
+  \item \verb|long animationBeginTime|\\
+    Initialised to 0, this is set to the current time at the beginning of any movement.
+  \item \verb|boolean isAnimating|\\
+    Initialised to \verb|false|, this is set to \verb|true| when the player is moving, and reset to \verb|false| when that movement has finished.
+  \item \verb|Vector2D dirAnimation|\\
+    Initialised to a new vector with values of 0, this denotes the direction the player should face when they move.
+  \item \verb|MovingEntity followObject|\\
+    Initialised to \verb|null|, this is used when a player steps on a log in the river stage, and denotes the direction and velocity the Frogger should move without input.
+  \item \verb|boolean isAlive|\\
+    Initialised to false, this denotes whether or not the player has died. It is set to \verb|true| at the start of a level.
+  \item \verb|long timeOfDeath|\\
+    Initialised to 0, this is used when resetting the frog with a 2-second delay.
+  \item \verb|int currentFrame|\\
+    Initialised to 0, this denotes which sprite should be used to represent the Frogger, and is updated depending on the direction the Frogger is facing.
+  \item \verb|int tmpFrame|\\
+    Initialised to 0, this is used such that the Frogger can return to the correct idle sprite after they have moved.
+  \item \verb|int deltaTime|\\
+    Initialised to 0, this is used mostly for level timing, taking one second off the game clock per second.
+  \item \verb|boolean cheating|\\
+    Initialised to \verb|false|, this changes the players' death scenarios making them invulnerable.
+  \item \verb|boolean hw_hasMoved|\\
+    Initialised to \verb|false|, this is set to \verb|true| whenever the player moves regardless of the reason.
+  \item \verb|Main game|\\
+    This is set up in the constructor.
+\end{itemize}
+
+\subsubsection{public Frogger(Main g), 72-77}
+This is the constructor class, taking as an argument an instance of the main game and drawing the character to the screen.
+The argument is stored as the \verb|Main game| variable mentioned earlier.
+It resets the frog as well, using \verb|resetFrog()|.
+
+\subsubsection{public void resetFrog(), 82-89}
+This function sets \verb|isAlive| to \verb|true|, \verb|isAnimating| to \verb|false|, \verb|currentFrame| to \verb|0|, \verb|followObject| to \verb|null|, \verb|position| to the default starting position, and the game's level timer to its default value.
+In essence it resets all of the values in the file to their initial state, except \verb|isAlive|
+
+\subsubsection{public void move<Direction>(), 94-125}
+This section will cover \verb|moveLeft()|, \verb|moveRight()|, \verb|moveUp()|, and \verb|moveDown()|, given that these are all similar enough functions that I do not believe they are worth individual sections.
+In each case, the function first checks 3 things: that the player is not trying to pass the boundary of the screen, that the player is alive, and that the Frogger is not currently animating.
+If all three of these things are true, it sets the players' sprite to the correct orientation, and calls \verb|move| with a \verb|Vector| of the correct orientation.
+It also plays a small sound effect.
+
+\subsubsection{public long getTime(), 131-133}
+This function returns the current system time, in milliseconds.
+
+\subsubsection{public void move(Vector2D dir), 144-161}
+This function is called in each of the \verb|move<Direction>()| function calls.
+It sets \verb|followObject| to \verb|null|, eliminating any "drifting" caused by a player being on a log, sets up a "step" to jump with \verb|curAnimationFrame| and \verb|finalAnimationFrame|, sets \verb|isAnimating| and \verb|hw_hasMoved| to \verb|true|, sets the Frogger's sprite to the correct, animated, state (including setting \verb|tmpFrame| to return to the correct original state), and synchronises the Frogger's collisionSphere with its new position.
+
+\subsubsection{public void updateAnimation(), 166-190}
+This function first checks whether or not the Frogger is alive and currently animating.
+If one of these is not true, the function synchronises the Frogger's CollisionSphere with its sprite, and returns.
+\par
+Otherwise, if the value of \verb|curAnimationFrame| is greater than or equal to \verb|finalAnimationFrame| it means the Frogger should have finished animating, and consequently sets the value of \verb|isAnimating| to \verb|false|, and returns the Frogger to the sprite described by \verb|tmpFrame| (the Frogger in its resting state).
+\par
+If neither of the above are true, and the sum of \verb|animationBeginTime| and \verb|animationDelay| are less than the current time (accessed via a \verb|getTime()| call), the animation will cycle; this is done by updating the position by the value of one step, and incrementing the \verb|curAnimationFrame| variable.
+
+\subsubsection{public void allignXPositionToGrid(), 195-202}
+The purpose of this function is to ensure that the Frogger, upon movement, snaps back to the "grid" that makes up its range of movement.
+If the Frogger is animating, or it has a \verb|followObject| set, the function does nothing.
+If neither of those are the case, the Frogger's x position is rounded to the nearest multiple of 32 (the size of one "step").
+
+\subsubsection{public void updateFollow(long deltaMs), 208-213}
+\verb|updateFollow| allows the Frogger to follow a log on the river by taking its velocity vector.
+To do this, it first checks that the the Frogger a) has a \verb|followObject| set, and b) is alive.
+If both of these are true, it updates the Frogger's position using the \verb|followObject|'s velocity vector.
+
+\subsubsection{public void follow(MovingEntity log), 219-221}
+This function sets the Frogger to have a \verb|followObject| when it steps on a log.
+
+\subsubsection{public void windReposition(Vector2D d), 228-234}
+This function enforces the "random wind gust" environmental effect, by moving the Frogger to a new position described by the Frogger's current location and the argument \verb|d|.
+It also sets \verb|hw_hasMoved| to true, and does all of this only if the Frogger is alive.
+
+\subsubsection{public void randomJump(final int rDir), 240-254}
+This function enforces the "heatwave" environmental effect, by moving the frogger one "step" in a random direction descirbed by \verb|rDir|.
+
+\subsubsection{public void die(), 259-274}
+If the Frogger is currently animating it cannot die, and as such this function does nothing if that is the case.
+If the player is not cheating, the function plays a sound effect, sets \verb|followObject| to \verb|null|, \verb|isAlive| to \verb|false|, and \verb|hw_hasMoved| to \verb|true|.
+It then sets the Frogger to the "dead" sprite, and decrements the number of lives the player has left.
+Regardless of whether or not the player is cheating, the \verb|timeOfDeath| variable is set to the current time, and the level's timer is set to the default value.
+
+\subsubsection{public void reach(final Goal g), 279-294}
+This function is only called upon the Frogger reaching the end of the level.
+If the \verb|Goal|'s \verb|isReached| variable is \verb|false|, it plays the relevant sound effect, adds 100 to the \verb|Game|'s score and adds the total score to the level timer.
+If the player has landed on a bonus goal another sound effect is played, and the player gains a life.
+\par
+If the \verb|Goal|'s \verb|isReached| variable is \verb|true|, the Frogger's position is set to the same as the \verb|Goal|'s.
+
+\subsubsection{public void update(final long deltaMs), 296-317}
+This function deals with level timing and general animation update work.
+If the player has run out of lives, it does nothing; if the player is dead it keeps them that way for two seconds.
+Otherwise it updates the Frogger's animation (via an \verb|updateAnimation()| call), follow position (via \verb|updateFollow|), and sets the correct sprite frame.
+Every 1000ms it decrements the game's timer by 1, and if that timer reaches 0 it kills the player.
+
+
+\subsection{FroggerCollisionDetection.java}
+This purpose of this class is to detect when the Frogger has collided with another object.
+
+\subsection{FroggerUI.java}
+
+\subsection{Goal.java}
+
+\subsection{GoalManager.java}
+
+\subsection{HeatWave.java}
+
+\subsection{LongLog.java}
+
+\subsection{Main.java}
+The \verb|Main| class is the controller class for the entire game.
+All of the functions herein are of type \verb|void|, given that they affect screen events or global/class variables.
+
+In its declaration it creates an instance of its superclass, namely \verb|StaticScreenGame| (a class declared within the JIG engine), with the desired height and width of the game screen, and preferring to be left in a window as opposed to taking up the full screen.
+It then sets the window's title to "Frogger", and loads its resources from the file \verb|resources.xml|, a file containing the names of all of the audio and image files for sprites and such.
+It sets up the background of the frame based on the filename referenced herein, and applies it to the window.
+Following this, the function sets up the collision detection by generating two spheres.
+Finally, it generates instances of all of the classes declared in other files, and calls the member function \verb|initializeLevel|, passing in the value 1 as the argument.
+
+\subsubsection{public void initializeLevel(int level), 131-178}
+This function sets up the level for the game, first clearing the screen of all moving objects then generating the 5 river lanes and 5 road lanes.
+Within this it sets the general speeds for objects within these lanes based on the variable \verb|dV|, which itself is proportional to the level the player has reached.
+
+Once this is done, it generates the objective, called the Goal, and and cycles the traffic generator 500 times to generate some cars before the game is launched.
+
+\subsubsection{public void cycleTraffic(long deltaMs), 186-229}
+\verb|cycleTraffic|, per the name, is responsible for generating and cycling traffic elements across the road lanes, and is between lines 186 and 229.
+The road lanes all have the same constructor, \verb|buildVehicle|, which implies that any vehicle has equal chance of appearing on any lane.
+The river lanes, by comparison, alternate with regard to what can populate them.
+All 5 lanes can have logs, however lanes 1, 3, and 5 will have short logs interspersed with turtles (generated by \verb|buildShortLogWithTurtles|), whereas lanes 2 and 4 will have longer logs interspersed with crocodiles (generated by \verb|buildLongLogWithCrocodile|).
+If the wind or heatwave events are in effect, it will draw the relevant particle effects for them.
+In each case for the road/river lanes, it will update them if they are present, or create and add them to the \verb|movingObjectsLayer| if they are not.
+
+\subsubsection{public void froggerKeyboardHandler(), 234-281}
+\verb|froggerKeyboardHandler|, as the name suggests, deals with keyboard inputs while the game is in progress.
+It first polls the keyboard to determine whether or not a key is being pressed, and updates a series of \verb|boolean|s based on whether or not the keys associated with them have been pressed.
+Before dealing with the results of those booleans it determines whether or not the user is cheating.
+Here, cheating means activating/deactivating cheat mode by pressing \verb|c| or \verb|v| respectively, or skipping to level 10 by pressing the \verb|0| key.
+Next it updates the \verb|keyPressed| and \verb|keyReleased| variables depending on whether or not a key has been pressed.
+The boolean variable \verb|listenInput|, declared at the top of the class file (line 92) determines whether or not the game acts upon the users' input; this means that the user cannot hold down a key and the frog move continuously, rather that the if the user wishes to move 4 squares to the right they must press the right key 4 times.
+If the keys have been released \verb|listenInput| is set to \verb|true|, so that the game can listen for another key press, and \verb|keyPressed| is set to false.
+Finally, if the user has pressed the escape key the game is set back to the intro state (the variable \verb|GameState| is set to 0).
+
+\subsubsection{public void menuKeyboardHandler(), 286-317}
+There is a separate handler for keyboard events while the game is in the menu state, called \verb|menuKeyboardHandler|.
+Again it begins by polling the keyboard, and if the space key is not pressed it sets the class boolean \verb|space_has_been_released| to \verb|true|; if that variable is \verb|false| it will \verb|return|, and finish the function there.
+If the space bar is being pressed it has a number of actions to take based upon the games' state.
+If the game is over, or the user is looking at the instructions, it will return them to the game's intro state and allow them to start again.
+Otherwise it will start the game again, resetting the number of lives, score, level, timer, frog position, game state, music playing, and starting the level via \verb|initializeLevel|.
+If the user presses \verb|h| in the menu they will recieve instructions about how the game works.
+
+\subsubsection{public void finishLevelKeyboardHandler(), 322-329}
+There is then a function to deal with keyboard inputs on the finish of a level, \verb|finishLevelKeyboardHandler|.
+If the space key is pressed it will initialise a new level, one greater than the previous one, and return to the game state.
+This function seems out of place, as in my gameplay testing the game automatically increments the level without the user pressing space.
+
+\subsubsection{public void update(long deltaMs), 335-388}
+\verb|update| is, I believe, run on every cycle of the game.
+It is ostensibly one giant \verb|switch/case| statement, with cases for each game state.
+In the case that the game is being played it will take the keyboard input and deal with it as described in \verb|froggerKeyboardHandler|, update the wind, heatwave, frog, audio, ui, and traffic with the current game time, and test for collisions, before applying wind or heatwave effects where appropriate.
+If the player has lost a life it clears the particle layer (which is where the particle effects for wind and heat are drawn).
+Otherwise, if the goal has been reached it will move to the level finish state, play a sound effect, and clear the particle layer.
+If the player has run out of lives it will move to the game over state and the game will start again.
+In the case that the game is over, the player is reading the instructions, or the game is on the intro menu, it will update the goal manager and cycle the traffic with the time since the game has started, and await user input.
+In the case that the level has finished it will call the \verb|finishLevelKeyboardHandler| and it will perform as described above.
+
+\subsubsection{public void render(RenderingContext rc), 394-421}
+This function is responsible for rendering the contents of the screen.
+Again, it is ostensibly one large \verb|switch/case| statement, doing different things depending upon the state of the game.
+If the game is in progress (i.e. in states \verb|GAME_FINISH_LEVEL| or \verb|GAME_PLAY|), it renders the map of the game as well as the many moving objects that make up the obstacles and player sprite, and any particle effects created by the environmental effects..
+If the game is in a pause state (i.e. \verb|GAME_OVER|,\verb|GAME_INSTRUCTIONS|, or \verb|GAME_INTRO|) it renders everything as before with the exception of the Frogger and particle effects.
+
+\subsubsection{public static void main(String[] args), 423-427}
+This is the function that is called on the \verb|.jar| file being run.
+In creates a new Main object, and calls \verb|run| on it.
+
+\subsection{MovingEntity.java}
+This class is the superclass for all objects on the screen that move, specifically the player, cars, and river obstacles.
+It extends the \verb|Body| class from the JIG with a linked list of \verb|CollisionObject|s.
+This linked list will contain all other objects on the screen as well as their "hitboxes", for use in determining collisions.
+
+\subsubsection{public void sync(Vector2D position), 64-72}
+\verb|sync| updates the list of \verb|CollisionObject|s within the \verb|MovingEntity| object with the new position of the \verb|MovingEntity|.
+
+\subsubsection{public void update(final long deltaMs), 82-90}
+\verb|update| first checks if the position of the \verb|MovingEntity| is outside the bounds of the world.
+Here it does this only for the X-axis, because the majority of objects only move on said axis, and the \verb|Frogger| class has an overriding implementation.
+It then updates the position of the \verb|MovingEntity| based on its old position and current velocity, after which it calls \verb|sync| with that new position.
+
+\subsection{MovingEntityFactory.java}
+
+\subsection{Particle.java}
+
+\subsection{ShortLog.java}
+
+\subsection{Truck.java}
+\verb|Truck| is similar to \verb|Car| and v
+
+\subsection{Turtles.java}
+
+\subsection{Windgust.java}
+
+\begin{thebibliography}{0}
+  \bibitem{jig-tutorial}
+    Wallace, Scott A. and Nierman, Andrew\\
+    Using the Java Instructional Game Engine in the Classroom\\
+    December 2007\\
+    Available at http://dl.acm.org/citation.cfm?id=1292428.1292437\\
+    Accessed 2018-10-26
+\end{thebibliography}
+
+
+\end{document}
