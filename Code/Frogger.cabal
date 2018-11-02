@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable Frogger
   main-is:             Main.hs
-  other-modules:       Base
+  other-modules:       Base, Util
   build-depends:       base >=4.11 && <4.12, GLUT
   hs-source-dirs:      src
   default-language:    Haskell2010
