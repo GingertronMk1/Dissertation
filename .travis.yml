@@ -1,0 +1,6 @@
+language: Haskell
+ghc:
+  - "8.4.1"
+
+before_install:
+  - cd Code/
