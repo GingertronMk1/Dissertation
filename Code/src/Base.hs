@@ -11,20 +11,17 @@ width = 640
 height :: GLsizei    -- This is the initial height of the window we wish to draw, in pixels
 height = 480
 
+noLanes :: Int    -- The number of each type of lane to draw
+noLanes = 5
+
 initSize :: Size  -- Converting the above into the GLUT `Size` type
 initSize = Size width height
 
-scaleAmount :: GLfloat  -- The scale factor for the whole thing, arrived at by trial and improvement
-scaleAmount = 0.000006
+gridSize :: Float    -- The width of a lane + a bit either side such that multiple lanes don't resemble a large rectangle
+gridSize = (fromIntegral height)/(fromIntegral ((2*noLanes) + 3)) -- Need to fit 2n+3 lanes in total on the screen
 
 laneWidth :: Float  -- How wide a lane should be
-laneWidth = 32.0
-
-lanePad :: Float    -- The width of a lane + a bit either side such that multiple lanes don't resemble a large rectangle
-lanePad = laneWidth * 1.25
-
-noLanes :: Int    -- The number of each type of lane to draw
-noLanes = 5
+laneWidth = gridSize/1.25
 
 laneBlue :: Color3 Float      -- Defining the shade of blue we want the river to be
 laneBlue = Color3 0.0 0.0 1.0
@@ -36,7 +33,7 @@ playerGreen :: Color3 Float   -- Defining the shade of green we want the player 
 playerGreen = Color3 0.0 1.0 0.0
 
 tupleToVertex :: (a, a, a) -> Vertex3 a   -- Converting a three-tuple into a Vertex3
-tupleToVertex (x,y,z) = (Vertex3 x y z)   -- This happens a lot, and it's an ugly lambda
+tupleToVertex (x,y,z) = (Vertex3 x y z)   -- This happens a lot, and it's an ugly lambda function
 
 drawPlayerChar' :: Float -> Float -> IO()                   -- Drawing a circle (50-sided polygon), this will represent the player
 drawPlayerChar' x y = let playerPoints = let n = 50
@@ -58,7 +55,7 @@ drawLane y = let laneVertices = [(fromIntegral width, y+(laneWidth/2), 0.0),
 drawLanes :: (Eq t, Num t) => Float -> t -> IO ()   -- Replicating the above function some number of times
 drawLanes _ 0 = return ()
 drawLanes y1 n = do drawLane y1
-                    drawLanes (y1+lanePad) (n-1)
+                    drawLanes (y1+gridSize) (n-1)
 
 drawRoadLanes :: (Eq t, Num t) => Float -> t -> IO ()   -- Using `drawLanes` to draw road lanes by applying the green colour
 drawRoadLanes y1 n = preservingMatrix $ do color laneGrey
@@ -68,31 +65,28 @@ drawRiverLanes :: (Eq t, Num t) => Float -> t -> IO ()  -- Using `drawLanes` to 
 drawRiverLanes y1 n = preservingMatrix $ do color laneBlue
                                             drawLanes y1 n
 
+-- This function translates the whole viewport such that x and y now start
+-- at the bottom left, as it would in a drawn graph.
+properTranslate :: IO()
+properTranslate = translate (Vector3 (-1.0) (-1.0) (0.0 :: Float))
+
 -- This function scales the viewport to a "reasonable" level.
 -- Essentially the values input when drawing a shape now correspond
 -- to pixels within a small frame inside the 640x480 window.
 properScale :: IO()
-properScale = let xScale  = ((fromIntegral height)*scaleAmount)
-                  yScale  = ((fromIntegral width)*scaleAmount)
-                in scale xScale yScale scaleAmount
-
--- This function translates the whole viewport such that x and y now start
--- at the bottom left, as it would in a drawn graph.
-properTranslate :: IO()
-properTranslate = let toFloat x  = 0.0-((fromIntegral x)/2.0)
-                      xTranslate = toFloat width :: Float
-                      yTranslate = toFloat height :: Float
-                  in translate (Vector3 xTranslate yTranslate 0.0)
+properScale = let xScale = (2.0/(fromIntegral width)) :: Float
+                  yScale = (2.0/(fromIntegral height)) :: Float
+                  scaleAmount = xScale*yScale :: Float
+              in scale xScale yScale scaleAmount
 
 display :: DisplayCallback
-display = do
-  clear [ColorBuffer]
-  properScale
-  properTranslate
-  drawPlayer ((fromIntegral width)/2.0) 0
-  drawRoadLanes lanePad noLanes
-  drawRiverLanes (lanePad*7) noLanes
-  flush
+display = do clear [ColorBuffer]
+             properTranslate
+             properScale
+             drawPlayer ((fromIntegral width)/2.0) (gridSize*0.5)
+             drawRoadLanes (gridSize*1.5) noLanes
+             drawRiverLanes (gridSize*(fromIntegral noLanes + 2.5)) noLanes
+             flush
 
 draw :: IO()
 draw = do (_progName, _args) <- getArgsAndInitialize
