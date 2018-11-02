@@ -30,7 +30,7 @@ version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
 bindir     = "/Users/jack/.cabal/bin"
-libdir     = "/Users/jack/.cabal/lib/x86_64-osx-ghc-8.4.3/Frogger-0.1.0.0-EbIPxn7LYSbDEV4l38JYI8"
+libdir     = "/Users/jack/.cabal/lib/x86_64-osx-ghc-8.4.3/Frogger-0.1.0.0-EbIPxn7LYSbDEV4l38JYI8-Frogger"
 dynlibdir  = "/Users/jack/.cabal/lib/x86_64-osx-ghc-8.4.3"
 datadir    = "/Users/jack/.cabal/share/x86_64-osx-ghc-8.4.3/Frogger-0.1.0.0"
 libexecdir = "/Users/jack/.cabal/libexec/x86_64-osx-ghc-8.4.3/Frogger-0.1.0.0"
