@@ -27,30 +27,30 @@ laneBlue :: Color3 Float      -- Defining the shade of blue we want the river to
 laneBlue = Color3 0.0 0.0 1.0
 
 laneGrey :: Color3 Float      -- Defining the shade of grey we want the road to be
-laneGrey = Color3 0.2 0.2 0.2
+laneGrey = let greyVal = 0.4 in Color3 greyVal greyVal greyVal
 
 playerGreen :: Color3 Float   -- Defining the shade of green we want the player to be
 playerGreen = Color3 0.0 1.0 0.0
 
-tupleToVertex :: (a, a, a) -> Vertex3 a   -- Converting a three-tuple into a Vertex3
-tupleToVertex (x,y,z) = (Vertex3 x y z)   -- This happens a lot, and it's an ugly lambda function
+tupleToVertex :: VertexComponent a => (a, a, a) -> IO ()  -- Converting a three-tuple into a Vertex3
+tupleToVertex (x,y,z) = vertex (Vertex3 x y z)             -- This happens a lot, and it's an ugly lambda function
 
 drawPlayerChar' :: Float -> Float -> IO()                   -- Drawing a circle (50-sided polygon), this will represent the player
 drawPlayerChar' x y = let playerPoints = let n = 50
                                              s = (laneWidth-1)/2 -- Want them to be slightly narrower than a lane
                                          in [(x + (s*(sin (2*pi*k/n))), y + (s*(cos (2*pi*k/n))), 0) | k <- [1..n] ]
-                      in (renderPrimitive TriangleFan . mapM_ (vertex . tupleToVertex)) playerPoints
+                      in (renderPrimitive TriangleFan . mapM_ tupleToVertex) playerPoints
 
 drawPlayer :: Float -> Float -> IO()      -- Applying the above but adding some colour
 drawPlayer x y = preservingMatrix $ do color playerGreen
                                        drawPlayerChar' x y
 
 drawLane :: Float -> IO()     -- A helper function to draw a lane onto the screen
-drawLane y = let laneVertices = [(fromIntegral width, y+(laneWidth/2), 0.0),
-                                 (0.0,                y+(laneWidth/2), 0.0),
-                                 (0.0,                y-(laneWidth/2), 0.0),
-                                 (fromIntegral width, y-(laneWidth/2), 0.0)]
-             in (renderPrimitive Quads . mapM_ (vertex . tupleToVertex)) laneVertices
+drawLane y = let laneVertices = [(fromIntegral width, y+laneWidth,  0.0),
+                                 (0.0,                y+laneWidth,  0.0),
+                                 (0.0,                y,            0.0),
+                                 (fromIntegral width, y,            0.0)]
+             in (renderPrimitive Quads . mapM_ tupleToVertex) laneVertices
 
 drawLanes :: (Eq t, Num t) => Float -> t -> IO ()   -- Replicating the above function some number of times
 drawLanes _ 0 = return ()
@@ -74,18 +74,17 @@ properTranslate = translate (Vector3 (-1.0) (-1.0) (0.0 :: Float))
 -- Essentially the values input when drawing a shape now correspond
 -- to pixels within a small frame inside the 640x480 window.
 properScale :: IO()
-properScale = let xScale = (2.0/(fromIntegral width)) :: Float
-                  yScale = (2.0/(fromIntegral height)) :: Float
-                  scaleAmount = xScale*yScale :: Float
-              in scale xScale yScale scaleAmount
+properScale = let xScale = (2.0/(fromIntegral width))
+                  yScale = (2.0/(fromIntegral height))
+              in scale xScale yScale (0.0 :: Float)
 
 display :: DisplayCallback
 display = do clear [ColorBuffer]
              properTranslate
              properScale
              drawPlayer ((fromIntegral width)/2.0) (gridSize*0.5)
-             drawRoadLanes (gridSize*1.5) noLanes
-             drawRiverLanes (gridSize*(fromIntegral noLanes + 2.5)) noLanes
+             drawRoadLanes (gridSize) noLanes
+             drawRiverLanes (gridSize*(fromIntegral noLanes + 2)) noLanes
              flush
 
 draw :: IO()
