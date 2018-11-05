@@ -57,13 +57,10 @@ drawLanes _ 0 = return ()
 drawLanes y1 n = do drawLane y1
                     drawLanes (y1+gridSize) (n-1)
 
-drawRoadLanes :: (Eq t, Num t) => Float -> t -> IO ()   -- Using `drawLanes` to draw road lanes by applying the green colour
-drawRoadLanes y1 n = preservingMatrix $ do color laneGrey
-                                           drawLanes y1 n
-
-drawRiverLanes :: (Eq t, Num t) => Float -> t -> IO ()  -- Using `drawLanes` to draw river lanes by applying the blue colour
-drawRiverLanes y1 n = preservingMatrix $ do color laneBlue
-                                            drawLanes y1 n
+drawAllLanes = preservingMatrix $ do color laneGrey
+                                     drawLanes gridSize noLanes
+                                     color laneBlue
+                                     drawLanes (gridSize*(fromIntegral noLanes + 2)) noLanes
 
 -- This function translates the whole viewport such that x and y now start
 -- at the bottom left, as it would in a drawn graph.
@@ -82,9 +79,8 @@ display :: DisplayCallback
 display = do clear [ColorBuffer]
              properTranslate
              properScale
+             drawAllLanes
              drawPlayer ((fromIntegral width)/2.0) (gridSize*0.5)
-             drawRoadLanes (gridSize) noLanes
-             drawRiverLanes (gridSize*(fromIntegral noLanes + 2)) noLanes
              flush
 
 draw :: IO()
