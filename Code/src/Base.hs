@@ -57,6 +57,7 @@ drawLanes _ 0 = return ()
 drawLanes y1 n = do drawLane y1
                     drawLanes (y1+gridSize) (n-1)
 
+drawAllLanes :: IO()
 drawAllLanes = preservingMatrix $ do color laneGrey
                                      drawLanes gridSize noLanes
                                      color laneBlue
