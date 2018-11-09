@@ -410,16 +410,25 @@ Otherwise, if it \verb|isHot| and the duration of the heatwave is less than the 
 Finally, if the player has moved, \verb|isHot| is set to false.
 
 \subsubsection{public void start(Frogger f, final int GameLevel), 77-88}
-
+Here it is determined whether or not a heatwave event should start; if it is not currently "hot", and the time since the last heatwave check is greater than the period between heatwaves, the check time is set to 0.
+Then, if the next random integer chosen by \verb|r| is less than the game's level multiplied by 10, \verb|durationMs| is set to 1, \verb|isHot| to \verb|true|, the Frogger's \verb|hw_hasMoved| variable to \verb|false|, and a heatwave-y sound effect plays.
 
 \subsubsection{public MovingEntity genParticles(Vector2D pos), 96-107}
+This generates the particles that appear around the Frogger when a heatwave event is occurring.
+If it is not hot, or \verb|r| returns an integer greater than 10, it does nothing; else it returns a new \verb|MovingEntity| with a particulate sprite, which is drawn to the screen.
 
 \subsubsection{public int computeHeatValue(final long deltaMs, final int level, int curTemp), 114-125}
+This function only appears in this file, at this point; it is as yet unclear as to whether or not it is a part of some call somewhere withing the JIG however as it stands it does nothing.
+Regardless, were it to be called it would increment \verb|heatWaveMs| by the value of the \verb|deltaMs| argument.
+From this, every two seconds it increases the game's temperature by 1, and resets heatWaveMs to 0, capping it at 170.
 
 \subsubsection{public void update(final long deltaMs), 127-130}
-
+This increases both \verb|timeMs| and \verb|durationMs| by the value of the \verb|deltaMs| argument.
 
 \subsection{LongLog.java}
+This file contains only the constructor for the \verb|LongLog| class.
+
+This sets up what is effectively 4 \verb|MovingEntities| joined together, and gives them a velocity described by the arguments passed in.
 
 \subsection{Main.java}
 The \verb|Main| class is the controller class for the entire game.
@@ -502,23 +511,176 @@ Here it does this only for the X-axis, because the majority of objects only move
 It then updates the position of the \verb|MovingEntity| based on its old position and current velocity, after which it calls \verb|sync| with that new position.
 
 \subsection{MovingEntityFactory.java}
+This class deals with the creation of all \verb|MovingEntities| in the game.
+It has 12 class variables:
+\begin{itemize}
+  \item The following essentially convert the subclass of \verb|MovingEntity| to be created, and are used in conjunction with the \verb|creationRate| variable described below.
+    \begin{itemize}
+      \item \verb|public static int CAR|\\
+            Set to \verb|0|, this denotes the \verb|Car| class to be created.
+      \item \verb|public static int TRUCK|\\
+            Set to \verb|1|, this denotes the \verb|Truck| class to be created.
+      \item \verb|public static int SLOG|\\
+            Set to \verb|2|, this denotes the \verb|ShortLog| class to be created.
+      \item \verb|public static int LLOG|\\
+            Set to \verb|3|, this denotes the \verb|LongLog| class to be created.
+    \end{itemize}
+  \item \verb|public Vector2D position|\\
+        This determines the position of the \verb|Factory|.
+  \item \verb|public Vector2D velocity|\\
+        This determines the velocity of the objects produced by the \verb|Factory|
+  \item \verb|public Random r|\\
+        A random-number generator.
+  \item \verb|private long updateMs|\\
+        This is used when creating a new \verb|MovingObject| to ensure it happens at the correct intervals.
+  \item \verb|private long copCarDelay|\\
+        This is used similarly to the above, however is only used when a \verb|CopCar| is trying to be made.
+  \item \verb|private long rateMs|\\
+        This determines the rate at which the \verb|Factory| checks whether or not to spawn a new \verb|MovingEntity|.
+  \item \verb|private int padding|\\
+        This is the minimum distance between two \verb|MovingObject|s in a lane.
+  \item \verb|private int[] creationRate|\\
+        This is an array of integers that determine the rate at which \verb|MovingEntities| should be created depending on what type they are.
+\end{itemize}
+
+\subsubsection{public MovingEntityFactory(Vector2D pos, Vector2D v), 59-72}
+The constructor, this takes sets the \verb|position| and \verb|velocity| variables to the values passed in as arguments.
+It then sets up \verb|r| with a new random number generator, and gives values to all items in the \verb|creationRate| variable based on their lengths and the \verb|Factory|'s \verb|velocity| variable.
+
+\subsubsection{public MovingEntity buildBasicObject(int type, int chance), 81-105}
+This is the basic factory method created for each lane.
+If the \verb|updateMs| variable is greater than the \verb|rateMs| variable, it has a chance described by the \verb|chance| argument to create a new \verb|MovingEntity| of type described by the \verb|type| argument, with the \verb|position| and \verb|velocity| variables set to those of the \verb|Factory|.
+
+\subsubsection{public MovingEntity buildShortLogWithTurtles(int chance), 107-112}
+This function is the factory function for the lanes which have a chance of building either a \verb|ShortLog| or a series of \verb|Turtles|.
+The function calls \verb|buildBasicObject| with an 80\% chance of building a \verb|ShortLog|; if it does not, and the \verb|chance| argument is less than another random number under 100 it will create a new series of turtles with a random 50/50 chance of being underwater initially.
+
+\subsubsection{public MovingEntity buildLongLogWithCrocodile(int chance), 118-123}
+Similarly to \verb|buildShortLogWithTurtles|, this first attempts to build a \verb|LongLog| using \verb|buildBasicObject|; if it does not it has a \verb|chance| argument\% chance to build a \verb|Crocodile|.
+
+\subsubsection{public movingEntity buildVehicle(), 130-147}
+This function is used to create \verb|Car|s, \verb|Truck|s, and \verb|CopCar|s.
+It creates a new \verb|MovingEntity m|, with an 80\% chance of being a \verb|Car| and a 20\% chance of being a \verb|Truck|; if that \verb|MovingEntity| is created successfully, and the absolute value of its velocity (multiplied by the \verb|copCarDelay| variable) is less than the wdth of the world, that \verb|MovingEntity| will be replaced with a \verb|CopCar|.
+Either way, the \verb|copCarDelay| variable is reset to 0, and if a \verb|CopCar| isn't spawned, \verb|m| is returned.
+
+\subsubsection{public void update(final long deltaMs), 149-152}
+This function increments \verb|updateMs| and \verb|copCarDelay| by the value of \verb|deltaMs| passed in by the argument.
+
 
 \subsection{Particle.java}
+This class extends \verb|MovingEntity|, and has 2 variables associated with it:
+\begin{itemize}
+  \item \verb|private int timeExpire|\\
+        Initialised to 1, this is the time before a \verb|Particle| shold expire.
+  \item \verb|private int timeAlive|\\
+        Initialised to 1, this is the time for which a \verb|Particle| has been alive.
+\end{itemize}
+
+\subsubsection{public Particle(String sprite, Vector2D pos, Vector2D v, int te), 58-64}
+The class constructor, this creates a new \verb|MovingEntity| with a sprite, position, and velocity described by the \verb|sprite|, \verb|pos|, and \verb|v| arguments respectively.
+The \verb|te| argument is passed into the \verb|timeExpire| variable, and the whole object is activated by a \verb|setActivation(true)| call.
+
+\subsubsection{public void update(final long deltaMs), 66-75}
+This updates the whole object based on the \verb|MovingEntity|'s \verb|update| function, with the added step of checking whether or not the \verb|Particle| should have expired by now; this is done by adding the \verb|deltaMs| arguement to the \verb|timeAlive| variable, and checking that against \verb|timeExpire|.
+If \verb|timeAlive| is greater than \verb|timeExpire|, the object is deactivated via a \verb|setActivation(false)| call.
 
 \subsection{ShortLog.java}
+This class is an extension of the \verb|MovingEntity| class, and has only one additional variable, \verb|public static int LENGTH|, which is initialised to 32*3 (96).
+
+\subsubsection{public ShortLog(Vector2D pos, Vector2D v), 33-47}
+This is the class constructor, which sets the sprite via a \verb|super| call.
+It then sets the position and velocity based on the \verb|pos| and \verb|v| arguments respectively, and adds the collosion spheres as offsets from the \verb|position| variable.
+If the x-value of \verb|v| is less than 0 the frame is set to 1, otherwise it's set to 0.
 
 \subsection{Turtles.java}
+This class extends \verb|MovingEntity|, and has 11 variables associated with it:
+\begin{itemize}
+  \item \verb|private long underwaterTime|\\
+        Initialised to 0, this is the amount of time the \verb|Turtles| have been underwater for.
+  \item \verb|private long underwaterPeriod|\\
+        Initialised to 1200, this is the time for which the \verb|Turtles| should be underwater.
+  \item \verb|protected boolean isUnderwater|\\
+        Initialised to \verb|false|, this determines whether or not the \verb|Turtles| are underwater.
+  \item \verb|private boolean isAnimating|\\
+        Initialised to \verb|false|, this determines whether or not the \verb|Turtles| are animating.
+  \item \verb|private long localDeltaMs|\\
+        
+  \item \verb|private long startAnimatingMs|\\
+  \item \verb|private long timerMs|\\
+  \item \verb|private long animatingPeriod|\\
+        Initialised to 150, this is the number of milliseconds one animation cycle should take.
+  \item \verb|private int aFrame|\\
+        Intialised to 0, this is the current animation frame.
+  \item \verb|private int max_aFrame|\\
+        Initialised to 2, this is the maximum number of animation frames allowed.
+\end{itemize}
+
+\subsubsection{public Turtles(Vector2D pos, Vector2D v, int water), 76-89}
+The class constructor, this sets the sprite via a \verb|super()| call, and calls \verb|init| with the \verb|pos| and \verb|v| arguments passed through.
+If the \verb|water| argument is 0, \verb|isUnderwater| is set to \verb|false|, else it is set to \verb|true|, and the frame is incremented by 2.
+
+\subsubsection{public void init(Vector2D pos, Vector2D v), 99-114}
+The \verb|position| variable is set to the \verb|pos| argument, and 2 additional collision spheres are created as offets.
+The \verb|velocity| variable is set to the value of the \verb|v| argument, and the correct sprite frame is set based on the direction the \verb|Turtles| are travelling.
+
+\subsubsection{public void checkAirTime(), 120-126}
+This first increments the \verb|underwaterTime| variable by the value of \verb|localDeltaMs|, and if it becomes greater than the value of \verb|underwaterPeriod| it goes into the other state (underwater to floating or vice-versa).
+
+\subsubsection{public void animate(), 133-152}
+If the \verb|isAnimating| flag is set to false, this function does nothing.
+Beyond that, if the \verb|timerMs| variable is greater than the \verb|startAnimatingMs| variable, it will animate one step of either returning to the surface or submerging.
+If the \verb|aFrame| variable is greater than or equal to the \verb|max_aFrame| variable, it stops the animation.
+
+\subsubsection{public void startAnimation(), 159-164}
+This sets up the animation by setting \verb|isAnimating| to \verb|true|, and \verb|startAnimatingMs|, \verb|timerMs|, and \verb|aFrame| to 0.
+
+\subsubsection{public void update(final long delta), 166-172}
+This first performs the superclass' \verb|update| function, then sets \verb|localDeltaMs| to the \verb|deltaMs| argument, which it then uses to incremend the \verb|timerMs| variable.
+It then performs \verb|checkAirTime()| and \verb|animate()|.
 
 \subsection{Windgust.java}
+This class has 6 variables associated with it:
+\begin{itemize}
+  \item \verb|final static int PERIOD|\\
+        Intiailised to 5000, this is the period between wind gust event checks in milliseconds.
+  \item \verb|final static int DURATION|\\
+        Initialised to 3000, this is the duration of wind gusts in milliseconds.
+  \item \verb|Random r|\\
+        This is a random number generator used in determining whether or not a gust actually occur.
+  \item \verb|private long timeMs|\\
+        This is a variable containing the current game time, in milliseconds.
+  \item \verb|private long durationMs|\\
+        This is used to check how long a wind gust has been occuring for.
+  \item \verb|private boolean isWindy|\\
+        A flag denoting whether or not a wind gust event is currently occuring.
+\end{itemize}
+
+\subsubsection{public WindGust(), 49-43}
+This is the constructor, which initialises \verb|timeMs| to 0, \verb|isWindy| to \verb|false|, and initialises \verb|r| with a new random number generator.
+
+\subsubsection{public void perform(Frogger f, int level, final long deltaMs), 60-72}
+If the Frogger is not alive, this function sets \verb|isWindy| to \verb|false| and \verb|return|s.
+Otherwise, \verb|isWindy| and \verb|durationMs| are checked, the latter against being smaller than \verb|DURATION|, and if both of those are true, it sets the wind position randomly.
+Otherwise it sets \verb|isWindy| to \verb|false|.
+
+\subsubsection{public void start(final int level), 79-92}
+This begins a new level; if it isn't currently windy and the value of \verb|timeMs| is greater than the \verb|PERIOD| variable, it has a chance of starting a new wind event, setting \verb|durationMs| to 1, \verb|isWindy| to \verb|true|, and playing a sound effect.
+Either way it resets \verb|timeMs| to 0.
+
+\subsubsection{public MovingEntity genParticles(final int level), 100-115}
+This function, similar to other \verb|genParticles| functions, generates the particle overlay that appears when a wind event occurs.
+
+\subsubsection{public void update(final long deltaMs), 117-120}
+This increments \verb|timeMs| and \verb|durationMs| by the value of the \verb|deltaMs| argument.
+
 
 \begin{thebibliography}{0}
   \bibitem{jig-tutorial}
     Wallace, Scott A. and Nierman, Andrew\\
     Using the Java Instructional Game Engine in the Classroom\\
     December 2007\\
-    Available at http://dl.acm.org/citation.cfm?id=1292428.1292437\\
+    Available at http://dl.acm.org/citation.cfm?id
     Accessed 2018-10-26
 \end{thebibliography}
-
 
 \end{document}
