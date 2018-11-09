@@ -14,9 +14,6 @@ height = 480
 noLanes :: Int    -- The number of each type of lane to draw
 noLanes = 5
 
-initSize :: Size  -- Converting the above into the GLUT `Size` type
-initSize = Size width height
-
 gridSize :: Float    -- The width of a lane + a bit either side such that multiple lanes don't resemble a large rectangle
 gridSize = (fromIntegral height)/(fromIntegral ((2*noLanes) + 3)) -- Need to fit 2n+3 lanes in total on the screen
 
@@ -32,7 +29,7 @@ laneGrey = let greyVal = 0.4 in Color3 greyVal greyVal greyVal
 playerGreen :: Color3 Float   -- Defining the shade of green we want the player to be
 playerGreen = Color3 0.0 1.0 0.0
 
-tupleToVertex :: VertexComponent a => (a, a, a) -> IO ()  -- Converting a three-tuple into a Vertex3
+tupleToVertex :: VertexComponent a => (a, a, a) -> IO()  -- Converting a three-tuple into a Vertex3
 tupleToVertex (x,y,z) = vertex (Vertex3 x y z)             -- This happens a lot, and it's an ugly lambda function
 
 drawPlayerChar' :: Float -> Float -> IO()                   -- Drawing a circle (50-sided polygon), this will represent the player
@@ -52,7 +49,7 @@ drawLane y = let laneVertices = [(fromIntegral width, y+laneWidth,  0.0),
                                  (fromIntegral width, y,            0.0)]
              in (renderPrimitive Quads . mapM_ tupleToVertex) laneVertices
 
-drawLanes :: (Eq t, Num t) => Float -> t -> IO ()   -- Replicating the above function some number of times
+drawLanes :: (Eq t, Num t) => Float -> t -> IO()   -- Replicating the above function some number of times
 drawLanes _ 0 = return ()
 drawLanes y1 n = do drawLane y1
                     drawLanes (y1+gridSize) (n-1)
@@ -86,7 +83,7 @@ display = do clear [ColorBuffer]
 
 draw :: IO()
 draw = do (_progName, _args) <- getArgsAndInitialize
-          initialWindowSize $= initSize
+          initialWindowSize $= Size width height
           _window <- createWindow "Frogger"
           displayCallback $= display
           mainLoop
