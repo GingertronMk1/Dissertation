@@ -133,7 +133,7 @@ It extends \verb|MovingEntity| with a number of variables:
   \item \verb|boolean cheating|\\
     Initialised to \verb|false|, this changes the players' death scenarios making them invulnerable.
   \item \verb|boolean hw_hasMoved|\\
-    Initialised to \verb|false|, this is set to \verb|true| whenever the player moves regardless of the reason.
+    Initialised to \verb|false|, this is set to \verb|true| whenever the player moves, and is used by the Heatwave event
   \item \verb|Main game|\\
     This is set up in the constructor.
 \end{itemize}
@@ -147,7 +147,7 @@ It resets the frog as well, using \verb|resetFrog()|.
 This function sets \verb|isAlive| to \verb|true|, \verb|isAnimating| to \verb|false|, \verb|currentFrame| to \verb|0|, \verb|followObject| to \verb|null|, \verb|position| to the default starting position, and the game's level timer to its default value.
 In essence it resets all of the values in the file to their initial state, except \verb|isAlive|
 
-\subsubsection{public void move<Direction>(), 94-125}
+\subsubsection{public void move$<$Direction$>$(), 94-125}
 This section will cover \verb|moveLeft()|, \verb|moveRight()|, \verb|moveUp()|, and \verb|moveDown()|, given that these are all similar enough functions that I do not believe they are worth individual sections.
 In each case, the function first checks 3 things: that the player is not trying to pass the boundary of the screen, that the player is alive, and that the Frogger is not currently animating.
 If all three of these things are true, it sets the players' sprite to the correct orientation, and calls \verb|move| with a \verb|Vector| of the correct orientation.
@@ -210,16 +210,225 @@ Every 1000ms it decrements the game's timer by 1, and if that timer reaches 0 it
 
 \subsection{FroggerCollisionDetection.java}
 This purpose of this class is to detect when the Frogger has collided with another object.
+It has 6 declared variables:
+\begin{itemize}
+  \item \verb|public Frogger frog|\\
+        The Frogger itself; this is given a value on object creation.
+  \item \verb|public CollisionObject frogSphere|\\
+        The Frogger's collision sphere; this is given a value on object creation.
+  \item \verb|public int river_y0|\\
+        The lower y-bound of the first river lane.
+        This is set to \verb|1*32|, or one grid step up.
+  \item \verb|public int river_y1|\\
+        The upper y-bound of the last river lane.
+        This is set to \verb|river_y0 + (6*32)|, 6 "lanes" up from \verb|y0|.
+  \item \verb|public int road_y0|\\
+        The lower y-bound of the first road lane.
+        This is set to \verb|1*32|, or one grid step up.
+  \item \verb|public int road_y1|\\
+        The upper y-bound of the last road lane.
+        This is set to \verb|road_y0 + (6*32)|, 6 "lanes" up from \verb|y0|.
+\end{itemize}
+
+\subsubsection{public FroggerCollisionDetection(Frogger f), 43-46}
+This function instantiates an instance of \verb|FroggerCollisionDetection|, setting both the \verb|frog| and \verb|frogSphere| variable.
+
+\subsubsection{public void testCollision(AbstractBodyLayer$<$MovingEntity$>$), 48-76}
+This function tests whether or not the frog is touching any other objects on the map.
+If the frog isn't alive, it returns empty, otherwise it sets a variable denoting the Frogger's current position and declares a \verb|double| called \verb|dist2|.
+If the frog is out of bounds (checked by the function \verb|public boolean isOutOfBounds()|), the player dies.
+Else it checks every \verb|MovingEntity| in its argument as follows: if that entity is inactive, skip it.
+For every \verb|CollisionObject| that entity has stored, calculate the distance between them using Pythagoras, and check that against the centre position of the frog.
+If they collide, call the \verb|collide| function and return.
+Finally, if the Frogger is in the river, the player dies.
+
+\subsubsection{public boolean isOutOfBounds(), 90-97}
+This function takes the centre position of the Frogger, and if it is outside the bounds of the map returns \verb|true|, else it returns \verb|false|
+
+\subsubsection{public boolean isOnRoad() \& public boolean isOnRiver(), 103-110 \& 116-123}
+These two functions are similar enough that they can be described in the same section.
+Both functions check the Frogger's position in \verb|y|, returning true if it is between the bounds described by \verb|road_y0| and \verb|road_y1|, and \verb|river_y0| and \verb|river_y1| respectively.
+
+\subsubsection{public void collide(MovingEntity m, CollisionObject s), 125-153}
+This function deals with collisions between the Frogger and other \verb|MovingEntity|s on the screen, selecting the correct function for the Frogger object given by \verb|frog| to perform based on what it collides with.
+
+It is essentially a giant switch/case statement, checking what the \verb|MovingObject| is an instance of;
+\begin{itemize}
+  \item If \verb|m| is a \verb|Truck|, \verb|Car|, or \verb|CopCar|, the Frogger dies.
+  \item If \verb|m| is a \verb|Crocodile|, the function checks whether or not the Frogger is on its head or body.\\
+        If the Frogger is on its head, the Frogger dies.\\
+        Otherwise, the Frogger is set to be \verb|follow|ing it.
+  \item If \verb|m| is a set of \verb|Turtles|, the function checks whether or not those turles are underwater or not.\\
+        If they are, the Frogger dies.\\
+        Otherwise, the Frogger is set to \verb|follow| the \verb|Turtles|.
+  \item Finally, if \verb|m| is a \verb|Goal|, the Frogger calls \verb|reach|, and the level is complete.
+\end{itemize}
+
 
 \subsection{FroggerUI.java}
+This class has 8 class variables:
+\begin{itemize}
+  \item The following 5 are all variables which store the relevant sprite information for various game mechanics.
+    \begin{itemize}
+      \item \verb|List<ImageResource> heart|\\
+            These are the hearts at the top-left of the screen which represent the number of lives the player has left.
+      \item \verb|List<ImageResource> gameOver|\\
+            This is the "Game Over" message.
+      \item \verb|List<ImageResource> levelFinish|\\
+            This is the "Level Complete" message.
+      \item \verb|List<ImageResource> introTitle|\\
+            This is the "Splash Screen", displayed at the start of the game.
+      \item \verb|List<ImageResource> instructions|\\
+            This is the "Help Screen", accessible by pressing \verb|h| while on the splash screen.
+    \end{itemize}
+  \item \verb|FontResource font|\\
+        This sets the correct font for instances when the text is on a dark background.
+  \item \verb|FontResource fontBlack|\\
+        This sets the correct font for instances when the text is on a light background.
+  \item \verb|Main game|\\
+        This is an instance of the \verb|Main| class, which the UI layer can interact with to determine game states and make perform functions.
+\end{itemize}
+
+\subsubsection{public FroggerUI(final Main g), 59-61}
+This function instatiates an instance of \verb|FroggerUI|, and provides the \verb|Main| instance taken by the \verb|game| variable.
+
+\subsubsection{public void render(RenderingContext rc), 64-118}
+This function first renders the game's time and score at the top of the screen.
+If the player has more than 0 lives, it then sets a variable \verb|dx| to 0, and using that draws all of the players' hearts at the top-left of the screen, capping it at a maximum of 10 rendered hearts (the player can have more than 10 lives, but only a maximum of 10 will be drawn).
+The game's level is then placed at the top of the screen.
+Now there is ostensibly a large switch/case statement that draws the relevant screen depending upon the value of the \verb|game| object's \verb|gameState| variable.
+
+\subsubsection{public void update(long deltaMs), 120-121}
+This function is empty, and simply overrides the superclass' \verb|update| function.
+
+\subsubsection{public boolean isActive(), 123-125}
+This function always returns \verb|true|; the layer is always active.
+
+\subsubsection{public void setActivation(boolean a), 127-129}
+This function does nothing, and similarly to \verb|update| only appears to override the superclass' version of it.
+This function does nothing because the layer is always active, and consequently there is no need to set its activation.
 
 \subsection{Goal.java}
+This class has two variables associated with it:
+\begin{itemize}
+  \item \verb|public boolean isReached|\\
+        Set to \verb|false| initially, this is set to \verb|true| if the Frogger reaches it.
+  \item \verb|public boolean isBonus|\\
+        Set to \verb|false| initially, this is set to \verb|true| if the goal is set as a bonus.
+\end{itemize}
+
+\subsubsection{public Goal(int loc) \& public Goal(Vector2D pos), 34-40 \& 42-48}
+These two functions are overloaded constructors, hence they can be described in one section.
+First they set the sprite to the goal one, and then they set their position.
+The \verb|int| instance sets the position to the top of the screen and some number of player "steps" either side of the middle of the screen.
+The \verb|Vector2D| instance sets the position to the exact one described by the argument.
+In both cases the \verb|collisionObjects| variable has added to it the details of the \verb|Goal| being constructed, the position synchronised within the global \verb|collisionObjects| list, and the correct sprite frame is selected.
+
+\subsubsection{public void reached(), 50-30}
+This function sets \verb|isReached| to \verb|true|, and changes the frame of the \verb|Goal|'s sprite to one denoting success.
+
+\subsubsection{public void setBonus(boolean b), 55-63}
+If the \verb|boolean| argument is \verb|true|, the \verb|Goal| is set to be a bonus, conferring more rewards for reaching it, and changing its sprite to denote a bonus.
+If the argument is \verb|false|, it unsets the bonus flag, and returns the sprite to a normal \verb|Goal| one.
+
+\subsubsection{public void update(long deltaMs), 65-67}
+This is an empty function whose purpose is solely to override the superclass' instance.
 
 \subsection{GoalManager.java}
+This class deals with generating and keeping track of all \verb|Goal|s in the game.
+It has 8 variables in the class:
+\begin{itemize}
+  \item \verb|final static int MAX_NUM_OF_GOALS|\\
+        Initialised to 6, this variable stores the maximum number of goals a single level can have.
+  \item \verb|private List<Goal> goals|\\
+        This keeps track of all of the \verb|Goal|s in the level.
+  \item \verb|private Random r|\\
+        This is a random series of integers, used when setting \verb|Goal|s to bonus and back.
+  \item \verb|protected boolean showingBonus|\\
+        Initialised to \verb|false|, this sets whether or not there is a bonus \verb|Goal| on the screen at all.
+  \item \verb|private int bonusRateMs|\\
+        Initialised to 5000, this variable sets how long there should be between the presence of bonus \verb|Goal|s
+  \item \verb|private int bonusShowMs|\\
+        Initialised to 5000, this variable sets how long a \verb|Goal| should be set as a bonus for.
+  \item \verb|private int dRMs|\\
+        Initialised to 0, this variable times how long it has been between bonuses being present.
+  \item \verb|private int dSMs|\\
+        Initialised to 0, this variable times how long a bonus has been present on the screen for.
+\end{itemize}
+
+\subsubsection{public GoalManager(), 49-53}
+This is the class constructor; it sets the \verb|goals| variable to be a linked list of \verb|Goal| objects, initiall empty, sets \verb|r| to be a new Java \verb|Random| based on the current time, and calls \verb|init| with the value of the first level, which is 1.
+
+\subsubsection{public void init(final int level), 62-85}
+This function first clears the \verb|goals| variable, then a switch/case statement based on the current level sets the relevant number of \verb|Goal|s to be on screen.
+There is a comment above this function which states that level 1 has 2 goals, 2 has 4, and all others have 6, however this code shows that in fact level 1 has 2 goals, and the rest have 4.
+
+\subsubsection{public List$<$Goal$>$ get(), 91-93}
+This function returns the \verb|goals| variable.
+
+\subsubsection{public List$<$Goal$>$ getUnreached(), 99-106}
+This function is similar to \verb|get|, however it returns a new list it constructs from \verb|Goal|s whose \verb|isReached| flag is \verb|false|.
+
+\subsubsection{public void doBonusCheck(), 112-118}
+This function consists of two if-statements.
+This first checks if a bonus is not currently being shown and that the current time between bonuses being shown is greater than the bonus rate.
+If both of those are \verb|true|, \verb|dSMs| is set to 0, \verb|showingBonus| to true, and a random unreached \verb|Goal| in \verb|goals| is set to be a bonus.
+The second if-statement checks if a bonus is currently being shown and that the current time it has been shown for is greater than the show rate.
+If both of those are true, \verb|dRMs| is set to 0, \verb|showingBonus| to false, and each \verb|Goal| in \verb|goals| has the bonus flag set to \verb|false|.
+
+\subsubsection{public void update(long deltaMs), 129-133}
+This function adds \verb|deltaMs| to both \verb|dRMs| and \verb|dSMs|, and then runs \verb|doBonusCheck|.
+
 
 \subsection{HeatWave.java}
+This class has 6 variables associated with it:
+\begin{itemize}
+  \item \verb|final static int PERIOD|\\
+        Initialised to 2000, this is the time between heatwave events.
+  \item \verb|final static int DURATION|\\
+        Initialised to 1000, this is the duration of one heatwave event.
+  \item \verb|Random r|\\
+        This is a Java \verb|Random| variable, used in determining whether or not a random event happens.
+  \item \verb|private long timeMs|\\
+        This is set to 0 initially, and is checked against the \verb|PERIOD| variables when determining whether or not a heatwave should happen.
+  \item \verb|private long durationMs|\\
+        Similar to \verb|timeMs|, this is checked against the \verb|DURATION| variable when determining whether or not a heatwave should finish.
+  \item \verb|private long heatWaveMs|\\
+        This variable tracks how long a heatwave event has been occurring for.
+  \item \verb|public boolean isHot|\\
+        Initialisd to \verb|false|, this determines whether or not a heatwave event is occurring.
+\end{itemize}
+
+\subsubsection{public HeatWave(), 44-49}
+This is the class constructor, and sets the values of \verb|isHot|, \verb|timeMs|, and \verb|heatWaveMs|, to \verb|true|, \verb|0|, and \verb|0| respectively.
+It also instantiates \verb|r| with a new \verb|Random| object.
+
+\subsubsection{public void perform(Frogger f, insal long deltaMs, final int level), 56-69}
+This function enforces the effect of the heatwave itself; namely that if a heatwave begins and the player does not move within a certain time (directly proportional to the level), the Frogger will jump in a random direction.
+if the Frogger is not alive, \verb|isHot| is set to \verb|false| and the function returns.
+Otherwise, if it \verb|isHot| and the duration of the heatwave is less than the defined limit, and the player has not moved in that time, a random jump occurs and \verb|isHot| is set to false.
+Finally, if the player has moved, \verb|isHot| is set to false.
+
+\subsubsection{public void start(Frogger f, final int GameLevel), 77-88}
+Here it is determined whether or not a heatwave event should start; if it is not currently "hot", and the time since the last heatwave check is greater than the period between heatwaves, the check time is set to 0.
+Then, if the next random integer chosen by \verb|r| is less than the game's level multiplied by 10, \verb|durationMs| is set to 1, \verb|isHot| to \verb|true|, the Frogger's \verb|hw_hasMoved| variable to \verb|false|, and a heatwave-y sound effect plays.
+
+\subsubsection{public MovingEntity genParticles(Vector2D pos), 96-107}
+This generates the particles that appear around the Frogger when a heatwave event is occurring.
+If it is not hot, or \verb|r| returns an integer greater than 10, it does nothing; else it returns a new \verb|MovingEntity| with a particulate sprite, which is drawn to the screen.
+
+\subsubsection{public int computeHeatValue(final long deltaMs, final int level, int curTemp), 114-125}
+This function only appears in this file, at this point; it is as yet unclear as to whether or not it is a part of some call somewhere withing the JIG however as it stands it does nothing.
+Regardless, were it to be called it would increment \verb|heatWaveMs| by the value of the \verb|deltaMs| argument.
+From this, every two seconds it increases the game's temperature by 1, and resets heatWaveMs to 0, capping it at 170.
+
+\subsubsection{public void update(final long deltaMs), 127-130}
+This increases both \verb|timeMs| and \verb|durationMs| by the value of the \verb|deltaMs| argument.
 
 \subsection{LongLog.java}
+This file contains only the constructor for the \verb|LongLog| class.
+
+This sets up what is effectively 4 \verb|MovingEntities| joined together, and gives them a velocity described by the arguments passed in.
 
 \subsection{Main.java}
 The \verb|Main| class is the controller class for the entire game.
@@ -302,26 +511,176 @@ Here it does this only for the X-axis, because the majority of objects only move
 It then updates the position of the \verb|MovingEntity| based on its old position and current velocity, after which it calls \verb|sync| with that new position.
 
 \subsection{MovingEntityFactory.java}
+This class deals with the creation of all \verb|MovingEntities| in the game.
+It has 12 class variables:
+\begin{itemize}
+  \item The following essentially convert the subclass of \verb|MovingEntity| to be created, and are used in conjunction with the \verb|creationRate| variable described below.
+    \begin{itemize}
+      \item \verb|public static int CAR|\\
+            Set to \verb|0|, this denotes the \verb|Car| class to be created.
+      \item \verb|public static int TRUCK|\\
+            Set to \verb|1|, this denotes the \verb|Truck| class to be created.
+      \item \verb|public static int SLOG|\\
+            Set to \verb|2|, this denotes the \verb|ShortLog| class to be created.
+      \item \verb|public static int LLOG|\\
+            Set to \verb|3|, this denotes the \verb|LongLog| class to be created.
+    \end{itemize}
+  \item \verb|public Vector2D position|\\
+        This determines the position of the \verb|Factory|.
+  \item \verb|public Vector2D velocity|\\
+        This determines the velocity of the objects produced by the \verb|Factory|
+  \item \verb|public Random r|\\
+        A random-number generator.
+  \item \verb|private long updateMs|\\
+        This is used when creating a new \verb|MovingObject| to ensure it happens at the correct intervals.
+  \item \verb|private long copCarDelay|\\
+        This is used similarly to the above, however is only used when a \verb|CopCar| is trying to be made.
+  \item \verb|private long rateMs|\\
+        This determines the rate at which the \verb|Factory| checks whether or not to spawn a new \verb|MovingEntity|.
+  \item \verb|private int padding|\\
+        This is the minimum distance between two \verb|MovingObject|s in a lane.
+  \item \verb|private int[] creationRate|\\
+        This is an array of integers that determine the rate at which \verb|MovingEntities| should be created depending on what type they are.
+\end{itemize}
+
+\subsubsection{public MovingEntityFactory(Vector2D pos, Vector2D v), 59-72}
+The constructor, this takes sets the \verb|position| and \verb|velocity| variables to the values passed in as arguments.
+It then sets up \verb|r| with a new random number generator, and gives values to all items in the \verb|creationRate| variable based on their lengths and the \verb|Factory|'s \verb|velocity| variable.
+
+\subsubsection{public MovingEntity buildBasicObject(int type, int chance), 81-105}
+This is the basic factory method created for each lane.
+If the \verb|updateMs| variable is greater than the \verb|rateMs| variable, it has a chance described by the \verb|chance| argument to create a new \verb|MovingEntity| of type described by the \verb|type| argument, with the \verb|position| and \verb|velocity| variables set to those of the \verb|Factory|.
+
+\subsubsection{public MovingEntity buildShortLogWithTurtles(int chance), 107-112}
+This function is the factory function for the lanes which have a chance of building either a \verb|ShortLog| or a series of \verb|Turtles|.
+The function calls \verb|buildBasicObject| with an 80\% chance of building a \verb|ShortLog|; if it does not, and the \verb|chance| argument is less than another random number under 100 it will create a new series of turtles with a random 50/50 chance of being underwater initially.
+
+\subsubsection{public MovingEntity buildLongLogWithCrocodile(int chance), 118-123}
+Similarly to \verb|buildShortLogWithTurtles|, this first attempts to build a \verb|LongLog| using \verb|buildBasicObject|; if it does not it has a \verb|chance| argument\% chance to build a \verb|Crocodile|.
+
+\subsubsection{public movingEntity buildVehicle(), 130-147}
+This function is used to create \verb|Car|s, \verb|Truck|s, and \verb|CopCar|s.
+It creates a new \verb|MovingEntity m|, with an 80\% chance of being a \verb|Car| and a 20\% chance of being a \verb|Truck|; if that \verb|MovingEntity| is created successfully, and the absolute value of its velocity (multiplied by the \verb|copCarDelay| variable) is less than the wdth of the world, that \verb|MovingEntity| will be replaced with a \verb|CopCar|.
+Either way, the \verb|copCarDelay| variable is reset to 0, and if a \verb|CopCar| isn't spawned, \verb|m| is returned.
+
+\subsubsection{public void update(final long deltaMs), 149-152}
+This function increments \verb|updateMs| and \verb|copCarDelay| by the value of \verb|deltaMs| passed in by the argument.
+
 
 \subsection{Particle.java}
+This class extends \verb|MovingEntity|, and has 2 variables associated with it:
+\begin{itemize}
+  \item \verb|private int timeExpire|\\
+        Initialised to 1, this is the time before a \verb|Particle| shold expire.
+  \item \verb|private int timeAlive|\\
+        Initialised to 1, this is the time for which a \verb|Particle| has been alive.
+\end{itemize}
+
+\subsubsection{public Particle(String sprite, Vector2D pos, Vector2D v, int te), 58-64}
+The class constructor, this creates a new \verb|MovingEntity| with a sprite, position, and velocity described by the \verb|sprite|, \verb|pos|, and \verb|v| arguments respectively.
+The \verb|te| argument is passed into the \verb|timeExpire| variable, and the whole object is activated by a \verb|setActivation(true)| call.
+
+\subsubsection{public void update(final long deltaMs), 66-75}
+This updates the whole object based on the \verb|MovingEntity|'s \verb|update| function, with the added step of checking whether or not the \verb|Particle| should have expired by now; this is done by adding the \verb|deltaMs| arguement to the \verb|timeAlive| variable, and checking that against \verb|timeExpire|.
+If \verb|timeAlive| is greater than \verb|timeExpire|, the object is deactivated via a \verb|setActivation(false)| call.
 
 \subsection{ShortLog.java}
+This class is an extension of the \verb|MovingEntity| class, and has only one additional variable, \verb|public static int LENGTH|, which is initialised to 32*3 (96).
 
-\subsection{Truck.java}
-\verb|Truck| is similar to \verb|Car| and v
+\subsubsection{public ShortLog(Vector2D pos, Vector2D v), 33-47}
+This is the class constructor, which sets the sprite via a \verb|super| call.
+It then sets the position and velocity based on the \verb|pos| and \verb|v| arguments respectively, and adds the collosion spheres as offsets from the \verb|position| variable.
+If the x-value of \verb|v| is less than 0 the frame is set to 1, otherwise it's set to 0.
 
 \subsection{Turtles.java}
+This class extends \verb|MovingEntity|, and has 11 variables associated with it:
+\begin{itemize}
+  \item \verb|private long underwaterTime|\\
+        Initialised to 0, this is the amount of time the \verb|Turtles| have been underwater for.
+  \item \verb|private long underwaterPeriod|\\
+        Initialised to 1200, this is the time for which the \verb|Turtles| should be underwater.
+  \item \verb|protected boolean isUnderwater|\\
+        Initialised to \verb|false|, this determines whether or not the \verb|Turtles| are underwater.
+  \item \verb|private boolean isAnimating|\\
+        Initialised to \verb|false|, this determines whether or not the \verb|Turtles| are animating.
+  \item \verb|private long localDeltaMs|\\
+        
+  \item \verb|private long startAnimatingMs|\\
+  \item \verb|private long timerMs|\\
+  \item \verb|private long animatingPeriod|\\
+        Initialised to 150, this is the number of milliseconds one animation cycle should take.
+  \item \verb|private int aFrame|\\
+        Intialised to 0, this is the current animation frame.
+  \item \verb|private int max_aFrame|\\
+        Initialised to 2, this is the maximum number of animation frames allowed.
+\end{itemize}
+
+\subsubsection{public Turtles(Vector2D pos, Vector2D v, int water), 76-89}
+The class constructor, this sets the sprite via a \verb|super()| call, and calls \verb|init| with the \verb|pos| and \verb|v| arguments passed through.
+If the \verb|water| argument is 0, \verb|isUnderwater| is set to \verb|false|, else it is set to \verb|true|, and the frame is incremented by 2.
+
+\subsubsection{public void init(Vector2D pos, Vector2D v), 99-114}
+The \verb|position| variable is set to the \verb|pos| argument, and 2 additional collision spheres are created as offets.
+The \verb|velocity| variable is set to the value of the \verb|v| argument, and the correct sprite frame is set based on the direction the \verb|Turtles| are travelling.
+
+\subsubsection{public void checkAirTime(), 120-126}
+This first increments the \verb|underwaterTime| variable by the value of \verb|localDeltaMs|, and if it becomes greater than the value of \verb|underwaterPeriod| it goes into the other state (underwater to floating or vice-versa).
+
+\subsubsection{public void animate(), 133-152}
+If the \verb|isAnimating| flag is set to false, this function does nothing.
+Beyond that, if the \verb|timerMs| variable is greater than the \verb|startAnimatingMs| variable, it will animate one step of either returning to the surface or submerging.
+If the \verb|aFrame| variable is greater than or equal to the \verb|max_aFrame| variable, it stops the animation.
+
+\subsubsection{public void startAnimation(), 159-164}
+This sets up the animation by setting \verb|isAnimating| to \verb|true|, and \verb|startAnimatingMs|, \verb|timerMs|, and \verb|aFrame| to 0.
+
+\subsubsection{public void update(final long delta), 166-172}
+This first performs the superclass' \verb|update| function, then sets \verb|localDeltaMs| to the \verb|deltaMs| argument, which it then uses to incremend the \verb|timerMs| variable.
+It then performs \verb|checkAirTime()| and \verb|animate()|.
 
 \subsection{Windgust.java}
+This class has 6 variables associated with it:
+\begin{itemize}
+  \item \verb|final static int PERIOD|\\
+        Intiailised to 5000, this is the period between wind gust event checks in milliseconds.
+  \item \verb|final static int DURATION|\\
+        Initialised to 3000, this is the duration of wind gusts in milliseconds.
+  \item \verb|Random r|\\
+        This is a random number generator used in determining whether or not a gust actually occur.
+  \item \verb|private long timeMs|\\
+        This is a variable containing the current game time, in milliseconds.
+  \item \verb|private long durationMs|\\
+        This is used to check how long a wind gust has been occuring for.
+  \item \verb|private boolean isWindy|\\
+        A flag denoting whether or not a wind gust event is currently occuring.
+\end{itemize}
+
+\subsubsection{public WindGust(), 49-43}
+This is the constructor, which initialises \verb|timeMs| to 0, \verb|isWindy| to \verb|false|, and initialises \verb|r| with a new random number generator.
+
+\subsubsection{public void perform(Frogger f, int level, final long deltaMs), 60-72}
+If the Frogger is not alive, this function sets \verb|isWindy| to \verb|false| and \verb|return|s.
+Otherwise, \verb|isWindy| and \verb|durationMs| are checked, the latter against being smaller than \verb|DURATION|, and if both of those are true, it sets the wind position randomly.
+Otherwise it sets \verb|isWindy| to \verb|false|.
+
+\subsubsection{public void start(final int level), 79-92}
+This begins a new level; if it isn't currently windy and the value of \verb|timeMs| is greater than the \verb|PERIOD| variable, it has a chance of starting a new wind event, setting \verb|durationMs| to 1, \verb|isWindy| to \verb|true|, and playing a sound effect.
+Either way it resets \verb|timeMs| to 0.
+
+\subsubsection{public MovingEntity genParticles(final int level), 100-115}
+This function, similar to other \verb|genParticles| functions, generates the particle overlay that appears when a wind event occurs.
+
+\subsubsection{public void update(final long deltaMs), 117-120}
+This increments \verb|timeMs| and \verb|durationMs| by the value of the \verb|deltaMs| argument.
+
 
 \begin{thebibliography}{0}
   \bibitem{jig-tutorial}
     Wallace, Scott A. and Nierman, Andrew\\
     Using the Java Instructional Game Engine in the Classroom\\
     December 2007\\
-    Available at http://dl.acm.org/citation.cfm?id=1292428.1292437\\
+    Available at http://dl.acm.org/citation.cfm?id
     Accessed 2018-10-26
 \end{thebibliography}
-
 
 \end{document}
