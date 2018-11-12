@@ -1,0 +1,41 @@
+\title{Specifications and Requirements for the proposed \textit{Frogger} implementation}
+\author{
+  Jack Ellis \\
+  psyje5@nottingham.ac.uk\\
+  4262333
+}
+\date{}
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\graphicspath{ {Images/} }
+\usepackage{mathtools}
+
+\begin{document}
+\maketitle
+
+\section{Specifications}
+\begin{itemize}
+  \item The game shall take place in a 640x480 pixel (VGA resolution) window.
+  \item The game shall be written in Haskell.
+  \item The game shall make use of the OpenGL window system.
+\end{itemize}
+
+\section{Requirements}
+\begin{itemize}
+  \item The user shall control a single character on the screen (hereafter the "Frogger") using their computer keyboard.
+  \item The objective of the game shall be to move from the start point to one of some number of goals via a series of moving obstacles spread across 10 "lanes".
+  \item These lanes will consist of 5 road lanes and 5 river lanes, with a safe place between them.
+    \begin{itemize}
+      \item The road lane shall contain vehicles: cars and lorries.
+      \item The river lane shall contain three types of obstacle:
+        \begin{itemize}
+          \item Logs: The basic object of the river, these shall provide safe passage however shall carry the Frogger in whichever direction they are moving.
+          \item Turtles: Shall behave identically to the logs, however shall submerge themselves on a regular cycle.
+          \item Crocodiles: Shall behave similarly to the logs, however if the Frogger steps onto their head they shall die.
+        \end{itemize}
+    \end{itemize}
+  \item If the Frogger is hit by a vehicle, moves off the edge of the screen, or touches the water the player shall die, lose a life, and have to begin the level anew.
+  \item The game shall have no defined end-point, only becoming progressively more difficult as it goes on by way of obstacles moving more quickly.
+\end{itemize}
+
+\end{document}
