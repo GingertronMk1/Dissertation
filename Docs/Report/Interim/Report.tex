@@ -1,0 +1,158 @@
+\title{Interim Report}
+\author{
+  \textbf{Author}\\
+  Jack Ellis \\
+  psyje5@nottingham.ac.uk\\
+  4262333\\\\
+  \textbf{Supervisor}\\
+  Natasa Milic-Frayling\\
+  psznm@nottingham.ac.uk
+}
+\date{}
+\documentclass[12pt, a4paper]{report}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+
+\graphicspath{ {Images/} }
+\begin{document}
+\maketitle
+
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+\subsection{\textit{Frogger}}
+\textit{Frogger} was released by Konami in 1981 as an arcade machine.
+Since then it has become the premiere "road-crossing simulator", with over a dozen official sequels.
+The basic objective of the original is to navigate a series of frogs (the eponymous Froggers) to their homes, via a busy road and a river filled with hazards.
+There are so many of these hazards in fact, that in a review of the 1982 Atari port \textit{Softline Magazine} stated that it had "earned the ominous distinction of being the arcade game with the most ways to die"\cite{softline}; a player can die from a number of mistimed jumps, world events, and even by reaching the goal at the wrong time.
+\par
+The game's popularity is massive, and there have been countless imitations created right from its inception; from 1982's \textit{Ribbit} for the Apple II, to the iOS and Android app \textit{Crossy Road} essentially aping the "road-crossing simulator" aspect of the original arcade game.
+Indeed, such is the historical significance of the game that an entire episode of the American sitcom \textit{Seinfeld} was dedicated to it\cite{seinfeld}.
+
+\begin{figure}[ht]
+  \centering
+  \caption{A screen capture of the original arcade version of \textit{Frogger} showing the 5 road lanes, 5 river lanes, and 5 objectives (the homes).}
+  \includegraphics[width=0.5\textwidth]{Frogger_Arcade.png}
+\end{figure}
+\begin{figure}[ht]
+  \centering
+  \caption{A screen capture of \textit{Crossy Road}, a game which apes the basic characteristics of \textit{Frogger}}
+  \includegraphics[width=0.5\textwidth]{Crossy_Road}
+\end{figure}
+
+\subsection{Functional Programming and Haskell}
+Functional Programming (FP) has been increasingly adoped in industry, now to the extent that there is an entire conference dedicated to discussing its' use\cite{cufp}.
+Currently, FP is predominantly used in the financial and research sectors, with only a couple of small game studios dedicated to using it.
+I am interested in extending the use of Functional Programming to games and plan to dedicate my project to re-implementing a popular game, \textit{Frogger}, using Functional Programming.
+\par
+Haskell is a functional programming language first released in 1990.
+In its default state it is a purely functional language, meaning that there are no global variables or instructions, only functions that, when applied to 0 or more arguments, return a modified version of said arguments.
+This purely functional nature means that it is devoid of side effects, which can be a common source of error in other imperative or object-oriented (OO) languages.
+It is strongly typed\cite{haskellsite}, which means that all functions declared have a type signature, often of the form \verb|function_name x y :: typex -> typey -> typez|, where \verb|function_name| is the name of the function, \verb|typex| and \verb|typey| are the types of argument \verb|x| and \verb|y| respectively, and \verb|typez| is the type of the result, which can be fed into other functions.
+It is also lazy\cite{haskellsite}, meaning that it will only calculate "as much as is needed"; this means that if a user wants the first \verb|n| Fibonacci numbers, for instance, they can write a function that will generate all Fibonacci numbers and take the first \verb|n| of that list.
+The rest of the list will simply not be generated.
+\par
+Between the pure nature of the functions and the strong typing system, Haskell programs are often very easy to read and debug once a user understands the syntax and structure of a typical piece of source code.
+For the most part it makes understanding the purpose and function of functions considerably easier, with the ability to user-define types meaning that one can have a function of type \verb|Player -> PlayerXPosition|, which would take a player "object" and return their position in X.
+While not exactly self-documenting, this approach does mean that one does not often need to refer to documentation to understand what a program does.
+As well as this, if one function returns an \verb|Int| and its result is fed, by for instance function composition, into one that expects an argument of type \verb|String|, the compiler will throw an error detailing exactly where the issue arose.
+
+\section{Motivation}
+In my experience with the G51PGP (Programming Paradigms) and G52AFP (Advanced Functional Programming) modules, Haskell is a concise and powerful language, more so than imperative or Object-Oriented equivalents.
+From this experience I believe that if more programs can be written using the Functional Programming paradigm, they will be more extensible, more maintainable, and more readily understandable (primarily due to the strong typing and the fact that they can be proved correct mathematically as opposed to being only tested, e.g. by way of some automated testing suite).
+\par
+In principle, functional programming is not often used to make games.
+There are a number of reasons for this; performance and legacy issues being one, the sheer pervasiveness of states and effects in modern games (both concepts that Haskell and FP either have no simple implementation for or struggle with in general) being another.
+However some big names in video game development have commented on the potential use of FP in video games:
+\begin{itemize}
+  \item John Carmack, developer of Doom and Quake, gave a talk at QuakeCon 2013 about the idea of reprogramming Wolfenstein 3d (arguably the first popular 3D first-person shooter) in Haskell\cite{carmackspeech}
+  \item Tim Sweeney, founder of Epic Games, has a lecture on programming languages from a developer's perspective in which he discusses current failures of languages and how best to overcome them.
+    In this talk he discusses Haskell's approach to things at length, going into some detail with regard to how well it deals with out-of-order evaluation, option types (provided by the \verb|Maybe| Monad), references, and list comprehensions\cite{sweeneytalk}.
+\end{itemize}
+\par
+The motivation behind recreating \textit{Frogger} in particular stems from the fact that \textit{Frogger} is a deceptively simple game.
+At its heart it is simply a "road-crossing simulator", however in practise there are many more aspects to it than this.
+The random generation of obstacles in particular is something that Haskell, while not struggling with, requires one implements in a particular way.
+Similar too the number of lives the player has remaining, the idea of pausing and resuming the game, and in general the non-deterministic nature of a game's result (which is to say that for one specific input, there are multiple possible outputs).
+These are all concepts which, from my experience in the aforementioned university modules and my own experience programming in Haskell, the language requires more work to implement.
+I find this challenge to be quite appealing in the context of a final-year project.
+
+\section{Related Work}
+University of Nottingham Professor Henrik Nilsson has done a large amount of work with respect to using FP in a time-based setting, most notably in the Haskell library \textit{Yampa}.
+In a paper he co-published, "The Yampa Arcade"\cite{yampaarcade}, he cites video games as a key implementation of this system, detailing how it can be used to create a functional implementation of Space Invaders.
+Ex-UoN student Ivan Perez launched Keera Studios in 2013, a games studio focussed on creating Haskell-based video games for mobile use on the iOS and Android platforms.
+
+
+\section{Description of Work}
+
+
+\section{Methodologies}
+
+
+\section{Design}
+The proposed specifications and requirements for this program are as follows:
+
+\subsection{Specifications}
+\begin{itemize}
+  \item The game shall take place in a 640x480 pixel (VGA resolution) window.
+  \item The game shall be written in Haskell.
+  \item The game shall make use of the OpenGL window system.
+\end{itemize}
+
+\subsection{Requirements}
+\begin{itemize}
+  \item The user shall control a single character on the screen (hereafter the "Frogger") using their computer keyboard.
+  \item The objective of the game shall be to move from the start point to one of some number of goals via a series of moving obstacles spread across 10 "lanes".
+  \item These lanes will consist of 5 road lanes and 5 river lanes, with a safe place between them.
+    \begin{itemize}
+      \item The road lane shall contain vehicles: cars and lorries.
+      \item The river lane shall contain three types of obstacle:
+        \begin{itemize}
+          \item Logs: The basic object of the river, these shall provide safe passage however shall carry the Frogger in whichever direction they are moving.
+          \item Turtles: Shall behave identically to the logs, however shall submerge themselves on a regular cycle.
+          \item Crocodiles: Shall behave similarly to the logs, however if the Frogger steps onto their head they shall die.
+        \end{itemize}
+    \end{itemize}
+  \item If the Frogger is hit by a vehicle, moves off the edge of the screen, or touches the water the player shall die, lose a life, and have to begin the level anew.
+  \item The game shall have no defined end-point, only becoming progressively more difficult as it goes on by way of obstacles moving more quickly.
+\end{itemize}
+
+
+\section{Progress Update}
+
+
+
+\begin{thebibliography}{0}
+  \bibitem{cufp}
+    Commercial Users of Functional Programming homepage\\
+    \verb|http://cufp.org|\\
+    Accessed 2018-18-11
+  \bibitem{softline}
+    Softline Magazine, November 1982\\
+    PDF available at \verb|www.cgwmuseum.org/galleries/issues/softline_2.2.pdf|\\
+    Accessed 2018-11-15
+  \bibitem{seinfeld}
+    "The Frogger", \textit{Seinfeld}, NBC, 23rd April 1998\\
+    Television
+  \bibitem{haskellsite}
+    The Haskell website\\
+    \verb|www.haskell.org/|\\
+    Accessed 2018-11-15
+  \bibitem{carmackspeech}
+    John Carmack's keynote at Quakecon 2013\\
+    \verb|www.youtube.com/watch?v=1PhArSujR_A&feature=youtu.be&t=127|
+    Accessed 2018-11-15
+  \bibitem{sweeneytalk}
+    Slides from Tim Sweeney's talk "The Next Mainstream Programming Language: A Game Developer’s Perspective"\\
+    \verb|www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/sweeny.pdf|\\
+    Accessed 2018-11-15
+  \bibitem{yampaarcade}
+    The Yampa Arcade\\
+    A. Courtney, H. Nilsson, and J. Peterson, 2003\\
+    \verb|www.antonycourtney.com/pubs/hw03.pdf|\\
+    Accessed 2018-11-15
+\end{thebibliography}
+
+\end{document}

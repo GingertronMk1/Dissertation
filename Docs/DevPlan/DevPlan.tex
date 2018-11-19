@@ -1,0 +1,50 @@
+\title{Proposed Stages of Development}
+\author{
+  Jack Ellis \\
+  psyje5@nottingham.ac.uk\\
+  4262333
+}
+\date{}
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\graphicspath{ {Images/} }
+\usepackage{mathtools}
+\usepackage{listings}
+\lstset{
+  language=Java,
+  basicstyle=\ttfamily\small,
+  showstringspaces=false
+}
+
+\begin{document}
+\maketitle
+
+There will be a number of phases of development:
+\begin{enumerate}
+  \item Statically Drawing To The Screen\\
+        In this phase I intend to implement Haskell's OpenGL/GLUT framework in such a way that all "objects" (i.e. the Frogger, other moving objects, the road, and the river) are present on screen, if static.
+      \item Animation\\
+        In this phase I intend to implement motion over time, i.e. all of the cars, logs, turtles, and crocodile will be in motion.
+      \item Keyboard Input\\
+        In this phase I will implement keyboard input, allowing the player to take control of the Frogger and move them about
+      \item Collision Detection and Death\\
+        In this phase I hope to set up some rudimentary collision detection, allowing the Frogger to collide with moving traffic in the "road" lanes and die.
+        This will also require that I set up some kind of death/reset system.
+      \item Following\\
+        Here I intend to implement the "following" system that will allow the Frogger to jump onto a log, turtle, or crocodile and follow it as it moves along the river.
+      \item Scoring\\
+        Using the collision detection system as well as a modified version of the dying system developed earlier I will here implement a "level over" scenario that will increment the players' score.
+      \item Lives\\
+        This will involve modifying the death system to implement a set number of lives, after which perma-death will occur.
+        Ideally this system will also implement a series of game states such that a user can enter the "perma-death" state and without exiting the game entirely begin a new one.
+        Additionally this might involve saving a list of high scores to a text file, however this can be added at a later time.
+      \item Audio\\
+        Here I hope to add background music and sound effects to the relevant in-game events.
+      \item Refinements\\
+        This stage will represent the first major development milestone, as it will be essentially the game of \textit{Frogger} as originally released in 1981.
+        There will be some refinements to make, most likely in the region of moving objects having the correct drawings applied to them, and potential bug fixes, however this could be considered version 1.0.
+      \item Extras\\
+        Here I hope to add fun "extra" parts to the game, in an effort to demonstrate the extensibility afforded by Haskell as opposed to another language.
+        In particular I hope to add heatwave and wind effects, as well as a cheating option a la the version I have studied, but also other options such as changing the player sprite to one of a character from another arcade game, such as a Space Invader.
+\end{enumerate}
+\end{document}
