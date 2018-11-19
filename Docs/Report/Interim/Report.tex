@@ -25,21 +25,36 @@
 \subsection{\textit{Frogger}}
 \textit{Frogger} was released by Konami in 1981 as an arcade machine.
 Since then it has become the premiere "road-crossing simulator", with over a dozen official sequels.
+<<<<<<< Updated upstream
 The basic objective of the original is to navigate a series of frogs (the eponymous Froggers) to their homes, via a busy road and a river filled with hazards.
 There are so many of these hazards in fact, that in a review of the 1982 Atari port \textit{Softline Magazine} stated that it had "earned the ominous distinction of being the arcade game with the most ways to die"\cite{softline}; a player can die from a number of mistimed jumps, world events, and even by reaching the goal at the wrong time.
 \par
 The game's popularity is massive, and there have been countless imitations created right from its inception; from 1982's \textit{Ribbit} for the Apple II, to the iOS and Android app \textit{Crossy Road} essentially aping the "road-crossing simulator" aspect of the original arcade game.
+=======
+The basic objective of the original is to navigate a series of frogs (the eponymous Froggers) to their homes, via a busy road and a river filled with hazards\textsuperscript{\ref{fig:froggerarcade}}.
+There are so many of these hazards in fact, that in a review of the 1982 Atari port \textit{Softline Magazine} stated that it had "earned the ominous distinction of being the arcade game with the most ways to die"\cite{softline}; a player can die from a number of mistimed jumps, world events, and even by reaching the goal at the wrong time.
+\par
+The game's popularity is massive, and there have been countless imitations created right from its inception; from 1982's \textit{Ribbit} for the Apple II, to the iOS and Android app \textit{Crossy Road} essentially aping the "road-crossing simulator" aspect of the original arcade game\textsuperscript{\ref{fig:crossyroad}}.
+>>>>>>> Stashed changes
 Indeed, such is the historical significance of the game that an entire episode of the American sitcom \textit{Seinfeld} was dedicated to it\cite{seinfeld}.
 
 \begin{figure}[ht]
   \centering
   \caption{A screen capture of the original arcade version of \textit{Frogger} showing the 5 road lanes, 5 river lanes, and 5 objectives (the homes).}
   \includegraphics[width=0.5\textwidth]{Frogger_Arcade.png}
+<<<<<<< Updated upstream
+=======
+  \label{fig:froggerarcade}
+>>>>>>> Stashed changes
 \end{figure}
 \begin{figure}[ht]
   \centering
   \caption{A screen capture of \textit{Crossy Road}, a game which apes the basic characteristics of \textit{Frogger}}
   \includegraphics[width=0.5\textwidth]{Crossy_Road}
+<<<<<<< Updated upstream
+=======
+  \label{fig:crossyroad}
+>>>>>>> Stashed changes
 \end{figure}
 
 \subsection{Functional Programming and Haskell}
@@ -67,7 +82,11 @@ In principle, functional programming is not often used to make games.
 There are a number of reasons for this; performance and legacy issues being one, the sheer pervasiveness of states and effects in modern games (both concepts that Haskell and FP either have no simple implementation for or struggle with in general) being another.
 However some big names in video game development have commented on the potential use of FP in video games:
 \begin{itemize}
+<<<<<<< Updated upstream
   \item John Carmack, developer of Doom and Quake, gave a talk at QuakeCon 2013 about the idea of reprogramming Wolfenstein 3d (arguably the first popular 3D first-person shooter) in Haskell\cite{carmackspeech}
+=======
+  \item John Carmack, developer of Doom and Quake, gave a talk at QuakeCon 2013 about the idea of reprogramming Wolfenstein 3D (arguably the first popular 3D first-person shooter) in Haskell\cite{carmackspeech}
+>>>>>>> Stashed changes
   \item Tim Sweeney, founder of Epic Games, has a lecture on programming languages from a developer's perspective in which he discusses current failures of languages and how best to overcome them.
     In this talk he discusses Haskell's approach to things at length, going into some detail with regard to how well it deals with out-of-order evaluation, option types (provided by the \verb|Maybe| Monad), references, and list comprehensions\cite{sweeneytalk}.
 \end{itemize}
