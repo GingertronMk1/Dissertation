@@ -1,4 +1,4 @@
-\title{Interim Report}
+\title{Implementing \textit{Frogger} Using Functional Programming: Undergraduate Dissertation Interim Report}
 \author{
   \textbf{Author}\\
   Jack Ellis \\
@@ -25,7 +25,7 @@
 \pagebreak
 
 \section{Introduction}
-In this interim report I will summarise the progress made on my Undergraduate Dissertation project which focusses on re-implementing the video game \textit{Frogger} using the Functional Programming language Haskell.
+In this interim report I will summarise the progress made on my Undergraduate Dissertation project which focuses on re-implementing the video game \textit{Frogger} using the Functional Programming language Haskell.
 Whilst this is primarily a software engineering effort, it will provide me with an opportunity to broaden and demonstrate my increased proficiency in software engineering methods, procedures, and skill.
 In the following sections I will first describe the origin and characteristics of \textit{Frogger} and follow it with a discussion of relevant Haskell characteristics and capabilities.
 
@@ -33,7 +33,7 @@ In the following sections I will first describe the origin and characteristics o
 \textit{Frogger} was first released by Konami in 1981 as an arcade machine.
 Since then it has become the premiere "road-crossing simulator", with over a dozen official sequels.
 The basic objective of the original game is to navigate a colony of frogs (the eponymous Froggers) to their homes, via a busy road and a river filled with hazards.
-There are so many of these hazards in fact, that in a review of the 1982 Atari port \textit{Softline Magazine} stated that it had "earned the ominous distinction of being the arcade game with the most ways to die"\cite{softline}. Indeed, a player can die from a number of mistimed jumps, world events, and even by reaching the goal at the wrong time.
+There are so many of these hazards, in fact, that in a review of the 1982 Atari port, \textit{Softline Magazine} stated that it had "earned the ominous distinction of being the arcade game with the most ways to die"\cite{softline}. Indeed, a player can die from a number of mistimed jumps, world events, and even by reaching the goal at the wrong time.
 
 \par
 
@@ -52,51 +52,51 @@ Indeed, such is the historical significance of the game that an entire episode o
 \end{figure}
 
 \subsection{Functional Programming and Haskell}
-Functional Programming (FP) has been increasingly adopted in industry of late, now to the extent that there is an entire conference dedicated to discussing its' use, the Commercial Users of Functional Programming\cite{cufp}.
+Functional Programming (FP) has been increasingly adopted in industry of late, now to the extent that there is an entire conference dedicated to discussing its use: the Commercial Users of Functional Programming\cite{cufp}.
 Currently, FP is predominantly used in the financial and research sectors, with only a couple of small game studios dedicated to using it.
-I am interested in extending the use of Functional Programming to games and plan to dedicate my project to re-implementing \textit{Frogger} using this programming paradigm.
+I am interested in extending the use of Functional Programming to games, and plan to dedicate my project to re-implementing \textit{Frogger} using this programming paradigm.
 
 \par
 
 Haskell is a functional programming language first released in 1990.
-In its default state it is a purely functional language, meaning that there are no global variables or instructions, only functions that, when applied to 0 or more arguments, return a modified version of said arguments.
+By default it is a purely functional language, meaning that there are no global variables or instructions, only functions that when applied to 0 or more arguments return a modified version of said arguments.
 This purely functional nature means that it is devoid of side effects, which can be a common source of error in other imperative or object-oriented (OO) languages.
-"Side effects" in this instance means any kind of effect that is not the direct manipulation of function arguments; printing to the screen, playing sound, accepting input, and so on.
+"Side effects" in this instance refers to any kind of effect that is not the direct manipulation of function arguments: printing to the screen, playing sound, accepting input, and so on.
 It is strongly typed\cite{haskellsite}, which means that all functions declared have a strict type signature, often of the form \verb|function_name :: a -> b -> c|, where \verb|function_name| is the name of the function, \verb|a| and \verb|b| are the types of the first and second argument respectively, and \verb|c| is the type of the result, which can then be fed into other functions.
-This type signature is often written by the programmer, however the GHC can interpret it at compile time if it is not present.
+This type signature is often written by the programmer, although the Glasgow Haskell Compiler (GHC) can interpret it at compile time if it is not present.
 It is also lazy\cite{haskellsite}, meaning that it will only calculate "as much as is needed"; this means that if a user wants the first \verb|n| Fibonacci numbers, for instance, they can write a function that will generate all Fibonacci numbers and take the first \verb|n| of that list.
 The rest of the list will simply not be generated.
 
 \par
 
 Between the pure nature of the functions and the strong typing system, Haskell programs are often very easy to read and debug once a user understands the syntax and structure of a typical piece of source code.
-For the most part it makes understanding the purpose and operation of functions considerably easier, with the ability to user-define types meaning that one can have a function of type \verb|Player -> PlayerXPosition|, which would take a player "object" as an argument and return their position in X.
-This function's type signature would otherwise potentially be \verb|(Float, Float, String, Float) -> Float|, which while somewhat useful is not as verbose as the custom types can allow.
+For the most part, it makes understanding the purpose and operation of functions considerably easier, with the ability to user-define types meaning that one can have a function of type \verb|Player -> PlayerXPosition|, which would take a player "object" as an argument and return their position in X.
+This function's type signature would otherwise potentially be \verb|(Float, Float, String, Float) -> Float|, which - while somewhat useful - is not as verbose as the custom types can allow.
 While not quite self-documenting, this approach does mean that one does not often need to refer to documentation to understand what a program does.
-As well as this, if one function returns an \verb|Int| and its result is fed, by for instance function composition, into one that expects an argument of type \verb|String|, the compiler will throw an error detailing exactly where the issue arose.
+As well as this the compiler will throw an error message detailing exactly where typine errors arise, allowing for simpler debugging.
 
 \section{Motivation}
 In my experience with the G51PGP (Programming Paradigms) and G52AFP (Advanced Functional Programming) modules, Haskell is a concise and powerful language, more so than imperative or Object-Oriented equivalents.
-From this experience it is my believe that if more programs can be written using the Functional Programming paradigm, they will be more extensible, more maintainable, and more readily understandable (primarily due to the strong typing and the fact that they can be proved correct mathematically as opposed to being only tested, e.g. by way of some automated testing suite).
+From this experience it is my belief that if more programs can be written using the Functional Programming paradigm, they will be more extensible, maintainable, and readily understandable (primarily due to the strong typing and the fact that they can be proved correct mathematically, as opposed to being only tested, e.g. by way of some automated testing suite).
 
 \par
 
 In principle, functional programming is not often used to make games.
-There are a number of reasons for this; performance and legacy issues being one, the sheer pervasiveness of states and effects in modern games (both concepts that Haskell and FP either have no simple implementation for or struggle with in general) being another.
-However some notable individuals in video game development have commented on the potential use of FP in video games:
+There are a number of reasons for this: performance and legacy issues being one; the sheer pervasiveness of states and effects in modern games (both concepts that Haskell and FP either have no simple implementation for or struggle with in general) being another.
+However, some notable individuals in video game development have commented on the potential use of FP in video games:
 \begin{itemize}
   \item John Carmack, one of the main developers of Doom and Quake, gave a talk at QuakeCon 2013 about the idea of reprogramming Wolfenstein 3d (arguably the first popular 3D first-person shooter) in Haskell\cite{carmackspeech}
-  \item The founder of Epic Games, Tim Sweeney, has a lecture on programming languages from a developer's perspective in which he discusses current failures of languages and how best to overcome them.
-    In this talk he discusses Haskell's approach to things at length, going into some detail with regard to how well it deals with out-of-order evaluation, option types (provided by the \verb|Maybe| Monad), references, and list comprehensions\cite{sweeneytalk}.
+  \item The founder of Epic Games, Tim Sweeney, gave a lecture on programming languages from a developer's perspective in which he describes current failures of languages and how best to overcome them.
+    In this talk, he discusses Haskell's approach to things at length, going into some detail with regard to how well it deals with out-of-order evaluation, option types (provided by the \verb|Maybe| Monad), references, and list comprehensions\cite{sweeneytalk}.
 \end{itemize}
 
 \par
 
 The motivation behind recreating \textit{Frogger} in particular stems from the fact that \textit{Frogger} is a deceptively simple game.
-At its heart it is simply a "road-crossing simulator", however in practise there are many more aspects to it than this.
-The random generation of obstacles in particular is something that Haskell, while not struggling with, requires one implements in a particular way.
-Similar too the number of lives the player has remaining, the idea of pausing and resuming the game, and in general the non-deterministic nature of a game's result (which is to say that for one specific input, there are multiple possible outputs).
-These are all concepts which, from my experience in the aforementioned university modules and my own experience programming in Haskell, the language requires more work to implement.
+At its heart it is just a "road-crossing simulator", however in practice there are many more aspects to it.
+The random generation of obstacles in particular is something that Haskell, while not struggling with, requires one to implement in a particular way.
+Likewise the number of lives the player has remaining, the idea of pausing and resuming the game, and in general the non-deterministic nature of a game's result (which is to say that for one specific input, there are multiple possible outputs) generally require some kind of global variable.
+These are all concepts which, from my experience in the aforementioned university modules and my own experience programming in Haskell, the language requires further development to implement.
 I find this challenge to be quite appealing in the context of a final-year project.
 
 \section{Aims and Objectives}
@@ -125,39 +125,41 @@ Ex-UoN student Ivan Perez launched Keera Studios in 2013, a games studio focusse
 \par
 
 Much has been done with respect to the porting of a video game to a new architecture or language.
-While more recent programming languages (C++ etc.) can output byte code that will work on a number of machines, it used to be the case that a game had to be reworked from the ground up for compatibility with other systems.
+While more recent programming languages (C++, etc.) can output byte code that will work on a number of machines, it used to be the case that a game had to be reworked from the ground up for compatibility with other systems.
 Indeed, \textit{Frogger} itself was the subject of a number of ports in the early 80s, with external companies publishing editions for home consoles.
 More recently, Michael Tonks recreated Atari's \textit{Pac-Man} using Java as part of his undergraduate dissertation; whilst not formalising the specifications and requirements of the game itself he chose to discuss and implement the experiential features of the game (the ghosts' pathfinding algorithms, point value of objectives, and so on)\cite{michaeltonks}.
 This is the approach I will likely take for developing a plan to create my version of \textit{Frogger}.
 
 
 \section{Description of Work}
-In the initial stages (i.e. up until the Christmas break) I plan to research the game, investigating extant open-source implementations which make use of OO styles and planning how I intend to map some of those OO features to an FP style.
-This research will extend to an experiential level, in which I will investigate the "feel" of these current versions of the game; I believe this is important as a point of comparison.
-After this I will plan out the initial stages of development and over the Christmas break I hope to have a first "alpha" version of the game for user testing.
-This will likely be a somewhat naive implementation, which may not leverage the benefits of the FP style properly and consequently I will ask my external sponsor Henrik Nilsson for feedback on this "alpha".
+In the initial stages (i.e. until the end of December) I intend to research the game, investigating extant open-source implementations which make use of OO styles, and planning how I intend to map some of those OO features to an FP style.
+This research will extend to an experiential level, in which I will investigate the "feel" of these current versions of the game.
+After this I will plan out the initial stages of development and, over the Christmas break, I hope to have a first "alpha" version of the game for user testing.
+This will likely be a somewhat naive implementation, which may not leverage the benefits of the FP style properly and, consequently, I will ask my external sponsor, Henrik Nilsson, for feedback on this "alpha" version.
 From that feedback the game will be refined until such a point that it meets the specifications laid out below.
 
 
 \section{Methodologies}
 Broadly the project will be implemented as a cabal program, in principle for ease of testing.
-Cabal is Haskell's system for building programs and libraries\cite{cabal}, and provides a "cleaner" method of installation than downloading all of the relevant \verb|.hs| files and compiling using the Glasgow Haskell Compiler (GHC).
-As well as this the cabal system allows for easier configuration of minimum Haskell version installs (i.e. requiring a user have at least version 4.1.1), dependency management, and declarations of the project's author and maintainer.
-It also allows testing systems such as Travis CI to work\cite{travisci}, which will allow me to create such a setup on the private GitHub repository where the project will be kept.
+Cabal is Haskell's system for building programs and libraries\cite{cabal}.
+It provides a "cleaner" method of installation than downloading and compiling all of the relevant \verb|.hs| files.
+As well as this, the cabal system allows for easier configuration of system requirements (i.e. requiring a user to have at least GHC version 4.1.1), dependency management, and declarations of the project's author and maintainer.
+It also allows testing systems such as Travis CI to work\cite{travisci}, which I intend to use as part of the development process.
 This CI testing system will ensure that any changes I make via pull requests will not break the broader game as a whole.
 
 \par
 
 I intend to use the OpenGL window system, in particular the Haskell GLUT library, for drawing windows.
-This is because the G53GRA Computer Graphics module has led to me being comfortable with the way this library works, in particular the translation and scaling features, and because it works on most platforms (Windows and Mac specifically) with a good degree of performance.
-Haskell's GLUT library works based on a system of callbacks\cite{glutpage}, with options for keyboard events and idling abstracting many of the issues Haskell usually faces when trying to natively deal with time-dependent and global "variables".
-Eventually I would hope to move away from this GLUT system to a model based on Functional Reactive Programming, but in the initial instance I feel that using GLUT is a good way of ensuring I understand and appreciate the key concepts required for creating a game using Haskell before continuing to a more complex drawing system.
+This is because the G53GRA Computer Graphics module has increased me knowlege of the way this library functions, in particular the translation and scaling features, and because it works on most platforms (Windows and Mac specifically) with a good degree of performance.
+Haskell's GLUT library operates based on a system of callbacks\cite{glutpage}, which abstract many of the issues Haskell usually faces when trying to natively deal with time-dependent and global "variables".
+Eventually I would hope to move away from this GLUT system to a model based on Functional Reactive Programming.
+However in the early stages I feel that using GLUT is a logical way of ensuring that I understand and appreciate the key concepts required for creating a game using Haskell, before progressing to a more complex rendering system.
 
 \par
 
-In terms of replicating the class hierarchy present in OO systems, Haskell can make use of a system of Modules, essentially feeding functions from one file into another at the compilation stage.
+In terms of replicating the class hierarchy present in OO systems, Haskell can make use of a system of Modules, ultimately feeding functions from one file into another at the compilation stage.
 I intend to use this to essentially replicate the various "objects" that will be required by the game (the player, other moving objects, etc.), eventually feeding into the main executable file.
-I believe it will be possible, at least in the initial stage, to make use of Haskell's \verb|data| declaration; this differs from the \verb|type| declarations described above in that \verb|data| allows one to make a new algebraic data type as opposed to \verb|type| which does little more than make your new type a "shortcut" to the old one, not dissimilar to a \verb|#define| in C.
+I believe it will be possible, at least in the initial stage, to make use of Haskell's \verb|data| declaration; this differs from the \verb|type| declarations described above, in that \verb|data| allows one to make a new algebraic data type as opposed to \verb|type| which does little more than make your new type a "shortcut" to the old one (not dissimilar to a \verb|#define| in C).
 \verb|data| declarations can take many forms, with the following record-style syntax being the one I intend to use for the project due to its readability, and the fact that it automatically creates "methods" (to use Object-Oriented terminology) to access "member data".
 
 \begin{lstlisting}[language=Haskell]
@@ -171,9 +173,11 @@ From this I intend to create an "environment" data type which will encapsulate t
 
 \par
 
-The main challenge I forsee in this is determining exactly what files to create and what functions should be amalgamated with others; given Haskell's dislike of polymorphism I can envisage some amount of "boilerplate" code - many almost identical functions created for slightly different input types - with respect to updating values for the player "object" compared to other moving objects.
-In order to skirt this dislike of polymorphism there are two main options: type classes, in which multiple types can have a version of a function applied to them given the proper definitions.
-An example of a typeclass is that of \verb|Show|, the \verb|Show| instance of a type being how a variable of that type is printed to the screen.
+The main challenge I foresee in this is determining exactly what files to create and what functions should be amalgamated with others.
+Given Haskell's dislike of polymorphism I can envisage some amount of "boilerplate" code - many almost identical functions created for slightly different input types - with respect to updating values for the player "object" compared to other moving objects.
+In order to skirt this issue there are two main options: type classes and guarded type definitions.
+Type classes are a system in which multiple types can have a version of a function applied to them given the proper definitions.
+An example of a type class is that of \verb|Show|, the \verb|Show| instance of a type being how a variable of that type is printed to the screen.
 So the \verb|Show| instance of the \verb|Object| type above would look as follows:
 
 \begin{lstlisting}[language=Haskell]
@@ -184,9 +188,12 @@ instance Show Object where
            ++ "sprite: " ++ (show . spritePath) p
 \end{lstlisting}
 
-This idea of type classes can be thought of as superclass methods in an Object-Oriented languages, however in my view they are somewhat "clunky" to use: they must be instantiated for each new type in the class, and new fields can lead to deprecated definitions.
-An alternative option is guarded type definitions; multiple definitions of the same class with different fields.
-The \verb|Object| definition above is for the player "object", so if we wanted some enemy \verb|Object| with a \verb|target| field but otherwise the same fields we can do so as follows:
+This idea of type classes can be thought of as superclass methods in Object-Oriented languages, however in my view they are somewhat "clunky" to use: they must be instantiated for each new type in the class, and new fields can lead to deprecated definitions.
+
+\par
+
+Guarded type definitions involve multiple definitions of the same class with different fields.
+The \verb|Object| definition above is for the player "object", so if we wanted some enemy \verb|Object| with a \verb|target| field - but otherwise the same fields - we can do so as follows:
 
 \begin{lstlisting}[language=Haskell]
 data Object = p {x :: Float,      -- Player
@@ -203,7 +210,7 @@ data Object = p {x :: Float,      -- Player
 I believe this is an easier option for some level of polymorphism and reduction of "boilerplate" code.
 
 \subsection{Mapping Types}
-From the report I wrote detailing the classes and methods of the extant \textit{Frogger} implementation, there are the following classes:
+From the report I wrote detailing the classes and methods of the extant \textit{Frogger} implementation, the following classes are defined:
 \begin{itemize}
   \item \verb|AudioEfx|
   \item \verb|Car|
@@ -225,8 +232,8 @@ From the report I wrote detailing the classes and methods of the extant \textit{
   \item \verb|Windgust|
 \end{itemize}
 
-It is my view that data types should be able to encapsulate \verb|MovingEntity|, and its subclasses \verb|Car|, \verb|CopCar|, \verb|Truck|, \verb|Turtles|, \verb|ShortLog|, \verb|LongLog|, and \verb|Frogger| using the guarded data type definitions described above.
-With respect to the environmental effects (\verb|HeatWave| and \verb|WindGust|) I believe these can be modelled using the callback functions in freeGLUT with random delays.
+It is my view that data types should be able to encapsulate \verb|MovingEntity| and its subclasses, \verb|Car|, \verb|CopCar|, \verb|Truck|, \verb|Turtles|, \verb|ShortLog|, \verb|LongLog|, and \verb|Frogger|, using the guarded data type definitions described above.
+With respect to the environmental effects (\verb|HeatWave| and \verb|WindGust|), I believe these can be modelled using the callback functions in freeGLUT with random delays.
 
 \section{Design}
 The proposed specifications and requirements for this program are as follows:
@@ -241,15 +248,15 @@ The proposed specifications and requirements for this program are as follows:
 \subsection{Requirements}
 \begin{itemize}
   \item The user shall control a single character on the screen (hereafter the "Frogger") using their computer keyboard.
-  \item The objective of the game shall be to move from the start point to one of some number of goals via a series of moving obstacles spread across 10 "lanes".
+  \item The objective of the game shall be to move from the starting point to one of multiple possible goals via a series of moving obstacles spread across 10 "lanes".
   \item These lanes will consist of 5 road lanes and 5 river lanes, with a safe place between them.
     \begin{itemize}
-      \item The road lane shall contain vehicles: cars and lorries.
-      \item The river lane shall contain three types of obstacle:
+      \item The road lane will contain vehicles: cars and lorries.
+      \item The river lane will contain three types of obstacle:
         \begin{itemize}
-          \item Logs: The basic object of the river, these shall provide safe passage however shall carry the \textit{Frogger} in whichever direction they are moving.
-          \item Turtles: Shall behave identically to the logs, however shall submerge themselves on a regular cycle.
-          \item Crocodiles: Shall behave similarly to the logs, however if the \textit{Frogger} steps onto their head they shall die.
+          \item Logs: The basic object of the river, these will provide safe passage however will carry the \textit{Frogger} in whichever direction they are already moving.
+          \item Turtles: will behave identically to the logs, however will submerge themselves on a regular cycle.
+          \item Crocodiles: will behave similarly to the logs, however if the \textit{Frogger} steps onto their head the Frogger will die.
         \end{itemize}
     \end{itemize}
   \item If the \textit{Frogger} is hit by a vehicle, moves off the edge of the screen, or touches the water the player shall die, lose a life, and have to begin the level anew.
@@ -258,27 +265,30 @@ The proposed specifications and requirements for this program are as follows:
 
 \section{Progress Update}
 Currently I believe I am on schedule for this project based on the Gantt Chart in my proposal.
-In terms of the investigation of an extant OO implementation I have compiled a report based on the work of GitHub user \verb|vitalius|, which has shown a number of interesting points; there are a total of 21 classes defined, which I believe can be effectively replicated using Haskell modules and exported types; this idea of exporting types from modules will be leaned on heavily in the early, "naive" stages when the project will consist of a great many modules.
+In terms of the investigation of an extant OO implementation I have compiled a report based on the work of GitHub user \verb|vitalius|, which has shown a number of interesting points.
+There are a total of 21 classes defined, which I believe can be effectively replicated using Haskell modules and exported types; this idea of exporting types from modules will be leaned on heavily in the early, "naive" stages when the project will consist of a great many modules.
 
 \par
 
-The proposed work plan may have been somewhat conservative however; examining the extant source code was not a task worth 4 weeks, similarly the specification/requirements gathering was less involved than I imagined it would have been.
+The proposed work plan may have been somewhat conservative, however. 
+Examining the extant source code was not a task worth 4 weeks; similarly the specification/requirements gathering was less complex than I imagined it would be.
 Little progress was made the week ending 2018-11-30 owing to external commitments, however I believe I accounted for that well in my original plan, allotting a good amount of time for the Structure Mapping and Implementation Plan.
-Going forward though I feel that through the Christmas Holidays I can progress further than the plan details, potentially even having a working first alpha of the game ready before exams.
+Going forward, though, I feel that through the Christmas Holidays I can progress further than the plan details, potentially even having a working first alpha of the game ready before exams in January.
 Similarly the user study planning should not in fact take the 4 weeks allotted to it, and consequently more documentation and paperwork can fill the gap that it will leave.
 
 \par
 
-With respect to deliverables again the project is very much on track for the original plan, indeed it is slightly advanced from this with a working test of the Haskell freeGLUT system having been created.
-This test application bears little to no resemblance to the \textit{Frogger} game, it serves more to act as a technical demonstration that the system can work as intended, which it very much does, and experience making it will no doubt serve to expedite the process of making the actual game.
+With respect to deliverables again the project is very much on track for the original plan.
+Indeed it is slightly advanced from this with a working test of the Haskell freeGLUT system having been created already.
+This test application bears little to no resemblance to the \textit{Frogger} game, rather it serves more to act as a technical demonstration that the system can work as intended, which it very much does, and the experience of making it will no doubt serve to expedite the process of making the actual game.
 
 \section{Reflections}
-Were I to begin this project again I think I would have aimed to have a working, if rough, prototype of the game by Christmas.
-Having stuck to the plan more than anticipated I feel that there has been a great deal of "dead time", and while I do not intend to completely rewrite my work plan at this time I believe that over the coming semester I will, upon completion of one element, begin on another rather than resting on my laurels after what I consider to be a job done.
+Were I to begin this project again I think I would have aimed to have a working, albeit rough, prototype of the game by Christmas.
+Having stuck to the plan more than anticipated, I feel that there has been a great deal of "dead time" and, while I do not intend to completely rewrite my work plan at this time, I believe that over the coming semester I will, upon completion of one element, begin on another rather than waiting for when my work plan says it should begin.
 
 \par
 
-I am however happy with my progress so far; I feel that I now have a solid base of specifications, requirements, and methodologies to begin work on programming the game and developing a user study.
+I am, however, happy with my progress so far; I feel that I now have a solid base of specifications, requirements, and methodologies to begin work on programming the game and developing a user study.
 
 \begin{thebibliography}{0}
   \bibitem{cufp}
