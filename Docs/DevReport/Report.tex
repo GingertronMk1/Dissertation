@@ -25,7 +25,7 @@
 \tableofcontents
 \pagebreak
 
-\section{Drawing a window}
+\section{Drawing A Window}
 
 The first stage of development for the game is to draw a window.
 Per the specifications set out in my interim report, this window is to be 640 pixels wide by 480 pixels tall.
@@ -66,20 +66,174 @@ Currently we're only interested in drawing the window in the first place, so we 
 
 \begin{figure}[ht]
   \centering
-  \caption{The blank window drawn}
+  \caption{The blank window drawn.}
   \includegraphics[width=0.5\textwidth]{DrawingAWindow.png}
   \label{fig:drawingawindow}
 \end{figure}
 
-
 With that done, we now have a window being drawn!
-It is however just a blank, black-filled window\ref{fig:drawingawindow}.
+It is however just a blank, black-filled window, as seen in Figure \ref{fig:drawingawindow}.
 In the next section we will add the game's titular \textit{Frogger}.
-The full code is available in the appendix.
 
+\section{Adding A Character}
+
+Now that we have a window to draw in, we should draw something in it.
+How better to start than with the hero of the game, the titular \textit{Frogger}?
+Let's first represent him as a green unit square, just to get to grips with the coordinate and scaling system in Haskell's GLUT library.
+
+\par
+
+First we need to set the current drawing colour to green, which is easily done using GLUT's \verb|color| function.
+
+% TODO: unescape $
+\begin{lstlisting}
+color \$ Color3 0.0 1.0 (0.0 :: Float)
+\end{lstlisting}
+
+This function sets the current drawing colour to whatever is passed into it, which in our case is a \verb|Color3| type (similar to the \verb|Size| type described earlier), with the 3 values representing red, green, and blue values.
+Worth noting is that in Haskell anything that follows a lone \$ is thought of as being in parentheses, so the above is semantically identical to this:
+
+\begin{lstlisting}
+color (Color3 0.0 1.0 (0.0 :: Float))
+\end{lstlisting}
+
+Now that we have the correct colour selected we can draw a quadrilateral, which we can do with the \verb|renderPrimitive Quads| function, as follows:
+
+\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+let p = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float,Float,Float)]
+renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
+\end{lstlisting}
+
+Let's unpack this a little bit.
+The \verb|let| command is more or less the same as a variable declaration on the "global" scope, like declaring a variable \verb|myVar :: Int| with a value of \verb|5|, only limited to the scope of the function in which it is declared.
+It is a local variable, essentially.
+\verb|p| is a list of tuples, each containing 3 \verb|Float| values.
+These values are the x, y, and z coordinates for each of the points of the quadrilateral we're drawing, respectively.
+The reason their type is declared explicitly here is that otherwise the compiler throws an error relating to ambiguous types, and because we don't want to clog up the rest of the program with values that no other function is ever going to need to know exists we append to the "local variable declaration" an explicit type declaration.
+The coordinates described by \verb|p| denote a unit square extending from what would be considered the origin on a mathematical graph in positive x and y.
+The next line is the fun one, let's go through it piece by piece.
+\verb|renderPrimitive| is the foundation for this; it does the actual drawing of what is fed into it.
+\verb|Quads| is one of the options for "ways to draw", it means draw the following as a closed quadrilateral or series or separate closed quadrilaterals.
+Other options here include drawing something as a wire frame, triangles, a single polygon, or just points.
+The argument passed in here is a version of \verb|p| that has had a lambda function\footnote{lambda functions are anonymous functions written in the style of the lambda calculus. They are convenient when you need to do something slightly complicated but that will only ever get used in that one place.} mapped over it.
+This lambda function takes a tuple of three values and, using two of the GLUT library's provided data constructors, converts them into a type accepted by \verb|renderPrimitive|.
+
+\par
+
+So with all of these in place we should have a unit square drawn nicely on the screen, right?
+Let's see.
+
+\begin{figure}[ht]
+  \centering
+  \caption{A "unit square" - this is a result of the way in which GLUT draws and populates a window by default.}
+  \includegraphics[width=0.5\textwidth]{DrawingACharacter.png}
+  \label{fig:drawingacharacter}
+\end{figure}
+
+Oh dear.
+As we can see in Figure \ref{fig:drawingacharacter} this square is much too large, and begins centered on the screen, rather than how it should be - in my opinion - specifically starting at the bottom left of the window.
+Conveniently GLUT provides functions for both scaling and translating, so this shouldn't be a problem!
+
+\par
+
+Something worth noting before we continue is that it is very important to get the scaling and translation done in the correct order; in general translation should be done first, because scaling actually affects translation.
+Mathematically speaking they are not commutative actions, in particular because they are both examples of matrix multiplication.
+
+\par
+
+The translation and scaling should be done before any other part of the display, given that they directly impact all other parts of drawing.
+They are both one-line functions taking similar forms:
+
+% TODO: unescape $
+\begin{lstlisting}
+translate \$ Vector3 (-1.0) (-1.0) (0.0 :: Float)
+scale (1.0/32.0) (1.0/24.0) (0.0 :: Float)
+\end{lstlisting}
+
+The main difference is that \verb|translate| takes a \verb|Vector3| data type as an argument, whereas \verb|scale| takes only 3 \verb|Float|s.
+\verb|translate| moves the drawing "origin" in a way described by the coordinates in its argument; before any scaling happens a GLUT window essentially consists of 4 "1x1" quadrants (these are stretched to fill the aspect ratio of the window they're in).
+The \verb|scale| function scales everything drawn after it is called by a factor of the first argument in x, second argument in y, and third argument in z.
+Here the scale factors are \verb|1/32| in x and \verb|1/24| in y, these are both based on the window size in their respective direction and, because the window is effectively 2 units both across and tall, it should be scaled to $2/$ that value, and the fractions have been reduced manually.
+Here one unit size is equivalent to 10 pixels, and so now we have a unit square as shown in Figure \ref{fig:drawingacharacterproperly}
+
+\begin{figure}[ht]
+  \centering
+  \caption{The unit square denoting our \textit{Frogger} is now an appropriate size.}
+  \includegraphics[width=0.5\textwidth]{DrawingACharacterProperly.png}
+  \label{fig:drawingacharacterproperly}
+\end{figure}
+
+Now we have a character drawn and scaled appropriately.
+Next let's give him some movement, by way of keyboard input.
+
+\section{Keyboard Input}
+
+Keyboard input is handled by way of another callback in the Haskell GLUT system, however implementing it will require some additional plumbing being added first.
+Specifically it will require the introduction of one of the major building blocks of this program, the \verb|IORef|.
+This is Haskell's way of making use of the IO Monad to do things that it, as a language, would rather not, in this instance global variables and states.
+Firstly however we must declare what kind of variable it is we want to be global.
+We do that in a new file, \verb|Type.hs|, which will be the point from which we declare all new types and functions relating to them.
+For now we will only have one type, the \verb|Mover|, based on the \verb|MovingEntity| superclass in the GitHub project reported on elsewhere.
+
+\begin{lstlisting}
+data Mover = Frogger {x :: Float,
+                      y :: Float
+                     }
+\end{lstlisting}
+
+This is a "record-style" data type with two fields: x and y, denoting the x and y coordinates of the \textit{Frogger}.
+With this in place we can add the \verb|Type| module to \verb|Main| and, after creating the window, create a new \verb|IORef Mover| with \verb|x| and \verb|y| both set to 0.0.
+
+% TODO: unescape $
+\begin{lstlisting}
+f <- newIORef \$ Frogger {x = 0.0, y = 0.0}
+\end{lstlisting}
+
+Finally before we set up the \verb|keyboardMouseCallback|, we modify the \verb|display| function to take as an argument an \verb|IORef Mover|, and draw the character based on it.
+This requires that we change 3 lines of the function, resulting in:
+
+\begin{lstlisting}
+display :: IORef Mover -> DisplayCallback
+display m = 
+  do clear [ColorBuffer]
+     loadIdentity
+     fr <- get m
+     translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
+     scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
+     color $ Color3 0.0 1.0 (0.0 :: Float)
+     let p = [(x fr + 10,y fr,0),
+              (x fr + 10,y fr + 10,0),
+              (x fr,y fr + 10,0),
+              (x fr,y fr,0)] :: [(Float,Float,Float)]
+     renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
+     flush
+\end{lstlisting}
+
+\verb|loadIdentity| is a very important function in all of this - it resets the modification matrix, which is to say that it resets the scaling and translation applied in the last call to the function.
+If this function is forgotten the screen is simply left blank with no explanation as to why.
+With all of that done, we can now create the file \verb|Input.hs|, which will contain all of the functions required to deal with keyboard and mouse inputs.
+In our case we want the WASD keys to be responsible for movement, which we can by defining a function \verb|input| which takes as an argument an \verb|IORef Mover| and returns a \verb|KeyboadMouseCallback|, which we will set the global \verb|keyboardMouseCallback| to in \verb|Main.hs|.
+A \verb|keyboardMouseCallback| takes 5 arguments: our Mover variable, the key being pressed, that key's state (up or down), any modifier keys (Shift, Ctrl, Alt), and a position.
+Our \verb|input| function can thus be described as follows.
+
+\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+input :: IORef Mover -> KeyboardMouseCallback
+input m c Down _ _ 
+  | c == (Char 'w') || c == (Char 'W') = m $~! \f -> f {y = y f + step}
+  | c == (Char 'a') || c == (Char 'A') = m $~! \f -> f {x = x f - step}
+  | c == (Char 's') || c == (Char 'S') = m $~! \f -> f {y = y f - step}
+  | c == (Char 'd') || c == (Char 'D') = m $~! \f -> f {x = x f + step}
+  | otherwise                          = return ()
+  where step = 5
+input _ _ _ _ _ = return ()
+\end{lstlisting}
+
+With this we now have a \textit{Frogger} who will move continuously about as long as either W, A, S, or D are being pressed.
+
+\pagebreak
 \appendix
 
-\section{Drawing a window}
+\section{Drawing A Window}
 \subsection{Main.hs}
 \begin{lstlisting}
 module Main where
@@ -104,6 +258,24 @@ import Graphics.UI.GLUT
 display :: DisplayCallback
 display = do clear [ColorBuffer]
              flush
+\end{lstlisting}
+
+\section{Adding A Character}
+\subsection{Display.hs}
+\begin{lstlisting}
+module Display (display) where
+
+import Graphics.UI.GLUT
+
+display :: DisplayCallback
+display =
+  do clear [ColorBuffer]
+     translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
+     scale (1.0/32.0) (1.0/24.0) (0.0 :: Float)
+     color $ Color3 0.0 1.0 (0.0 :: Float)
+     let p = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float,Float,Float)]
+     renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
+     flush
 \end{lstlisting}
 %\begin{thebibliography}{0}
 %\end{thebibliography}
