@@ -1,0 +1,111 @@
+\title{Development Report}
+\author{
+  \textbf{Author}\\
+  Jack Ellis \\
+  psyje5@nottingham.ac.uk\\
+  4262333\\\\
+  \textbf{Supervisor}\\
+  Natasa Milic-Frayling\\
+  psznm@nottingham.ac.uk
+}
+\date{}
+\documentclass[12pt, a4paper]{report}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\lstset{
+  basicstyle=\ttfamily\small,
+  language=Haskell
+}
+
+\graphicspath{ {Images/} }
+\begin{document}
+\maketitle
+
+\tableofcontents
+\pagebreak
+
+\section{Drawing a window}
+
+The first stage of development for the game is to draw a window.
+Per the specifications set out in my interim report, this window is to be 640 pixels wide by 480 pixels tall.
+I first created a file called \verb|Main.hs|; this can be thought of as analagous to the \verb|main| function often found in imperative languages as the "point of entry" for a given program.
+Here I first declared it as a module called \verb|Main|, and then declared the \verb|main| function itself.
+Again similar to an imperative language, this is the function that will be called once the program is compiled and run.
+It is a function of type \verb|IO()|, meaning that ultimately all it does is perform some \verb|IO| action, some action with a side effect; it takes no arguments and returns no value that can be passed into another function.
+These functions often consist of multiple commands chained in a manner that could look imperative to some however, as we shall see, this is not necessarily the case.
+To begin with we must initialise GLUT; this allows it to begin working and set up a session with the window system in use.
+The function \verb|getArgsAndInitialize| also returns a tuple, with a string representing argument 0 (the program name) as the first element, and a list of strings representing the remaining arguments as the second.
+To again liken it to an imperative language, this is the \verb|(int argc, char* argv)| seen so often in C and C-style \verb|main| functions.
+
+\par
+
+Now that the window session is initialised we must provide it with some parameters with which to draw a window.
+In my motivation for doing this I said that Haskell does not provide users with the ability to declare global variables.
+The GLUT library however does, via a module called \verb|StateVar|.
+The library has a number of such \verb|StateVar| variables, many of which will be explored as this program becomes more and more complex, but for the moment the one that is of use to us is the \verb|initialWindowSize| variable.
+This is of type \verb|StateVar Size|, where \verb|Size| is a type defined in the GLUT library as little more than a wrapper for two numbers - a more readily understood tuple.
+We can use the \verb|$=| operator as a "setter" for \verb|StateVar| variables, and with it we can set the window's initial size to 640x480 pixels.
+
+\par
+
+With the required settings now correct we can call \verb|createWindow|, passing the string "Frogger" as the window's title, and the program should compile and run.
+It does not, however, because we are missing something.
+If we try to compile the code we get the following error:
+
+\begin{lstlisting}[language=sh, xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+GLUT Warning: The following is a new check for GLUT 3.0; update your code.
+GLUT Fatal Error: redisplay needed for window 1, but no display callback.
+\end{lstlisting}
+
+We need to set a \verb|DisplayCallback|, essentially a function describing how to draw things within the created window at each refresh.
+In order to keep things clean this function will be declared in its own module, \verb|Display|.
+Currently we're only interested in drawing the window in the first place, so we can just tell it to first clear the \verb|ColorBuffer| - setting the whole content of the window to black - and then \verb|flush|, which empties all command buffers, executing the commands as quickly as possible so as to ensure the image is as expected by the user.
+
+\par
+
+\begin{figure}[ht]
+  \centering
+  \caption{The blank window drawn}
+  \includegraphics[width=0.5\textwidth]{DrawingAWindow.png}
+  \label{fig:drawingawindow}
+\end{figure}
+
+
+With that done, we now have a window being drawn!
+It is however just a blank, black-filled window\ref{fig:drawingawindow}.
+In the next section we will add the game's titular \textit{Frogger}.
+The full code is available in the appendix.
+
+\appendix
+
+\section{Drawing a window}
+\subsection{Main.hs}
+\begin{lstlisting}
+module Main where
+
+import Graphics.UI.GLUT
+import Display
+
+main :: IO()
+main = do (_progName, _args) <- getArgsAndInitialize
+          initialWindowSize $= Size 640 480
+          createWindow "Frogger"
+          displayCallback $= display
+          mainLoop
+\end{lstlisting}
+
+\subsection{Display.hs}
+\begin{lstlisting}
+module Display (display) where
+
+import Graphics.UI.GLUT
+
+display :: DisplayCallback
+display = do clear [ColorBuffer]
+             flush
+\end{lstlisting}
+%\begin{thebibliography}{0}
+%\end{thebibliography}
+
+\end{document}
