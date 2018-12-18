@@ -85,10 +85,10 @@ Let's first represent him as a green unit square, just to get to grips with the 
 
 First we need to set the current drawing colour to green, which is easily done using GLUT's \verb|color| function.
 
-% TODO: unescape $
 \begin{lstlisting}
-color \$ Color3 0.0 1.0 (0.0 :: Float)
+color $ Color3 0.0 1.0 (0.0 :: Float)
 \end{lstlisting}
+$
 
 This function sets the current drawing colour to whatever is passed into it, which in our case is a \verb|Color3| type (similar to the \verb|Size| type described earlier), with the 3 values representing red, green, and blue values.
 Worth noting is that in Haskell anything that follows a lone \$ is thought of as being in parentheses, so the above is semantically identical to this:
@@ -144,11 +144,11 @@ Mathematically speaking they are not commutative actions, in particular because 
 The translation and scaling should be done before any other part of the display, given that they directly impact all other parts of drawing.
 They are both one-line functions taking similar forms:
 
-% TODO: unescape $
 \begin{lstlisting}
-translate \$ Vector3 (-1.0) (-1.0) (0.0 :: Float)
+translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
 scale (1.0/32.0) (1.0/24.0) (0.0 :: Float)
 \end{lstlisting}
+$
 
 The main difference is that \verb|translate| takes a \verb|Vector3| data type as an argument, whereas \verb|scale| takes only 3 \verb|Float|s.
 \verb|translate| moves the drawing "origin" in a way described by the coordinates in its argument; before any scaling happens a GLUT window essentially consists of 4 "1x1" quadrants (these are stretched to fill the aspect ratio of the window they're in).
@@ -194,7 +194,7 @@ This requires that we change 3 lines of the function, resulting in:
 
 \begin{lstlisting}
 display :: IORef Mover -> DisplayCallback
-display m = 
+display m =
   do clear [ColorBuffer]
      loadIdentity
      fr <- get m
@@ -218,7 +218,7 @@ Our \verb|input| function can thus be described as follows.
 
 \begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
 input :: IORef Mover -> KeyboardMouseCallback
-input m c Down _ _ 
+input m c Down _ _
   | c == (Char 'w') || c == (Char 'W') = m $~! \f -> f {y = y f + step}
   | c == (Char 'a') || c == (Char 'A') = m $~! \f -> f {x = x f - step}
   | c == (Char 's') || c == (Char 'S') = m $~! \f -> f {y = y f - step}
@@ -230,7 +230,163 @@ input _ _ _ _ _ = return ()
 
 With this we now have a \textit{Frogger} who will move continuously about as long as either W, A, S, or D are being pressed.
 
+There is an additional callback required for this all to work however: \verb|idleCallback|.
+This callback deals with background events and is required for continuous animation.
+It can handle background tasks such as updating the positions of non-player characters (a function that will have great use later on in this process).
+For now however it will simply take the following form.
+
+\begin{lstlisting}
+idle :: IORef Mover -> IdleCallback
+idle e = do e $~! id
+            postRedisplay Nothing
+\end{lstlisting}
+$
+\section{Other Characters}
+
+\textit{Frogger} is a game of avoiding obstacles, so let's now add some obstacles to be avoided.
+This will first require that we extend the \verb|Mover| type to include some "subclasses", in the first instance a \verb|Car| "subclass".
+
+\begin{lstlisting}
+data Mover = Frogger {x :: Float
+                     ,y :: Float
+                     ,s :: Float
+           }
+           | Car {x :: Float
+                 ,y :: Float
+                 ,l :: Float
+                 ,w :: Float
+                 ,v :: Float
+           }
+\end{lstlisting}
+
+\verb|x| and \verb|y| are common with the \verb|Frogger| "subclass", and will be used with the drawing function we will define later.
+\verb|l| and \verb|w| are the length and width of the car respectively; width will likely remain a constant, however length could change depending on what kinds of car obstacles we wish to add to the game.
+\verb|v| is the velocity of the car, with the positive direction being left-to-right, or increasing in x.
+This will be used in conjunction with a modified version of the \verb|idle| function, discussed later.
+
+
+We now have to create a containing data type for both the Frogger and the obstacles, such that they can all be stored as one \verb|IORef|.
+This is to be the environment variable, and in due course will contain all relevant information about the game, including scores, number of lives, time remaining, and so on.
+For now though, it only need include two things: the Frogger and a list of other obstacles.
+It can therefore be defined thus:
+
+\begin{lstlisting}
+data Env = E {player :: Mover
+             ,enemies :: [Mover]
+         }
+\end{lstlisting}
+
+We can then extend \verb|Display| to include a helper function to draw any \verb|Mover| to the screen.
+This will be a two-step function, the first step being a call to \verb|preservingMatrix|, a function in GLUT that stores all of the current transformation information (in this instance the translation and scaling discussed when we first drew a character to the screen).
+We can then call a function of our own definition, using pattern matching to ensure the appropriate version of it is called based on what kind of \verb|Mover| we are dealing with - it would not work if we drew the player character identically to a car.
+
+\begin{lstlisting}
+drawMover :: Mover -> IO()
+drawMover m = preservingMatrix $ drawMover' m
+
+drawMover' :: Mover -> IO()
+drawMover' Frogger {x = fx, y = fy, s = fs}
+  = do color $ Color3 0.0 1.0 (0.0 :: Float)
+       translate $ Vector3 fx fy 0.0
+       scale fs fs 1.0
+       unitSquare
+
+drawMover' Car {x = cx, y = cy, l = cl, w = cw}
+  = do color $ Color3 1.0 0.0 (0.0 :: Float)
+       translate $ Vector3 cx cy 0.0
+       scale cl cw 1.0
+       unitSquare
+
+unitSquare :: IO()
+unitSquare
+  = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float)]
+    in (renderPrimitive Quads . mapM_ makeVertex) us
+
+makeVertex :: (Float, Float, Float) -> IO ()
+makeVertex (x,y,z) -> vertex $ Vertex3 x y z
+\end{lstlisting}
+
+Note the additional helper function \verb|unitSquare| - this will be replaced in due course as the game's art becomes more complex however for now we can use it to draw a square of size 1x1 pixel, which we can translate and scale as we wish.
+The helper \verb|makeVertex| on the other hand will likely only become more useful as the complexity of drawing increases - it is a useful constructor, taking 3 points and converting them into the data type used by \verb|renderPrimitive|.
+
+\par
+
+Now that we have these we can extend \verb|display| to take as an argument an \verb|IORef Env| rather than an \verb|IORef Mover|, and replace much of the drawing code with the \verb|drawMover| function applied to parts of the environment variable.
+
+\begin{lstlisting}
+display :: IORef Env -> DisplayCallback
+display m = do clear [ColorBuffer]
+               loadIdentity
+               fr <- get m
+               --putStrLn $ show fr
+               translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
+               scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
+               (drawMover . player) fr
+               (sequence . map drawMover . enemies) fr
+               swapBuffers
+\end{lstlisting}
+
+\begin{figure}[ht]
+  \centering
+  \caption{The \textit{Frogger} being closed in on by two cars}
+  \includegraphics[width=0.5\textwidth]{DrawingEnemies.png}
+  \label{fig:drawingenemies}
+\end{figure}
+
+As we can see in Figure \ref{fig:drawingenemies}, we can now draw cars to the screen.
+By modifying the \verb|idle| function we can also animate them, and with that we can get to the first real glimpse of the game of \textit{Frogger}.
+
+\par
+
+The modification to \verb|idle| is slightly involved, mostly because of the now nested records we have meaning that modifying an internal one is more or less a two-step process.
+Fortunately Haskell's \verb|let| syntax makes this process considerably easier, because we can take the internal record value (i.e. the one we want to change) and store it with a different name.
+We can then take a helper function, whose role is to update the x position of a mover based on its velocity, and map it across the \verb|enemies| field of the environment variable, thus:
+
+\begin{lstlisting}
+idle :: IORef Env -> IdleCallback
+idle e = do e $~! \env -> let es = enemies env
+                          in env {enemies = map updateMover es}
+            postRedisplay Nothing
+
+updateMover :: Mover -> Mover
+updateMover c@(Car {x = cx, v = cv}) = c {x = cx + cv}
+\end{lstlisting}
+$
+
+This two-step processing does also have to be extended to the \verb|input| functions, which leads to a great deal of boilerplate code.
+
+\begin{lstlisting}
+input :: IORef Env -> KeyboardMouseCallback
+input m c Down _ _
+  | c == (Char 'w') || c == (Char 'W')
+    = m $~! \e -> let p = player e
+                  in e {player = p {y = y p + step}}
+  | c == (Char 'a') || c == (Char 'A')
+    = m $~! \e -> let p = player e
+                  in e {player = p {x = x p - step}}
+  | c == (Char 's') || c == (Char 'S')
+    = m $~! \e -> let p = player e
+                  in e {player = p {y = y p - step}}
+  | c == (Char 'd') || c == (Char 'D')
+    = m $~! \e -> let p = player e
+                  in e {player = p {x = x p + step}}
+  | otherwise
+    = return ()
+  where step = 5
+input _ _ _ _ _ = return ()
+\end{lstlisting}
+
+The repetition of \verb|let p = player e in e {...| throughout the middle of those guarded functions is both ugly and not especially useful; if that function were to change each individual instance of it would have to, and the more of them that there are, the more likelihood one will be missed.
+This has major negative impact on the maintainability of this code, and will have to be addressed.
+For now however, we are focussed on getting the game to a point where it is playable.
+
+
 \pagebreak
+%
+% HERE BEGINS THE APPENDIX
+% IT CONTAINS THE SOURCE CODE FOR A COMPLETE
+% IMPLEMENTATION OF EACH CHAPTER'S WORK
+%
 \appendix
 
 \section{Drawing A Window}
