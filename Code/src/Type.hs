@@ -18,6 +18,41 @@ data Mover = Frogger { -- The position of the frog, in x
                    -- The velocity of the car (+ve means going left-to-right)
                  , v :: Float
            }
+           | Croc { -- The position of the croc in x
+                    x :: Float
+                    -- The position of the croc in y
+                  , y :: Float
+                    -- The length of the croc
+                  , l :: Float
+                    -- The width of the croc
+                  , w :: Float
+                    -- Velocity in x (+ve means going left-to-right)
+                  , v :: Float
+           }
+           | Turtles { -- Position in x
+                       x :: Float
+                       -- Position in y
+                     , y :: Float
+                       -- Length
+                     , l :: Float
+                       -- Width
+                     , w :: Float
+                       -- Velocity in x
+                     , v :: Float
+                       -- Are the turtles above water?
+                     , aboveWater :: Bool
+           }
+           | Log { -- Position in x
+                   x :: Float
+                   -- Position in y
+                 , y :: Float
+                   -- Length
+                 , l :: Float
+                   -- Width
+                 , w :: Float
+                   -- Velocity in x
+                 , v :: Float
+           }
            deriving Show
 
 data Env = E { -- The Frogger
