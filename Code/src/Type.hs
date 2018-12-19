@@ -1,15 +1,15 @@
 module Type (Mover(..), Env(..), startEnv) where
 
-data Mover = Frogger { -- The centre position of the frog, in x
+data Mover = Frogger { -- The position of the frog, in x
                        x :: Float
-                       -- The centre position of the frog, in x
+                       -- The position of the frog, in x
                      , y :: Float
                        -- The "size" of the frog (the length of one edge of the square)
                      , s :: Float
            }
-           | Car { -- The centre position of the car in x
+           | Car { -- The position of the car in x
                    x :: Float
-                   -- The centre position of the car in y
+                   -- The position of the car in y
                  , y :: Float
                    -- The length of the car
                  , l :: Float
@@ -17,13 +17,19 @@ data Mover = Frogger { -- The centre position of the frog, in x
                  , w :: Float
                    -- The velocity of the car (+ve means going left-to-right)
                  , v :: Float
-           } deriving Show
+           }
+           deriving Show
 
 data Env = E { -- The Frogger
                player :: Mover
                -- The enemies
              , enemies :: [Mover]
-         } deriving Show
+               -- The total elapsed number of frames
+             , frames :: Int
+               -- The total elapsed time since game start
+             , time :: Int
+         }
+         deriving Show
 
 startEnv :: Env
 startEnv = E { player = Frogger {x = 310.0, y = 5.0, s = 20.0}
@@ -33,4 +39,6 @@ startEnv = E { player = Frogger {x = 310.0, y = 5.0, s = 20.0}
                          ,Car {x = 640.0, y = 132.0, l = 48.0, w = 24.0, v = -0.5}
                          ,Car {x = 0.0,   y = 164.0, l = 48.0, w = 24.0, v = 0.5}
                          ]
+             , frames = 0
+             , time = 0
          }

@@ -8,6 +8,7 @@ display :: IORef Env -> DisplayCallback
 display m = do clear [ColorBuffer]
                loadIdentity
                fr <- get m
+               t <- get elapsedTime
                translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
                scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
                let lanes = [0.0,32.0..] :: [Float]
@@ -15,7 +16,17 @@ display m = do clear [ColorBuffer]
                (sequence . map drawRiverLane . take 5 . drop 7) lanes
                (sequence . map drawMover . enemies) fr
                (drawMover . player) fr
+               m $~! \e -> e {frames = frames e + 1, time = t}
+               color $ Color3 1.0 1.0 (1.0 :: Float)
+               ppFPS fr
                swapBuffers
+
+ppFPS :: Env -> IO()
+ppFPS e = let t = time e
+              f = frames e * 1000
+          in if t > 0 then do putStr "\ESC[2J"
+                              (putStrLn . show) $ div f t
+                      else return()
 
 drawMover :: Mover -> IO()
 drawMover m = preservingMatrix $ drawMover' m
