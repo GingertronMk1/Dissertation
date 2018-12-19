@@ -68,7 +68,8 @@ data Env = E { -- The Frogger
          }
          deriving Show
 
-data GameState = Playing | Paused | PlayerDead deriving (Eq, Show)
+data GameState = PreStart | Playing | Paused | PlayerDead
+                 deriving (Eq, Show)
 
 newCar :: Float -> Float -> Float -> Mover
 newCar nx ny nv = Car {x = nx, y = ny, v = nv, l = 48.0, w = 24.0}
