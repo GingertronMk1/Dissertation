@@ -1,4 +1,4 @@
-module Type (Mover(..), Env(..), emptyEnv) where
+module Type (Mover(..), Env(..), startEnv) where
 
 data Mover = Frogger { -- The centre position of the frog, in x
                        x :: Float
@@ -25,8 +25,12 @@ data Env = E { -- The Frogger
              , enemies :: [Mover]
          } deriving Show
 
-emptyEnv :: Env
-emptyEnv = E { player = Frogger {x = 320.0, y = 240.0, s = 10.0}
-             , enemies = [Car {x = 0.0, y = 120.0, l = 20.0, w = 10.0, v = 1}
-                         ,Car {x = 640.0, y = 360.0, l = 20.0, w = 10.0, v = -1}]
+startEnv :: Env
+startEnv = E { player = Frogger {x = 310.0, y = 5.0, s = 20.0}
+             , enemies = [Car {x = 0.0,   y = 34.0, l = 48.0, w = 24.0, v = 0.5}
+                         ,Car {x = 640.0, y = 66.0, l = 48.0, w = 24.0, v = -0.5}
+                         ,Car {x = 0.0,   y = 100.0, l = 48.0, w = 24.0, v = 0.5}
+                         ,Car {x = 640.0, y = 132.0, l = 48.0, w = 24.0, v = -0.5}
+                         ,Car {x = 0.0,   y = 164.0, l = 48.0, w = 24.0, v = 0.5}
+                         ]
          }
