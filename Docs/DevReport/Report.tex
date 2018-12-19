@@ -88,7 +88,6 @@ First we need to set the current drawing colour to green, which is easily done u
 \begin{lstlisting}
 color $ Color3 0.0 1.0 (0.0 :: Float)
 \end{lstlisting}
-$
 
 This function sets the current drawing colour to whatever is passed into it, which in our case is a \verb|Color3| type (similar to the \verb|Size| type described earlier), with the 3 values representing red, green, and blue values.
 Worth noting is that in Haskell anything that follows a lone \$ is thought of as being in parentheses, so the above is semantically identical to this:
@@ -148,7 +147,6 @@ They are both one-line functions taking similar forms:
 translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
 scale (1.0/32.0) (1.0/24.0) (0.0 :: Float)
 \end{lstlisting}
-$
 
 The main difference is that \verb|translate| takes a \verb|Vector3| data type as an argument, whereas \verb|scale| takes only 3 \verb|Float|s.
 \verb|translate| moves the drawing "origin" in a way described by the coordinates in its argument; before any scaling happens a GLUT window essentially consists of 4 "1x1" quadrants (these are stretched to fill the aspect ratio of the window they're in).
@@ -184,7 +182,6 @@ data Mover = Frogger {x :: Float,
 This is a "record-style" data type with two fields: x and y, denoting the x and y coordinates of the \textit{Frogger}.
 With this in place we can add the \verb|Type| module to \verb|Main| and, after creating the window, create a new \verb|IORef Mover| with \verb|x| and \verb|y| both set to 0.0.
 
-% TODO: unescape $
 \begin{lstlisting}
 f <- newIORef \$ Frogger {x = 0.0, y = 0.0}
 \end{lstlisting}
@@ -240,7 +237,6 @@ idle :: IORef Mover -> IdleCallback
 idle e = do e $~! id
             postRedisplay Nothing
 \end{lstlisting}
-$
 \section{Other Characters}
 
 \textit{Frogger} is a game of avoiding obstacles, so let's now add some obstacles to be avoided.
@@ -279,6 +275,8 @@ data Env = E {player :: Mover
 We can then extend \verb|Display| to include a helper function to draw any \verb|Mover| to the screen.
 This will be a two-step function, the first step being a call to \verb|preservingMatrix|, a function in GLUT that stores all of the current transformation information (in this instance the translation and scaling discussed when we first drew a character to the screen).
 We can then call a function of our own definition, using pattern matching to ensure the appropriate version of it is called based on what kind of \verb|Mover| we are dealing with - it would not work if we drew the player character identically to a car.
+Something to consider is that for all moving objects with a given velocity is that the positivity of that velocity denotes the direction of that object's movement.
+Therefore we can use that value in conjunction with the Haskell Prelude function \verb|signum| to appropriately "rotate" the object (in reality this is a scale being used to flip the image 180 degrees).
 
 \begin{lstlisting}
 drawMover :: Mover -> IO()
@@ -291,10 +289,10 @@ drawMover' Frogger {x = fx, y = fy, s = fs}
        scale fs fs 1.0
        unitSquare
 
-drawMover' Car {x = cx, y = cy, l = cl, w = cw}
+drawMover' Car {x = cx, y = cy, l = cl, w = cw, v = cv}
   = do color $ Color3 1.0 0.0 (0.0 :: Float)
        translate $ Vector3 cx cy 0.0
-       scale cl cw 1.0
+       scale (cl*signum cv) cw 1.0
        unitSquare
 
 unitSquare :: IO()
@@ -351,7 +349,6 @@ idle e = do e $~! \env -> let es = enemies env
 updateMover :: Mover -> Mover
 updateMover c@(Car {x = cx, v = cv}) = c {x = cx + cv}
 \end{lstlisting}
-$
 
 This two-step processing does also have to be extended to the \verb|input| functions, which leads to a great deal of boilerplate code.
 
@@ -380,6 +377,45 @@ The repetition of \verb|let p = player e in e {...| throughout the middle of tho
 This has major negative impact on the maintainability of this code, and will have to be addressed.
 For now however, we are focussed on getting the game to a point where it is playable.
 
+\section{Collision Detection}
+
+This will again consist mostly of modifications to the \verb|idle| function - at this stage in development any kind of detection is the desired goal; acting upon this detection is a task for later.
+
+We can first define two functions, one a helper for the other which will check if a number is within the bounds set by a tuple containing two numbers.
+
+\begin{lstlisting}
+inRange :: (Num a, Ord a) => (a, a) -> a -> Bool
+inRange (m, n) p = if m < n then m <= p && p <= n
+                            else n <= p && p <= m
+\end{lstlisting}
+
+The other will make use of this and use it to determine whether or not the boundaries of a \verb|Mover| overlap with those of the \textit{Frogger}.
+If they do, the \textit{Frogger} will die.
+
+\begin{lstlisting}
+hasCollided :: Mover -> Mover -> Bool
+hasCollided (Frogger {x=fx, y=fy, s=fs}) (Car {x=cx, y=cy, l=cl, w=cw, v=cv})
+  = let froggerBoundsX = (fx,fx+fs)
+        froggerBoundsY = (fy,fy+fs)
+        carBoundsX     = (cx,cx+(cl*signum cv))
+        carBoundsY     = (cy,cy+cw)
+    in (inRange froggerBoundsX (fst carBoundsX) || inRange froggerBoundsX (snd carBoundsX))
+       && (inRange froggerBoundsY (fst carBoundsY) || inRange froggerBoundsY (snd carBoundsY))
+\end{lstlisting}
+
+This function simply determines whether or not any combination of the top/bottom and left/right boundaries of the \textit{Frogger} intersect those of the \verb|Car| it is being checked against.
+We can then map this function over the \verb|enemies| field of the environment, checking the \textit{Frogger} against every enemy.
+We can then create a function \verb|hitCheck| to do exactly that, returning a list of \verb|Bool|s, which we can apply \verb|or| over to determine if any enemy has hit the \textit{Frogger}.
+If any have, at the moment it simply prints "Hit!", otherwise does nothing.
+
+\begin{lstlisting}
+hitCheck :: Env -> IO()
+hitCheck env = if or $ map (hasCollided (player env)) (enemies env)
+               then putStrLn "Hit!"
+               else return()
+\end{lstlisting}
+
+As it stands I am pleased that simple rectangular hitboxes are an adequate option.
 
 \pagebreak
 %
@@ -433,6 +469,7 @@ display =
      renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
      flush
 \end{lstlisting}
+
 %\begin{thebibliography}{0}
 %\end{thebibliography}
 
