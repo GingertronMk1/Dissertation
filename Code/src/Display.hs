@@ -9,6 +9,7 @@ display m = do clear [ColorBuffer]
                loadIdentity
                fr <- get m
                t <- get elapsedTime
+               ppFPS fr
                translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
                scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
                let lanes = [0.0,32.0..] :: [Float]
@@ -17,8 +18,6 @@ display m = do clear [ColorBuffer]
                (sequence . map drawMover . enemies) fr
                (drawMover . player) fr
                m $~! \e -> e {frames = frames e + 1, time = t}
-               color $ Color3 1.0 1.0 (1.0 :: Float)
-               ppFPS fr
                swapBuffers
 
 ppFPS :: Env -> IO()
@@ -44,6 +43,38 @@ drawMover' Car {x = cx, y = cy, l = cl, w = cw, v = cv} = do color $ Color3 1.0 
                                                              translate $ Vector3 0.8 0.0 (0.0 :: Float)
                                                              scale 0.1 1.0 (1.0 :: Float)
                                                              unitSquare
+drawMover' Croc {x = cx, y = cy, l = cl, w = cw, v = cv} = do color $ Color3 0.0 0.5 (0.0 :: Float)
+                                                              translate $ Vector3 cx cy 0.0
+                                                              scale (cl*(signum cv)) cw 1.0
+                                                              unitSquare
+                                                              color $ Color3 1.0 1.0 (1.0 :: Float)
+                                                              preservingMatrix $ do translate $ Vector3 0.8 (0.1) (0.0 :: Float)
+                                                                                    scale 0.1 0.2 (1.0 :: Float)
+                                                                                    unitSquare
+                                                              preservingMatrix $ do translate $ Vector3 0.8 (0.8) (0.0 :: Float)
+                                                                                    scale 0.1 0.2 (1.0 :: Float)
+                                                                                    unitSquare
+drawMover' Turtles {x = tx, y = ty, l = tl, w = tw, v = tv} = do translate $ Vector3 tx ty 0.0
+                                                                 scale (tw * signum tv) tw 1.0
+                                                                 drawTurtles
+drawMover' Log {x = lx, y = ly, l = ll, w = lw, v = lv} = do color $ Color3 0.6 0.3 (0.2 :: Float)
+                                                             translate $ Vector3 lx ly 0.0
+                                                             scale (ll*(signum lv)) lw 1.0
+                                                             unitSquare
+
+
+drawTurtle = do preservingMatrix $ do translate $ Vector3 0.1 0.1 (0.0 :: Float)
+                                      scale 0.8 0.8 (1.0 :: Float)
+                                      color $ Color3 0.0 1.0 (0.0 :: Float)
+                                      unitSquare
+                color $ Color3 1.0 0.6 (0.0 :: Float)
+                unitCircle
+
+drawTurtles = do drawTurtle
+                 translate $ Vector3 1.0 0.0 (0.0 :: Float)
+                 drawTurtle
+                 translate $ Vector3 1.0 0.0 (0.0 :: Float)
+                 drawTurtle
 
 drawRiverLane :: Float -> IO()
 drawRiverLane y = preservingMatrix $ do color $ Color3 0.2 0.2 (1.0 :: Float)
@@ -57,6 +88,11 @@ drawLane :: Float -> IO()
 drawLane y = do translate $ Vector3 0.0 y 0.0
                 scale 640.0 30.0 (1.0 :: Float)
                 unitSquare
+
+unitCircle :: IO()
+unitCircle = let n = 50.0
+                 points = [(0.5*(sin (2*pi*k/n)+1.0), 0.5*(cos (2*pi*k/n)+1.0), 0) | k <- [1..n]]
+              in (renderPrimitive Polygon . mapM_ makeVertex) points
 
 unitSquare :: IO()
 unitSquare = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float)]
