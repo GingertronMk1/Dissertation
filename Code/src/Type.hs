@@ -1,4 +1,4 @@
-module Type (Mover(..), Env(..), startEnv) where
+module Type (Mover(..), Env(..), GameState(..), startEnv) where
 
 data Mover = Frogger { -- The position of the frog, in x
                        x :: Float
@@ -63,17 +63,37 @@ data Env = E { -- The Frogger
              , frames :: Int
                -- The total elapsed time since game start
              , time :: Int
+               -- The current state of the game
+             , gameState :: GameState
          }
          deriving Show
 
+data GameState = Playing | Paused | PlayerDead deriving (Eq, Show)
+
+newCar :: Float -> Float -> Float -> Mover
+newCar nx ny nv = Car {x = nx, y = ny, v = nv, l = 48.0, w = 24.0}
+
+newCroc :: Float -> Float -> Float -> Mover
+newCroc nx ny nv = Croc {x = nx, y = ny, v = nv, l = 72.0, w = 24.0}
+
+newTurtles :: Float -> Float -> Float -> Mover
+newTurtles nx ny nv = Turtles {x = nx, y = ny, v = nv, l = 72.0, w = 24.0, aboveWater = True}
+
+newLog :: Float -> Float -> Float -> Mover
+newLog nx ny nv = Log {x = nx, y = ny, v = nv, l = 48.0, w = 24.0}
+
 startEnv :: Env
 startEnv = E { player = Frogger {x = 310.0, y = 5.0, s = 20.0}
-             , enemies = [Car {x = 0.0,   y = 34.0, l = 48.0, w = 24.0, v = 0.5}
-                         ,Car {x = 640.0, y = 66.0, l = 48.0, w = 24.0, v = -0.5}
-                         ,Car {x = 0.0,   y = 100.0, l = 48.0, w = 24.0, v = 0.5}
-                         ,Car {x = 640.0, y = 132.0, l = 48.0, w = 24.0, v = -0.5}
-                         ,Car {x = 0.0,   y = 164.0, l = 48.0, w = 24.0, v = 0.5}
+             , enemies = [newCar 0.0 34.0 0.5
+                         ,newCar 640.0 66.0 (-0.5)
+                         ,newCar 0.0 98.0 0.5
+                         ,newCar 640.0 132.0 (-0.5)
+                         ,newCar 0.0 164.0 0.5
+                         ,newCroc 0.0 228.0 0.5
+                         ,newTurtles 640.0 260.0 (-0.5)
+                         ,newLog 0.0 292.0 0.5
                          ]
              , frames = 0
              , time = 0
+             , gameState = Paused
          }
