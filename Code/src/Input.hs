@@ -15,5 +15,5 @@ input m c Down _ _
   | c == (Char 'd') || c == (Char 'D') = m $~! \e -> let p = player e
                                                      in e {player = p {x = x p + step}}
   | otherwise                          = return ()
-  where step = 5
+  where step = 32
 input _ _ _ _ _ = return ()
