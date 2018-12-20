@@ -2,6 +2,7 @@ module Display (display) where
 
 import Graphics.UI.GLUT
 import Data.IORef
+import Data.List (intersperse)
 import Type
 
 display :: IORef Env -> DisplayCallback
@@ -9,7 +10,7 @@ display m = do clear [ColorBuffer]
                loadIdentity
                fr <- get m
                t <- get elapsedTime
-               ppFPS fr
+               --ppStats fr
                translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
                scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
                let lanes = [0.0,32.0..] :: [Float]
@@ -20,12 +21,13 @@ display m = do clear [ColorBuffer]
                m $~! \e -> e {frames = frames e + 1, time = t}
                swapBuffers
 
-ppFPS :: Env -> IO()
-ppFPS e = let t = time e
-              f = frames e * 1000
-          in if t > 0 then do putStr "\ESC[2J"
-                              (putStrLn . show) $ div f t
-                      else return()
+ppStats :: Env -> IO()
+ppStats e = let ppFrog = show $ player e
+                ppMovers = (concat . intersperse "\n" . map (("  "++) . show) . enemies) e
+                ppFPS = if (time e) > 0 then show $ div (frames e * 1000) (time e) else "0"
+                ppState = show $ gameState e
+             in do putStr "\ESC[2J"
+                   (putStrLn . concat . intersperse "\n") $ [ppFrog,"Movers",ppMovers,ppFPS,ppState]
 
 drawMover :: Mover -> IO()
 drawMover m = preservingMatrix $ drawMover' m
@@ -37,7 +39,7 @@ drawMover' Frogger {x = fx, y = fy, s = fs} = do color $ Color3 0.0 1.0 (0.0 :: 
                                                  unitSquare
 drawMover' Car {x = cx, y = cy, l = cl, w = cw, v = cv} = do color $ Color3 1.0 0.0 (0.0 :: Float)
                                                              translate $ Vector3 cx cy 0.0
-                                                             scale (cl*(signum cv)) cw 1.0
+                                                             scale cl cw 1.0
                                                              unitSquare
                                                              color $ Color3 0.3 0.3 (1.0 :: Float)
                                                              translate $ Vector3 0.8 0.0 (0.0 :: Float)
@@ -45,7 +47,7 @@ drawMover' Car {x = cx, y = cy, l = cl, w = cw, v = cv} = do color $ Color3 1.0 
                                                              unitSquare
 drawMover' Croc {x = cx, y = cy, l = cl, w = cw, v = cv} = do color $ Color3 0.0 0.5 (0.0 :: Float)
                                                               translate $ Vector3 cx cy 0.0
-                                                              scale (cl*(signum cv)) cw 1.0
+                                                              scale cl cw 1.0
                                                               unitSquare
                                                               color $ Color3 1.0 1.0 (1.0 :: Float)
                                                               preservingMatrix $ do translate $ Vector3 0.8 (0.1) (0.0 :: Float)
@@ -59,7 +61,7 @@ drawMover' Turtles {x = tx, y = ty, l = tl, w = tw, v = tv} = do translate $ Vec
                                                                  drawTurtles
 drawMover' Log {x = lx, y = ly, l = ll, w = lw, v = lv} = do color $ Color3 0.6 0.3 (0.2 :: Float)
                                                              translate $ Vector3 lx ly 0.0
-                                                             scale (ll*(signum lv)) lw 1.0
+                                                             scale ll lw 1.0
                                                              unitSquare
 
 
