@@ -65,6 +65,8 @@ data Env = E { -- The Frogger
              , time :: Int
                -- The current state of the game
              , gameState :: GameState
+               -- The current score
+             , gameScore :: Int
          }
          deriving Show
 
@@ -72,19 +74,19 @@ data GameState = PreStart | Playing | Paused | PlayerDead
                  deriving (Eq, Show)
 
 newCar :: Float -> Float -> Float -> Mover
-newCar nx ny nv = Car {x = nx, y = ny, v = nv, l = 48.0, w = 24.0}
+newCar nx ny nv = Car {x = nx, y = ny, v = nv, l = 48.0 * signum nv, w = 24.0}
 
 newCroc :: Float -> Float -> Float -> Mover
-newCroc nx ny nv = Croc {x = nx, y = ny, v = nv, l = 72.0, w = 24.0}
+newCroc nx ny nv = Croc {x = nx, y = ny, v = nv, l = 72.0 * signum nv, w = 24.0}
 
 newTurtles :: Float -> Float -> Float -> Mover
-newTurtles nx ny nv = Turtles {x = nx, y = ny, v = nv, l = 72.0, w = 24.0, aboveWater = True}
+newTurtles nx ny nv = Turtles {x = nx, y = ny, v = nv, l = 72.0 * signum nv, w = 24.0, aboveWater = True}
 
 newLog :: Float -> Float -> Float -> Mover
-newLog nx ny nv = Log {x = nx, y = ny, v = nv, l = 48.0, w = 24.0}
+newLog nx ny nv = Log {x = nx, y = ny, v = nv, l = 48.0 * signum nv, w = 24.0}
 
 startEnv :: Env
-startEnv = E { player = Frogger {x = 310.0, y = 5.0, s = 20.0}
+startEnv = E { player = Frogger {x = 310.0, y = 4.0, s = 20.0}
              , enemies = [newCar 0.0 34.0 0.5
                          ,newCar 640.0 66.0 (-0.5)
                          ,newCar 0.0 98.0 0.5
@@ -97,4 +99,5 @@ startEnv = E { player = Frogger {x = 310.0, y = 5.0, s = 20.0}
              , frames = 0
              , time = 0
              , gameState = Paused
+             , gameScore = 0
          }
