@@ -53,12 +53,21 @@ data Mover = Frogger { -- The position of the frog, in x
                    -- Velocity in x
                  , v :: Float
            }
+           | Goal { -- Position in x
+                    x :: Float
+                    -- Position in y
+                  , y :: Float
+                    -- Length and Width
+                  , s :: Float
+           }
            deriving Show
 
 data Env = E { -- The Frogger
                player :: Mover
                -- The enemies
              , enemies :: [Mover]
+               -- The goal/s
+             , goals :: [Mover]
                -- The total elapsed number of frames
              , frames :: Int
                -- The total elapsed time since game start
@@ -70,8 +79,12 @@ data Env = E { -- The Frogger
          }
          deriving Show
 
-data GameState = PreStart | Playing | Paused | PlayerDead
-                 deriving (Eq, Show)
+data GameState = PreStart
+               | Playing
+               | Paused
+               | PlayerDead String
+               | LevelComplete
+               deriving (Eq, Show)
 
 newCar :: Float -> Float -> Float -> Mover
 newCar nx ny nv = Car {x = nx, y = ny, v = nv, l = 48.0 * signum nv, w = 24.0}
@@ -85,6 +98,9 @@ newTurtles nx ny nv = Turtles {x = nx, y = ny, v = nv, l = 72.0 * signum nv, w =
 newLog :: Float -> Float -> Float -> Mover
 newLog nx ny nv = Log {x = nx, y = ny, v = nv, l = 48.0 * signum nv, w = 24.0}
 
+newGoal :: Float -> Float -> Mover
+newGoal gx gy = Goal {x = gx, y = gy, s = 24}
+
 startEnv :: Env
 startEnv = E { player = Frogger {x = 310.0, y = 4.0, s = 20.0}
              , enemies = [newCar 0.0 34.0 0.5
@@ -96,6 +112,7 @@ startEnv = E { player = Frogger {x = 310.0, y = 4.0, s = 20.0}
                          ,newTurtles 640.0 260.0 (-0.5)
                          ,newLog 0.0 292.0 0.5
                          ]
+             , goals = [newGoal 308.0 196.0]
              , frames = 0
              , time = 0
              , gameState = Paused
