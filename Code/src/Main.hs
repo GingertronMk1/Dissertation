@@ -9,12 +9,12 @@ import Type
 
 main :: IO()
 main = do (_progName, _args) <- getArgsAndInitialize
-          putStrLn $ _progName ++ " " ++ concat _args
+          putStrLn (_progName ++ " " ++ concat _args)
           initialDisplayMode $= [DoubleBuffered]
           initialWindowSize $= Size 640 480
           createWindow "Frogger"
           reshapeCallback $= Just reshape
-          f <- newIORef $ startEnv
+          f <- newIORef startEnv
           keyboardMouseCallback $= Just (input f)
           displayCallback $= display f
           idleCallback $= Just (idle f)
