@@ -5,11 +5,21 @@ import Data.IORef
 import Type
 
 input :: IORef Env -> KeyboardMouseCallback
-input m k ks mo p = do m' <- get m
-                       if gameState m' == Playing then inputPlaying m k ks mo p
-                       else if gameState m' == Paused then inputPaused m k ks mo p
-                       else if gameState m' == PlayerDead then inputDead m k ks mo p
-                       else return ()
+input m k ks mo p = get m >>= \m' -> case gameState m' of Playing       -> inputPlaying m k ks mo p
+                                                          Paused        -> inputPaused m k ks mo p
+                                                          PlayerDead _  -> inputDead m k ks mo p
+                                                          LevelComplete -> inputComplete m k ks mo p
+                                                          otherwise     -> return ()
+
+inputComplete :: IORef Env -> KeyboardMouseCallback
+inputComplete m c Down _ _
+  | c == (Char ' ') = m $~! \e -> startEnv { frames = frames e
+                                           , time = time e
+                                           , gameState = Paused
+                                           , gameScore = gameScore e
+                                           }
+  | otherwise       = return ()
+inputComplete _ _ _ _ _ = return ()
 
 inputDead :: IORef Env -> KeyboardMouseCallback
 inputDead m c Down _ _
@@ -35,8 +45,7 @@ inputPlaying m c Down _ _
   | c == (Char 'd') || c == (Char 'D') = m $~! \e -> let p = player e
                                                      in e {player = p {x = x p + step}}
   | c == (Char ' ')                    = m $~! \e -> e {gameState = Paused}
-  | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead}
+  | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead "You quit"}
   | otherwise                          = return ()
   where step = 32
 inputPlaying _ _ _ _ _ = return ()
-
