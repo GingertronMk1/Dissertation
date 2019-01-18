@@ -8,15 +8,16 @@ import Type
 display :: IORef Env -> DisplayCallback
 display m = do clear [ColorBuffer]
                loadIdentity
-               fr <- get m
-               t <- get elapsedTime
-               --ppStats fr
                translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
                scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
+               fr <- get m
+               t <- get elapsedTime
+               ppStats fr
                let lanes = [0.0,32.0..] :: [Float]
                (sequence . map drawRoadLane . take 5 . drop 1) lanes
                (sequence . map drawRiverLane . take 5 . drop 7) lanes
                (sequence . map drawMover . enemies) fr
+               (sequence . map drawMover . goals) fr
                (drawMover . player) fr
                m $~! \e -> e {frames = frames e + 1, time = t}
                swapBuffers
@@ -26,8 +27,16 @@ ppStats e = let ppFrog = show $ player e
                 ppMovers = (concat . intersperse "\n" . map (("  "++) . show) . enemies) e
                 ppFPS = if (time e) > 0 then show $ div (frames e * 1000) (time e) else "0"
                 ppState = show $ gameState e
-             in do putStr "\ESC[2J"
-                   (putStrLn . concat . intersperse "\n") $ [ppFrog,"Movers",ppMovers,ppFPS,ppState]
+                ppScore = show $ gameScore e
+             in preservingMatrix $ do color $ Color3 1.0 1.0 (1.0 :: Float)
+                                      translate $ Vector3 32.0 440.0 (0.0 :: Float)
+                                      preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
+                                                            renderString MonoRoman $ ppState
+                                      translate $ Vector3 200.0 0.0 (0.0 :: Float)
+                                      preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
+                                                            renderString MonoRoman $ ppScore
+                                      putStr "\ESC[2J"
+                                      (putStrLn . concat . intersperse "\n") [ppFrog,"Movers",ppMovers,ppFPS,ppState]
 
 drawMover :: Mover -> IO()
 drawMover m = preservingMatrix $ drawMover' m
@@ -63,6 +72,10 @@ drawMover' Log {x = lx, y = ly, l = ll, w = lw, v = lv} = do color $ Color3 0.6 
                                                              translate $ Vector3 lx ly 0.0
                                                              scale ll lw 1.0
                                                              unitSquare
+drawMover' Goal {x = gx, y = gy, s = gs} = do color $ Color3 0.8 0.7 (0.2 :: Float)
+                                              translate $ Vector3 gx gy 0.0
+                                              scale gs gs 1.0
+                                              unitSquare
 
 
 drawTurtle = do preservingMatrix $ do translate $ Vector3 0.1 0.1 (0.0 :: Float)
