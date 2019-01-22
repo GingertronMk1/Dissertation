@@ -7,23 +7,29 @@ import Type
 idle :: IORef Env -> IdleCallback
 idle e = do e' <- get e
             if hitCheck (player e') (enemies e')
-            then e $~! \env -> env {gameState = PlayerDead "You hit an enemy"}
+               then e $~! \env -> env {gameState = PlayerDead "You hit an enemy"}
             else if hitCheck (player e') (goals e')
-            then if gameState e' /= LevelComplete
-                 then e $~! \env -> env {gameState = LevelComplete
-                                        , gameScore = gameScore env + 1000}
-                 else return ()
+                    then if gameState e' /= LevelComplete
+                            then e $~! endLevel
+                         else return ()
             else if gameState e' == Playing
-            then do e $~! \env -> let es = enemies env
-                                  in env {enemies = map updateMover es}
+                    then do e $~! updateMovers
             else return ()
             postRedisplay Nothing
+
+endLevel :: Env -> Env
+endLevel e = e {gameState = LevelComplete
+               ,gameScore = gameScore e + 1000}
 
 hitCheck :: Mover -> [Mover] -> Bool
 hitCheck f ms = or $ hitCheck' f ms
 
 hitCheck' :: Mover -> [Mover] -> [Bool]
 hitCheck' f ms = map (hasCollided f) ms
+
+updateMovers :: Env -> Env
+updateMovers e = let es = enemies e
+                  in e {enemies = map updateMover es}
 
 updateMover :: Mover -> Mover
 updateMover c@(Car {x = cx, v = cv})    = c {x = cx + cv}
