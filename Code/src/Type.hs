@@ -1,4 +1,12 @@
-module Type (Mover(..), Env(..), GameState(..), startEnv) where
+module Type (Mover(..), Env(..), GameState(..), startEnv, Drawable(..)) where
+
+-- TODO: 
+-- - Create a class "Drawable", with a rendering method
+-- - Move "Frogger" and "Goal" out of "Mover" and into their own type
+-- - Change "Mover" to "Enemy"
+
+class Drawable a where
+  draw :: a -> IO()
 
 data Mover = Frogger { -- The position of the frog, in x
                        x :: Float

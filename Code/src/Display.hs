@@ -16,18 +16,21 @@ display m = do clear [ColorBuffer]
                let lanes = [0.0,32.0..] :: [Float]
                (sequence . map drawRoadLane . take 5 . drop 1) lanes
                (sequence . map drawRiverLane . take 5 . drop 7) lanes
-               (sequence . map drawMover . enemies) fr
-               (sequence . map drawMover . goals) fr
-               (drawMover . player) fr
+               --(sequence . map drawMover . enemies) fr
+               --(sequence . map drawMover . goals) fr
+               --(drawMover . player) fr
+               (sequence . map draw) (player fr : (enemies fr ++ goals fr))
                m $~! \e -> e {frames = frames e + 1, time = t}
                swapBuffers
 
 ppStats :: Env -> IO()
-ppStats e = let ppFrog = show $ player e
+ppStats e = let t = time e
+                ppFrog = show $ player e
                 ppMovers = (concat . intersperse "\n" . map (("  "++) . show) . enemies) e
-                ppFPS = if (time e) > 0 then show $ div (frames e * 1000) (time e) else "0"
+                ppFPS = if t > 0 then show $ div (frames e * 1000) t else "0"
                 ppState = show $ gameState e
                 ppScore = show $ gameScore e
+                ppTime = show $ div t 100
              in preservingMatrix $ do color $ Color3 1.0 1.0 (1.0 :: Float)
                                       translate $ Vector3 32.0 440.0 (0.0 :: Float)
                                       preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
@@ -36,7 +39,7 @@ ppStats e = let ppFrog = show $ player e
                                       preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
                                                             renderString MonoRoman $ ppScore
                                       putStr "\ESC[2J"
-                                      (putStrLn . concat . intersperse "\n") [ppFrog,"Movers",ppMovers,ppFPS,ppState]
+                                      (putStrLn . concat . intersperse "\n") [ppFrog,"Movers",ppMovers,ppFPS,ppState,ppTime]
 
 drawMover :: Mover -> IO()
 drawMover m = preservingMatrix $ drawMover' m
@@ -115,3 +118,6 @@ unitSquare = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float
 
 makeVertex :: (Float, Float, Float) -> IO()
 makeVertex (x,y,z) = vertex $ Vertex3 x y z
+
+instance Drawable Mover where
+  draw = drawMover
