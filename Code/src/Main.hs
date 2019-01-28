@@ -11,7 +11,9 @@ main :: IO()
 main = do (_progName, _args) <- getArgsAndInitialize
           putStrLn (_progName ++ " " ++ concat _args)
           initialDisplayMode $= [DoubleBuffered]
-          initialWindowSize $= Size 640 480
+          let iX = round initSizeX :: GLsizei
+              iY = round initSizeY :: GLsizei
+          initialWindowSize $= Size iX iY
           createWindow "Frogger"
           reshapeCallback $= Just reshape
           f <- newIORef startEnv
