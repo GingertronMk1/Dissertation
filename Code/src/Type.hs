@@ -21,6 +21,8 @@ data Frogger = Frogger { -- The position of the frog, in x
                        , f_Y :: Float
                         -- The "size" of the frog (the length of one edge of the square)
                        , f_S :: Float
+                        -- The velocity of the Frogger when moving on the back of a RiverObject
+                       , f_V :: Float
                }
                deriving Show
 
@@ -141,7 +143,7 @@ newGoal :: Float -> Float -> Goal
 newGoal gx gy = Goal {g_X = gx, g_Y = gy, g_S = 24}
 
 startEnv :: Env
-startEnv = E { player = Frogger {f_X = 310.0, f_Y = 4.0, f_S = 20.0}
+startEnv = E { player = Frogger {f_X = 310.0, f_Y = 4.0, f_S = 20.0, f_V = 0.0}
              , roadEnemies = [newCar 0.0 34.0 0.5
                              ,newCar 640.0 66.0 (-0.5)
                              ,newCar 0.0 98.0 0.5
@@ -211,7 +213,7 @@ instance Drawable Frogger where
                                                    translate $ Vector3 fx fy 0.0
                                                    scale fs fs 1.0
                                                    unitSquare
-  update = id
+  update (f@Frogger {f_X = fx, f_V = fv}) = f {f_X = fx + fv}
 
 instance Drawable RoadMover where
   draw Car {ro_X = cx, ro_Y = cy, ro_L = cl, ro_W = cw} = do color $ Color3 1.0 0.0 (0.0 :: Float)
