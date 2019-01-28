@@ -10,7 +10,6 @@ input m k ks mo p = get m >>= \m' -> case gameState m' of PreStart      -> input
                                                           Paused        -> inputPaused m k ks mo p
                                                           PlayerDead _  -> inputDead m k ks mo p
                                                           LevelComplete -> inputComplete m k ks mo p
-                                                          otherwise     -> return ()
 
 inputComplete :: IORef Env -> KeyboardMouseCallback
 inputComplete m c Down _ _
