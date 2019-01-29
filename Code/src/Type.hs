@@ -131,28 +131,28 @@ newCar :: Int -> RoadMover
 newCar l = let x = case mod l 2 of 0 -> 0.0
                                    1 -> initSizeX
                nv = vels !! l
-            in Car {ro_X = x, ro_Y = lanes!!l, ro_V = nv, ro_L = 48.0 * signum nv, ro_W = 24.0}
+            in Car {ro_X = x, ro_Y = lanes!!l + 2, ro_V = nv, ro_L = 48.0 * signum nv, ro_W = 24.0}
 
 newCroc :: Int -> RiverMover
 newCroc l = let x = case mod l 2 of 0 -> 0.0
                                     1 -> initSizeX
                 nv = vels !! l
-            in Croc {ri_X = x, ri_Y = lanes!!l, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0}
+            in Croc {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0}
 
 newTurtles :: Int -> RiverMover
 newTurtles l = let x = case mod l 2 of 0 -> 0.0
                                        1 -> initSizeX
                    nv = vels !! l
-            in Turtles {ri_X = x, ri_Y = lanes!!l, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0, aboveWater = True}
+            in Turtles {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0, aboveWater = True}
 
 newLog :: Int -> RiverMover
 newLog l = let x = case mod l 2 of 0 -> 0.0
                                    1 -> initSizeX
                nv = vels !! l
-            in Log {ri_X = x, ri_Y = lanes!!l, ri_V = nv, ri_L = 48.0 * signum nv, ri_W = 24.0}
+            in Log {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 48.0 * signum nv, ri_W = 24.0}
 
 newGoal :: Float -> Int -> Goal
-newGoal gx l = Goal {g_X = gx, g_Y = lanes!!l, g_S = 24}
+newGoal gx l = Goal {g_X = gx, g_Y = lanes!!l + 2, g_S = 24}
 
 startEnv :: Env
 startEnv = E { player = Frogger {f_X = 310.0, f_Y = 4.0, f_S = 20.0, f_V = 0.0}
