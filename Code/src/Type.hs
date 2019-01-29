@@ -101,6 +101,8 @@ data Env = E { -- The Frogger
              , gameState :: GameState
                -- The current score
              , gameScore :: Int
+               -- The current level
+             , level :: Int
          }
          deriving Show
 
@@ -178,6 +180,7 @@ startEnv = E { player = Frogger {f_X = 310.0, f_Y = 4.0, f_S = 20.0, f_V = 0.0}
              , time = 0
              , gameState = PreStart
              , gameScore = 0
+             , level = 1
          }
          where xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
                modFrac n d = mod (round n) (round d)
