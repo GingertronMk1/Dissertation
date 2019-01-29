@@ -15,7 +15,7 @@ inputComplete :: IORef Env -> KeyboardMouseCallback
 inputComplete m c Down _ _
   | c == (Char ' ') = m $~! \e -> startEnv { frames = frames e
                                            , time = time e
-                                           , gameState = PreStart
+                                           , gameState = Playing
                                            , gameScore = gameScore e
                                            }
   | otherwise       = return ()
@@ -28,10 +28,7 @@ inputDead m c Down _ _
 inputDead _ _ _ _ _ = return ()
 
 inputPreStart :: IORef Env -> KeyboardMouseCallback
-inputPreStart m c Down _ _
-  | c == (Char ' ') = m $~! \e -> e {gameState = Playing}
-  | otherwise       = return ()
-inputPreStart _ _ _ _ _ = return ()
+inputPreStart m _ _ _ _ = m $~! \e -> e {gameState = Playing}
 
 inputPaused :: IORef Env -> KeyboardMouseCallback
 inputPaused m c Down _ _
