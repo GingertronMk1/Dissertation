@@ -62,6 +62,27 @@ We need to set a \verb|DisplayCallback|, essentially a function describing how t
 In order to keep things clean this function will be declared in its own module, \verb|Display|.
 Currently we're only interested in drawing the window in the first place, so we can just tell it to first clear the \verb|ColorBuffer| - setting the whole content of the window to black - and then \verb|flush|, which empties all command buffers, executing the commands as quickly as possible so as to ensure the image is as expected by the user.
 
+\begin{lstlisting}
+-- In Main.hs
+module Main where
+
+main :: IO ()
+main = do (_progName, _args) <- getArgsAndInitialize
+          initialWindowSize $= Size 640 480
+          createWindow "Frogger"
+          displayCallBack $= display
+          mainLoop
+
+-- In Display.hs
+module Display where
+
+import Graphics.UI.GLUT
+
+display :: DisplayCallback
+display = do clear [ColorBuffer]
+             flush
+\end{lstlisting}
+
 \par
 
 \begin{figure}[ht]
@@ -86,14 +107,14 @@ Let's first represent him as a green unit square, just to get to grips with the 
 First we need to set the current drawing colour to green, which is easily done using GLUT's \verb|color| function.
 
 \begin{lstlisting}
-color $ Color3 0.0 1.0 (0.0 :: Float)
+color $ Color3 0.0 1.0 0.0
 \end{lstlisting}
 
 This function sets the current drawing colour to whatever is passed into it, which in our case is a \verb|Color3| type (similar to the \verb|Size| type described earlier), with the 3 values representing red, green, and blue values.
 Worth noting is that in Haskell anything that follows a lone \$ is thought of as being in parentheses, so the above is semantically identical to this:
 
 \begin{lstlisting}
-color (Color3 0.0 1.0 (0.0 :: Float))
+color (Color3 0.0 1.0 0.0)
 \end{lstlisting}
 
 Now that we have the correct colour selected we can draw a quadrilateral, which we can do with the \verb|renderPrimitive Quads| function, as follows:
@@ -135,8 +156,8 @@ Conveniently GLUT provides functions for both scaling and translating, so this s
 
 \par
 
-Something worth noting before we continue is that it is very important to get the scaling and translation done in the correct order; in general translation should be done first, because scaling actually affects translation.
-Mathematically speaking they are not commutative actions, in particular because they are both examples of matrix multiplication.
+Something worth noting before we continue is that it is very important to scale and translate in the correct order; in general translation should be done first, because scaling actually affects translation.
+Mathematically speaking they are not commutative actions, this is because they are both examples of matrix multiplication.
 
 \par
 
@@ -144,8 +165,8 @@ The translation and scaling should be done before any other part of the display,
 They are both one-line functions taking similar forms:
 
 \begin{lstlisting}
-translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
-scale (1.0/32.0) (1.0/24.0) (0.0 :: Float)
+translate $ Vector3 (-1.0) (-1.0) 0.0
+scale (1.0/32.0) (1.0/24.0) 0.0
 \end{lstlisting}
 
 The main difference is that \verb|translate| takes a \verb|Vector3| data type as an argument, whereas \verb|scale| takes only 3 \verb|Float|s.
@@ -160,6 +181,18 @@ Here one unit size is equivalent to 10 pixels, and so now we have a unit square 
   \includegraphics[width=0.5\textwidth]{DrawingACharacterProperly.png}
   \label{fig:drawingacharacterproperly}
 \end{figure}
+
+\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+display :: DisplayCallback
+display
+  = do clear [ColorBuffer]
+       translate $ Vector3 (-1.0) (-1.0) 0.0
+       scale (1.0/32.0) (1.0/24.0) 0.0
+       color $ Color3 0.0 1.0 0.0
+       let p = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)]
+       renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
+       flush
+\end{lstlisting}
 
 Now we have a character drawn and scaled appropriately.
 Next let's give him some movement, by way of keyboard input.
@@ -183,31 +216,39 @@ This is a "record-style" data type with two fields: x and y, denoting the x and 
 With this in place we can add the \verb|Type| module to \verb|Main| and, after creating the window, create a new \verb|IORef Mover| with \verb|x| and \verb|y| both set to 0.0.
 
 \begin{lstlisting}
-f <- newIORef \$ Frogger {x = 0.0, y = 0.0}
+f <- newIORef $ Frogger {x = 0.0, y = 0.0}
 \end{lstlisting}
 
 Finally before we set up the \verb|keyboardMouseCallback|, we modify the \verb|display| function to take as an argument an \verb|IORef Mover|, and draw the character based on it.
 This requires that we change 3 lines of the function, resulting in:
 
-\begin{lstlisting}
+\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
 display :: IORef Mover -> DisplayCallback
 display m =
   do clear [ColorBuffer]
      loadIdentity
      fr <- get m
-     translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
-     scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
-     color $ Color3 0.0 1.0 (0.0 :: Float)
+     translate $ Vector3 (-1.0) (-1.0) 0.0
+     scale (1.0/320.0) (1.0/240.0) 0.0
+     color $ Color3 0.0 1.0 0.0
      let p = [(x fr + 10,y fr,0),
               (x fr + 10,y fr + 10,0),
               (x fr,y fr + 10,0),
-              (x fr,y fr,0)] :: [(Float,Float,Float)]
+              (x fr,y fr,0)]
      renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
-     flush
+     swapBuffers
 \end{lstlisting}
 
 \verb|loadIdentity| is a very important function in all of this - it resets the modification matrix, which is to say that it resets the scaling and translation applied in the last call to the function.
-If this function is forgotten the screen is simply left blank with no explanation as to why.
+If this function is forgotten the screen is simply left blank with no explanation as to why, and all of the objects are translated and scaled from the previous frame.
+As well, the change from \verb|flush| to \verb|swapBuffers| is similarly important; the way the GLUT system works is with a pair of buffers (this is automatic on a Mac, but on other platforms will require modifying \verb|Main.hs| to add the line \verb|initialDisplayMode $= [DoubleBuffered]|).
+This pair of buffers is swapped between constantly, with one being displayed and the other "behind" it.
+The "behind" buffer is the next one to be drawn, and so is the updated version.
+\verb|swapBuffer|, as the name suggests, swaps the buffers.
+If \verb|flush| was not replaced there could therefore be no animation.
+
+\par
+
 With all of that done, we can now create the file \verb|Input.hs|, which will contain all of the functions required to deal with keyboard and mouse inputs.
 In our case we want the WASD keys to be responsible for movement, which we can by defining a function \verb|input| which takes as an argument an \verb|IORef Mover| and returns a \verb|KeyboadMouseCallback|, which we will set the global \verb|keyboardMouseCallback| to in \verb|Main.hs|.
 A \verb|keyboardMouseCallback| takes 5 arguments: our Mover variable, the key being pressed, that key's state (up or down), any modifier keys (Shift, Ctrl, Alt), and a position.
@@ -237,6 +278,7 @@ idle :: IORef Mover -> IdleCallback
 idle e = do e $~! id
             postRedisplay Nothing
 \end{lstlisting}
+
 \section{Other Characters}
 
 \textit{Frogger} is a game of avoiding obstacles, so let's now add some obstacles to be avoided.
@@ -284,21 +326,21 @@ drawMover m = preservingMatrix $ drawMover' m
 
 drawMover' :: Mover -> IO()
 drawMover' Frogger {x = fx, y = fy, s = fs}
-  = do color $ Color3 0.0 1.0 (0.0 :: Float)
+  = do color $ Color3 0.0 1.0 0.0
        translate $ Vector3 fx fy 0.0
        scale fs fs 1.0
        unitSquare
 
 drawMover' Car {x = cx, y = cy, l = cl, w = cw, v = cv}
-  = do color $ Color3 1.0 0.0 (0.0 :: Float)
+  = do color $ Color3 1.0 0.0 0.0
        translate $ Vector3 cx cy 0.0
        scale (cl*signum cv) cw 1.0
        unitSquare
 
 unitSquare :: IO()
 unitSquare
-  = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float)]
-    in (renderPrimitive Quads . mapM_ makeVertex) us
+  = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)]
+     in (renderPrimitive Quads . mapM_ makeVertex) us
 
 makeVertex :: (Float, Float, Float) -> IO ()
 makeVertex (x,y,z) -> vertex $ Vertex3 x y z
@@ -316,9 +358,8 @@ display :: IORef Env -> DisplayCallback
 display m = do clear [ColorBuffer]
                loadIdentity
                fr <- get m
-               --putStrLn $ show fr
-               translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
-               scale (1.0/320.0) (1.0/240.0) (0.0 :: Float)
+               translate $ Vector3 (-1.0) (-1.0) 0.0
+               scale (1.0/320.0) (1.0/240.0) 0.0
                (drawMover . player) fr
                (sequence . map drawMover . enemies) fr
                swapBuffers
@@ -380,97 +421,278 @@ For now however, we are focussed on getting the game to a point where it is play
 \section{Collision Detection}
 
 This will again consist mostly of modifications to the \verb|idle| function - at this stage in development any kind of detection is the desired goal; acting upon this detection is a task for later.
-
-We can first define two functions, one a helper for the other which will check if a number is within the bounds set by a tuple containing two numbers.
-
-\begin{lstlisting}
-inRange :: (Num a, Ord a) => (a, a) -> a -> Bool
-inRange (m, n) p = if m < n then m <= p && p <= n
-                            else n <= p && p <= m
-\end{lstlisting}
-
-The other will make use of this and use it to determine whether or not the boundaries of a \verb|Mover| overlap with those of the \textit{Frogger}.
+The function \verb|hasCollided| will do this; it will take as an input two \verb|Mover|s (one being the \verb|Frogger|) and, taking into account the direction of the enemy mover, will return whether or not their two hitboxes intersect.
 If they do, the \textit{Frogger} will die.
 
 \begin{lstlisting}
 hasCollided :: Mover -> Mover -> Bool
-hasCollided (Frogger {x=fx, y=fy, s=fs}) (Car {x=cx, y=cy, l=cl, w=cw, v=cv})
-  = let froggerBoundsX = (fx,fx+fs)
-        froggerBoundsY = (fy,fy+fs)
-        carBoundsX     = (cx,cx+(cl*signum cv))
-        carBoundsY     = (cy,cy+cw)
-    in (inRange froggerBoundsX (fst carBoundsX) || inRange froggerBoundsX (snd carBoundsX))
-       && (inRange froggerBoundsY (fst carBoundsY) || inRange froggerBoundsY (snd carBoundsY))
+hasCollided f m
+  = case signum (l m) of 1  -> x m + l m > x f &&
+                               y m + w m > y f &&
+                               x f + s f > x m &&
+                               y f + s f > y m
+                         -1 -> x m > x f &&
+                               y m + w m > y f &&
+                               x f + s f > x m + l m &&
+                               y f + s f > y m
+                         otherwise -> False
 \end{lstlisting}
 
-This function simply determines whether or not any combination of the top/bottom and left/right boundaries of the \textit{Frogger} intersect those of the \verb|Car| it is being checked against.
+This function simply determines whether or not any combination of the top/bottom and left/right boundaries of the \textit{Frogger} intersect those of the \verb|Mover| it is being checked against.
 We can then map this function over the \verb|enemies| field of the environment, checking the \textit{Frogger} against every enemy.
 We can then create a function \verb|hitCheck| to do exactly that, returning a list of \verb|Bool|s, which we can apply \verb|or| over to determine if any enemy has hit the \textit{Frogger}.
 If any have, at the moment it simply prints "Hit!", otherwise does nothing.
 
 \begin{lstlisting}
-hitCheck :: Env -> IO()
+hitCheck :: Env -> IO ()
 hitCheck env = if or $ map (hasCollided (player env)) (enemies env)
-               then putStrLn "Hit!"
-               else return()
+                  then putStrLn "Hit!"
+               else return ()
 \end{lstlisting}
 
 As it stands I am pleased that simple rectangular hitboxes are an adequate option.
 
-\pagebreak
-%
-% HERE BEGINS THE APPENDIX
-% IT CONTAINS THE SOURCE CODE FOR A COMPLETE
-% IMPLEMENTATION OF EACH CHAPTER'S WORK
-%
-\appendix
+\section{Game State}
 
-\section{Drawing A Window}
-\subsection{Main.hs}
+Next we add the ability to play/pause the game, or rather add a game state variable in general.
+This will allow for not only the aforementioned playing and pausing of the game but also for things such as splash screens and death events to be reflected more appropriately.
+To do this is first a matter of modifying \verb|Type.hs|, firstly creating a new type \verb|GameState| which will give us a verbose manner of specifying what state the game is in.
+This could be done using a simple integer, with 1 representing playing, 2 paused, and so on, but Haskell provides us with the tools to do so in a more intuitive and easier to follow manner, so we shall use them.
+
 \begin{lstlisting}
-module Main where
-
-import Graphics.UI.GLUT
-import Display
-
-main :: IO()
-main = do (_progName, _args) <- getArgsAndInitialize
-          initialWindowSize $= Size 640 480
-          createWindow "Frogger"
-          displayCallback $= display
-          mainLoop
+data GameState = PreStart | Playing | Paused | PlayerDead
+                 deriving (Eq, Show)
 \end{lstlisting}
 
-\subsection{Display.hs}
+Now we add a field to \verb|Env| which will contain a \verb|GameState| variable, and that's it.
+Not quite, of course, we still have to do the relevant plumbing to make sure things are actually playing and pausing as they should.
+
+\par
+
+We can begin in \verb|Idle|, where all of the updating of the objects on the screen happens.
+Here we can add a check, an if statement querying the current state of the game as given in the argument.
+If the game is currently in the \verb|Playing| state we can continue to update everything as normal.
+Otherwise pause all updating, using \verb|return()| as the empty case.
+
 \begin{lstlisting}
-module Display (display) where
-
-import Graphics.UI.GLUT
-
-display :: DisplayCallback
-display = do clear [ColorBuffer]
-             flush
+idle e = do e' <- get e
+            if gameState e' == Playing
+            then do e $~! \env -> let es = enemies env
+                                  in env {enemies = map updateMover es}
+            else return ()
+            postRedisplay Nothing
 \end{lstlisting}
 
-\section{Adding A Character}
-\subsection{Display.hs}
+To move between the states we must update \verb|Input.hs|, adding cases for the various new \verb|GameState|s.
+
 \begin{lstlisting}
-module Display (display) where
+input :: IORef Env -> KeyboardMouseCallback
+input m k ks mo p
+  = do m' <- get m
+       case (gameState m') of Playing   -> inputPlaying m k ks mo p
+                              Paused    -> inputPaused m k ks mo p
+                              otherwise -> return ()
 
-import Graphics.UI.GLUT
+inputPaused :: IORef Env -> KeyboardMouseCallback
+inputPaused m c Down _ _
+  | c == (Char ' ') = m $~! \e -> e {gameState = Playing}
+  | otherwise       = return ()
+inputPaused _ _ _ _ _ = return ()
 
-display :: DisplayCallback
-display =
-  do clear [ColorBuffer]
-     translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
-     scale (1.0/32.0) (1.0/24.0) (0.0 :: Float)
-     color $ Color3 0.0 1.0 (0.0 :: Float)
-     let p = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float,Float,Float)]
-     renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
-     flush
+inputPlaying :: IORef Env -> KeyboardMouseCallback
+inputPlaying m c Down _ _
+  | c == (Char 'w') || c == (Char 'W')
+      = m $~! \e -> let p = player e
+                     in e {player = p {y = y p + step}}
+  | c == (Char 'a') || c == (Char 'A')
+      = m $~! \e -> let p = player e
+                     in e {player = p {x = x p - step}}
+  | c == (Char 's') || c == (Char 'S')
+      = m $~! \e -> let p = player e
+                     in e {player = p {y = y p - step}}
+  | c == (Char 'd') || c == (Char 'D')
+      = m $~! \e -> let p = player e
+                     in e {player = p {x = x p + step}}
+  | c == (Char ' ')
+      = m $~! \e -> e {gameState = Paused}
+  | otherwise                          = return ()
+  where step = 32
+inputPlaying _ _ _ _ _ = return ()
 \end{lstlisting}
 
-%\begin{thebibliography}{0}
-%\end{thebibliography}
+\section{Collision Detection 2 - Detection on the River}
+
+Collision detection on the river section is slightly more complex than it is on the road; in this case it is a matter of the player remaining alive if they \textit{have} collided with an object, and dying if they step onto a lane with no object present.
+
+Hence this will require some modification of the code.
+We introduce a custom typeclass\footnote{A typeclass in Haskell can be thought of similarly to superclasses in imperative languages.
+They are collections of types which support certain operations, and allow for ad-hoc polymorphism. www.haskell.org/tutorial/classes.html}, \verb|Drawable|.
+This typeclass will have two operations, \verb|draw :: a -> IO()|, with which we can replace the \verb|drawMover| function, and \verb|update :: a -> a|, with which we can replace the \verb|updateMover| function.
+It will also include operations to draw the object to the screen whilst preserving the current transformation matrix, and to do so to a list of objects.
+Both of the latter operations will have default definitions.
+
+\begin{lstlisting}
+class Drawable a where
+  update :: a -> a
+  draw :: a -> IO()
+  preservingDraw :: a -> IO()
+  preservingDraw = preservingMatrix . draw
+  preservingDraws :: [a] -> IO [()]
+  preservingDraws = sequence . map preservingDraw
+\end{lstlisting}
+
+This will allow us to break the \verb|Mover| type down, improving readability and giving us the ability to create functions for more specific instances of a type.
+In particular, we can split it into 4 new types:
+\begin{itemize}
+  \item \verb|Frogger|: the player character.
+    \item \verb|RoadMover|: moving objects on the road.
+    \item \verb|RiverMover|: moving objects on the river.
+    \item \verb|Goal|: the goal objects.
+\end{itemize}
+
+\par
+
+As a result of this the \verb|Env| type must be modified with the \verb|enemies| field being split into \verb|roadEnemies|, \verb|riverEnemies|, and \verb|goals|.
+
+As well as this, the collision detection function will be modified to take the x, y, length, and width values of both objects as arguments, as opposed to just taking the objects themselves.
+
+\par
+
+With this we can split the \verb|hitCheck| function into three parts:
+\begin{itemize}
+  \item \verb|roadCollision :: Frogger -> RoadMover -> GameState|\\
+    If the Frogger has collided with the road object, it returns \verb|PlayerDead|, otherwise it returns \verb|Playing|.
+    We can use this to build a function \verb|hitCheckRoad|,
+    \begin{lstlisting}
+      hitCheckRoad :: Frogger -> [RoadMover] -> GameState
+      hitCheckRoad f rs
+        = let cs = map (roadCollision f) rs
+          in hcro' collisions
+          where hcro' [] = Playing
+                hcro' (s:ss) = if s == PlayerDead then s
+                                                  else hcro' ss
+    \end{lstlisting}
+  \item \verb|riverCollision :: Frogger -> RiverMover -> GameState|\\
+    Essentially the opposite: if there is a collision it will return \verb|Playing|, else \verb|Playing|.
+    \begin{lstlisting}
+      hitCheckRiver :: Frogger -> [RoadMover] -> GameState
+      hitCheckRiver f rs
+        = let cs = map (riverCollision f) rs
+           in hcri' collisions
+          where hcri' [] = PlayerDead
+                hcri' (s:ss) = if s /= PlayerDead then s
+                                                  else hcri' ss
+    \end{lstlisting}
+  \item \verb|goalCollision :: Frogger -> Goal -> Bool|\\
+    A simple boolean check to see if a goal has been collided with.
+    This function can then be used in a larger function \verb|hitCheckGoal|, which at this point simply \verb|or|s the list of collided goals, and returns \verb|LevelComplete| if that is \verb|True|.
+    \begin{lstlisting}
+      hitCheckGoals f gs
+        = let cs = map (goalCollision f) rs
+           in if or cs then LevelComplete
+                       else Playing
+    \end{lstlisting}
+\end{itemize}
+
+\verb|hitCheck| now becomes a "routing" function, calling \verb|roadCollision|, \verb|riverCollision|, or \verb|goalCollsion| depending upon where on the map the player is, while checking that the player is within the screen bounds (if they go beyond the screen they die).
+
+\begin{lstlisting}
+hitCheck :: Env -> GameState
+hitCheck e
+  = let frogger = player e
+        fx = f_X frogger
+        fy = f_Y frogger
+     in if inRange (0,initSizeX) fx && inRange (0,initSizeY) fy
+        then if inRange ((head lanes),(lanes !! 4)) fy
+                then hitCheckRoad frogger (roadEnemies e)
+             else if inRange ((lanes !! 6),(lanes !! 11)) fy
+                then hitCheckRiver frogger (riverEnemies e)
+             else hitCheckGoals frogger (goals e)
+        else PlayerDead
+        where inRange (l,u) n = u >= n && n >= l
+\end{lstlisting}
+
+\verb|lanes| is a data object exported by \verb|Type| containing the y-values of all lanes - lanes 1-5 (index 0-4) are the road lanes, and lanes 7-10 (index 6-11) are the river lanes.
+
+We now have support for determining death both on the road and on the river.
+However if the player is sat on a log they currently do not move.
+Fixing this will be the next step.
+
+\section{Rolling on the River}
+
+The first step to this will be updating the \verb|Frogger| data type with a velocity element, \verb|f_V|.
+We then change the \verb|update| function in its \verb|Drawable| instance from the identity function to something resembling the definition for the other moving objects, specifically
+
+\begin{lstlisting}
+update f@({f_X = fx, f_V = fv}) = f {f_X = fx + fv}
+\end{lstlisting}
+
+With that done, and updating the Frogger's position added to the idle callback, we can implement the "follow" functionality.
+
+\par
+
+To do this we make use of Haskell's \verb|Either| type, which allows a function to return results of one of two types, given as the \verb|Left| type and \verb|Right| type.
+
+Therefore \verb|hitCheck|'s type signature will now be 
+
+\begin{lstlisting}
+hitCheck :: Env -> Either GameState Float
+\end{lstlisting}
+
+Thanks to the breaking down of the \verb|hitCheck| function into its road, river, and goal elements we need only concern ourselves with changing the \verb|hitCheckRiver| function, simply prepending \verb|Left| to the other returned \verb|GameState|s.
+
+All definitions for \verb|riverCollision| will be updated in the same way, but we will again use the one for \verb|Log|s as an example:
+
+\begin{lstlisting}
+riverCollision (Frogger {f_X = fx, f_Y = fy, f_S = fs}) (Log {ri_X = lx, ri_Y = ly, ri_L = ll, ri_W = lw, ri_V = lv})
+  = if hasCollided fx fy fs lx ly ll lw then Right lv
+                                        else Left PlayerDead
+
+\end{lstlisting}
+
+As we can see, the function has been updated to, in the instance of a collision, return the \verb|Right| type, a float giving the value of the Frogger's new velocity.
+Importantly if a \verb|Float| is returned it can be assumed that the player is not dead.
+
+\par
+
+All updating of the main \verb|Env| variable has now been moved to a function \verb|updateEnv|, which is only called when the \verb|gameState| is \verb|Playing|.
+
+Within this update is applied to all applicable fields, and the \verb|Either| returned by \verb|hitCheck| is now dealt with as follows
+
+\begin{lstlisting}
+(f_V', gameState') = case hitCheck e of Left gs -> (0.0, gs)
+                                        Right v -> (v, Playing)
+\end{lstlisting}
+
+\section{Cause of death}
+
+It would be nice if the player knew what killed them - \textit{Frogger} after all has the most ways to die of any game according to a 1982 \textit{Softline} article - so that will be the next thing implemented.
+
+The first thing to do here is to modify the \verb|GameState| data type, adding a \verb|String| to \verb|PlayerDead| such that it can carry a message.
+
+Then we update \verb|hitCheckRoad|, \verb|hitCheckRiver|, and their associated collision functions, which conveniently return \verb|GameState|s rather than \verb|Bool|s.
+This means that we can trivially add to the \verb|PlayerDead| options with a brief message detailing what killed the player, getting hit by a car or drowning being the current options.
+Finally we update the end of \verb|hitCheck| with the fact that the player has died by jumping off the map, and it's done.
+
+\section{Final Touches}
+
+First we update the \verb|display| function to show different things depending on the current state of the game
+\begin{itemize}
+  \item In \verb|PreStart| it should show a welcome message detailing the controls of the game.
+  \item In \verb|PlayerDead s| it should render \verb|s|, the string explaining why as well as the number of points the player has accrued in their game.
+  \item In \verb|LevelComplete| it should congratulate the player on completing the level, tell them how many points they've got, and tell them how to advance to the next level.
+  \item Otherwise it should draw the map according to the current \verb|Env|
+\end{itemize}
+
+This can be accomplished by adding a \verb|case gameState e of ...| statement to \verb|display|, with the different options being applied as necessary.
+
+\begin{lstlisting}
+case (gameState fr) of PreStart      -> -- Draw a welcome message
+                       PlayerDead _  -> -- Describe how the player died and their score
+                       LevelComplete -> -- Show the players score
+                       otherwise     -> -- Draw the game as before
+\end{lstlisting}
+
+With this addition I believe we can consider the initial version of the game complete.
 
 \end{document}
