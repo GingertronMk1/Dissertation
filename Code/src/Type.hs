@@ -216,11 +216,11 @@ startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                                                               ,w = fWidth
                                                               }
                                           }
-                   , goals = case l of 1         -> [newGoal ((initSizeX/2) - 12) 0]
-                                       2         -> [newGoal ((initSizeX/2) - x) 0 | x <- [-22, 44]]
-                                       3         -> [newGoal ((initSizeX/2) - x) 0 | x <- [-84, 12, 108]]
-                                       4         -> [newGoal ((initSizeX/2) - x) 0 | x <- [-96, -24, 48, 120]]
-                                       otherwise -> [newGoal ((initSizeX/2) - x) 0 | x <- [-180, -84, 12, 108, 204]]
+                   , goals = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
+                                       2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
+                                       3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
+                                       4         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-96, -24, 48, 120]]
+                                       otherwise -> [newGoal ((initSizeX/2) - x) 11 | x <- [-180, -84, 12, 108, 204]]
 
                    , riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
                                            ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
