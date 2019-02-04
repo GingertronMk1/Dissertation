@@ -29,88 +29,34 @@ data Entity = Entity { -- Position in x
                      , l  :: Float
                        -- Width
                      , w  :: Float
-                     }
-                     deriving (Eq, Show)
+              }
+              deriving (Eq, Show)
 
-data Frogger = Frogger { -- The position of the frog, in x
-                         f_X :: Float
-                        -- The position of the frog, in x
-                       , f_Y :: Float
-                        -- The "size" of the frog (the length of one edge of the square)
-                       , f_S :: Float
-                        -- The velocity of the Frogger when moving on the back of a RiverObject
-                       , f_V :: Float
-                        -- The Entity containing important values about the Frogger
-                       , fr_Entity :: Entity
+data Frogger = Frogger { -- The Entity containing important values about the Frogger
+                         fr_Entity :: Entity
                }
                deriving Show
 
-data RoadMover = Car { -- The position of the car in x
-                   ro_X :: Float
-                   -- The position of the car in y
-                 , ro_Y :: Float
-                   -- The length of the car
-                 , ro_L :: Float
-                   -- The width of the car
-                 , ro_W :: Float
-                   -- The velocity of the car (+ve means going left-to-right)
-                 , ro_V :: Float
-                  -- The Entity containing important values about the Car
-                 , ro_Entity :: Entity
-           }
-           deriving Show
+data RoadMover = Car { -- The Entity containing important values about the Car
+                       ro_Entity :: Entity
+                 }
+                 deriving Show
 
-data RiverMover = Croc { -- The position of the croc in x
-                         ri_X :: Float
-                         -- The position of the croc in y
-                       , ri_Y :: Float
-                         -- The length of the croc
-                       , ri_L :: Float
-                         -- The width of the croc
-                       , ri_W :: Float
-                         -- Velocity in x (+ve means going left-to-right)
-                       , ri_V :: Float
-                         -- The Entity containing important values about the Croc
-                       , ri_Entity :: Entity
-                }
-                | Turtles { -- Position in x
-                            ri_X :: Float
-                            -- Position in y
-                          , ri_Y :: Float
-                            -- Length
-                          , ri_L :: Float
-                            -- Width
-                          , ri_W :: Float
-                            -- Velocity in x
-                          , ri_V :: Float
-                            -- Are the turtles above water?
-                          , aboveWater :: Bool
+data RiverMover = Croc { -- The Entity containing important values about the Croc
+                         ri_Entity :: Entity
+                  }
+                | Turtles {  -- Are the turtles above water?
+                            aboveWater :: Bool
                              -- The Entity containing important values about the Turtles
                           , ri_Entity :: Entity
                 }
-                | Log { -- Position in x
-                        ri_X :: Float
-                        -- Position in y
-                      , ri_Y :: Float
-                        -- Length
-                      , ri_L :: Float
-                        -- Width
-                      , ri_W :: Float
-                        -- Velocity in x
-                      , ri_V :: Float
-                         -- The Entity containing important values about the Log
-                      , ri_Entity :: Entity
+                | Log { -- The Entity containing important values about the Log
+                        ri_Entity :: Entity
                 }
                 deriving Show
 
-data Goal =  Goal { -- Position in x
-                    g_X :: Float
-                  -- Position in y
-                  , g_Y :: Float
-                  -- Size (length of one edge of the square)
-                  , g_S :: Float
-                  -- The Entity containing important values about the Goal
-                  , go_Entity :: Entity
+data Goal =  Goal { -- The Entity containing important values about the Goal
+                    go_Entity :: Entity
           }
           deriving Show
 
@@ -193,12 +139,8 @@ newCar :: Int -> [Float] -> RoadMover
 newCar l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
-              in Car {ro_X = x
-                     ,ro_Y = lanes!!l + 2
-                     ,ro_V = nv
-                     ,ro_L = 48.0 * signum nv
-                     ,ro_W = 24.0
-                     ,ro_Entity = Entity {x = x
+              in Car {
+                     ro_Entity = Entity {x = x
                                          ,y = lanes !! l + 2
                                          ,dX = nv
                                          ,dY = 0
@@ -211,12 +153,8 @@ newCroc :: Int -> [Float] -> RiverMover
 newCroc l v = let x = case mod l 2 of 0 -> 0.0
                                       1 -> initSizeX
                   nv = v !! l
-               in Croc {ri_X = x
-                       ,ri_Y = lanes!!l + 2
-                       ,ri_V = nv
-                       ,ri_L = 72.0 * signum nv
-                       ,ri_W = 24.0
-                       ,ri_Entity = Entity {x = x
+               in Croc {
+                       ri_Entity = Entity {x = x
                                            ,y = lanes !! l + 2
                                            ,dX = nv
                                            ,dY = 0
@@ -229,12 +167,8 @@ newTurtles :: Int -> [Float] -> RiverMover
 newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                          1 -> initSizeX
                      nv = v !! l
-                  in Turtles {ri_X = x
-                             ,ri_Y = lanes!!l + 2
-                             ,ri_V = nv
-                             ,ri_L = 72.0 * signum nv
-                             ,ri_W = 24.0
-                             ,aboveWater = True
+                  in Turtles {
+                             aboveWater = True
                              ,ri_Entity = Entity {x = x
                                                  ,y = lanes !! l + 2
                                                  ,dX = nv
@@ -248,12 +182,8 @@ newLog :: Int -> [Float] -> RiverMover
 newLog l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
-              in Log {ri_X = x
-                     ,ri_Y = lanes!!l + 2
-                     ,ri_V = nv
-                     ,ri_L = 48.0 * signum nv
-                     ,ri_W = 24.0
-                     ,ri_Entity = Entity {x = x
+              in Log {
+                     ri_Entity = Entity {x = x
                                          ,y = lanes !! l + 2
                                          ,dX = nv
                                          ,dY = 0
@@ -263,10 +193,8 @@ newLog l v = let x = case mod l 2 of 0 -> 0.0
                      }
 
 newGoal :: Float -> Int -> Goal
-newGoal gx l = Goal {g_X = gx
-                    ,g_Y = lanes!!l + 2
-                    ,g_S = 24
-                    ,go_Entity = Entity {x = gx
+newGoal gx l = Goal {
+                    go_Entity = Entity {x = gx
                                         ,y = lanes !! l + 2
                                         ,dX = 0.0
                                         ,dY = 0.0
@@ -279,11 +207,8 @@ startEnv :: Int -> Env
 startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                  vels' = fmap (*l') vels
               in E { player = let fWidth = 20.0
-                               in Frogger {f_X = (initSizeX - fWidth)/2.0
-                                          ,f_Y = 4.0
-                                          ,f_S = fWidth
-                                          ,f_V = 0.0
-                                          ,fr_Entity = Entity {x = (initSizeX - fWidth)/2.0
+                               in Frogger {
+                                          fr_Entity = Entity {x = (initSizeX - fWidth)/2.0
                                                               ,y = 4.0
                                                               ,dX = 0.0
                                                               ,dY = 0.0
@@ -371,11 +296,10 @@ instance Drawable Goal where
   setdX _ = id
   setdY _ = id
   update = id
-  draw g@(Goal {g_X = gx, g_Y = gy, g_S = gs})
-    = do color $ Color3 0.8 0.7 (0.2 :: Float)
-         translate $ Vector3 (getX g) (getY g) 0.0
-         scale (getL g) (getW g) 1.0
-         unitSquare
+  draw g = do color $ Color3 0.8 0.7 (0.2 :: Float)
+              translate $ Vector3 (getX g) (getY g) 0.0
+              scale (getL g) (getW g) 1.0
+              unitSquare
 
 instance Drawable Frogger where
   getEntity = fr_Entity
