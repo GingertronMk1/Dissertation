@@ -57,6 +57,8 @@ data RiverMover = Croc { -- The Entity containing important values about the Cro
 
 data Goal =  Goal { -- The Entity containing important values about the Goal
                     go_Entity :: Entity
+                    -- Does the goal currently have a Frogger on it?
+                  , is_Occupied :: Bool
           }
           deriving Show
 
@@ -194,13 +196,14 @@ newLog l v = let x = case mod l 2 of 0 -> 0.0
 
 newGoal :: Float -> Int -> Goal
 newGoal gx l = Goal {
-                    go_Entity = Entity {x = gx
-                                        ,y = lanes !! l + 2
-                                        ,dX = 0.0
-                                        ,dY = 0.0
-                                        ,l = 24.0
-                                        ,w = 24.0
-                                        }
+                      go_Entity = Entity {x = gx
+                                         ,y = lanes !! l + 2
+                                         ,dX = 0.0
+                                         ,dY = 0.0
+                                         ,l = 24.0
+                                         ,w = 24.0
+                                         }
+                    , is_Occupied = False
                     }
 
 startEnv :: Int -> Env
