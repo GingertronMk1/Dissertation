@@ -20,7 +20,7 @@ updateEnv e = let frogger' = update (player e)
                                 in if gameState' == LevelComplete
                                       then s + (1000 * level e)
                                    else s
-               in e {player = frogger' {f_V = f_V'}
+               in e {player = setdX f_V' frogger'
                     ,roadEnemies = roadEnemies'
                     ,riverEnemies = riverEnemies'
                     ,gameState = gameState'
@@ -29,8 +29,8 @@ updateEnv e = let frogger' = update (player e)
 
 hitCheck :: Env -> Either GameState Float
 hitCheck e = let frogger = player e
-                 fx = f_X frogger
-                 fy = f_Y frogger
+                 fx = getX frogger
+                 fy = getY frogger
               in if inRange (0,initSizeX) fx && inRange (0,initSizeY) fy
                  then if inRange ((head lanes),(lanes !! 4)) fy
                          then Left $ hitCheckRoad frogger (roadEnemies e)
@@ -58,42 +58,35 @@ hitCheckRiver f rs = let cs = map (riverCollision f) rs
 
 hitCheckGoals :: Frogger -> [Goal] -> GameState
 hitCheckGoals f gs = if or $ map (goalCollision f) gs
-                       then LevelComplete
+                        then LevelComplete
                      else Playing
 
 roadCollision :: Frogger -> RoadMover -> GameState
-roadCollision (Frogger {f_X = fx, f_Y = fy, f_S = fs}) (Car {ro_X = cx, ro_Y = cy, ro_L = cl, ro_W = cw})
-  = if hasCollided fx fy fs cx cy cl cw then PlayerDead "You got hit by a car!"
-                                        else Playing
+roadCollision f r = if hasCollided f r then PlayerDead "You got hit by a car!"
+                                       else Playing
 
 riverCollision :: Frogger -> RiverMover -> Either GameState Float
-riverCollision (Frogger {f_X = fx, f_Y = fy, f_S = fs}) (Croc {ri_X = cx, ri_Y = cy, ri_L = cl, ri_W = cw, ri_V = cv})
-  = if hasCollided fx fy fs cx cy cl cw then Right cv
-                                        else Left $ PlayerDead "You drowned!"
-riverCollision (Frogger {f_X = fx, f_Y = fy, f_S = fs}) (Turtles {ri_X = tx, ri_Y = ty, ri_L = tl, ri_W = tw, ri_V = tv})
-  = if hasCollided fx fy fs tx ty tl tw then Right tv
-                                        else Left $ PlayerDead "You drowned!"
-riverCollision (Frogger {f_X = fx, f_Y = fy, f_S = fs}) (Log {ri_X = lx, ri_Y = ly, ri_L = ll, ri_W = lw, ri_V = lv})
-  = if hasCollided fx fy fs lx ly ll lw then Right lv
+riverCollision f r = if hasCollided f r then Right (getdX r)
                                         else Left $ PlayerDead "You drowned!"
 
 goalCollision :: Frogger -> Goal -> Bool
-goalCollision (Frogger {f_X = fx, f_Y = fy, f_S = fs}) (Goal {g_X = gx, g_Y = gy, g_S = gs})
-  = if hasCollided fx fy fs gx gy gs gs then True
-                                        else False
+goalCollision = hasCollided
 
-hasCollided :: Float -> Float -> Float ->           -- Frogger x, y, and size
-               Float -> Float -> Float -> Float ->  -- Enemy x, y, length, width
-               Bool                                 -- Have the two collided?
-hasCollided fx fy fs ex ey el ew = case signum el of 1         -> ex + el > fx &&
-                                                                  ey + ew > fy &&
-                                                                  fx + fs > ex &&
-                                                                  fy + fs > ey
-                                                     -1        -> ex > fx &&
-                                                                  ey + ew > fy &&
-                                                                  fx + fs > ex + el &&
-                                                                  fy + fs > ey
-                                                     otherwise -> False
-
-test :: Either Int String
-test = Right "Hello"
+hasCollided :: Drawable a => Frogger -> a -> Bool
+hasCollided f d = let xf = getX f
+                      yf = getY f
+                      lf = getL f
+                      wf = getW f
+                      xd = getX d
+                      yd = getY d
+                      ld = getL d
+                      wd = getW d
+                     in case signum ld of 1         -> xd + ld > xf &&
+                                                       yd + wd > yf &&
+                                                       xf + lf > xd &&
+                                                       yf + wf > yd
+                                          -1        -> xd > xf &&
+                                                       yd + wd > yf &&
+                                                       xf + lf > xd + ld &&
+                                                       yf + wf > yd
+                                          otherwise -> False
