@@ -91,9 +91,6 @@ data GameState = PreStart
 -- CLASS DECLARATIONS
 
 class Drawable a where
-  -- A function to update the object over time
-  update :: a -> a
-  update = updateX . updateY
   -- A function to draw the object to the screen
   draw :: a -> IO()
   -- A function to draw the object, preserving the current transformation matrix
@@ -132,6 +129,9 @@ class Drawable a where
   setY :: Float -> a -> a
   setdX :: Float -> a -> a
   setdY :: Float -> a -> a
+  -- A function to update the object over time
+  update :: a -> a
+  update = updateX . updateY
 
 -- TYPE "CONSTRUCTORS"
 
@@ -216,23 +216,28 @@ startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                                                               ,w = fWidth
                                                               }
                                           }
-                   , goals = [newGoal ((initSizeX - 24)/2) 11]
-                   , riverEnemies = concat [[setX x (newTurtles 10 vels')| x <- xList 5]
-                                           ,[setX (x-offset) (newLog 9 vels')| x <- xList 3, offset <- [0,48.0]]
-                                           ,[setX x (newCroc 8 vels') | x <- xList 9]
-                                           ,[setX x (newTurtles 7 vels') | x <- xList 6]
-                                           ,[setX x (newLog 6 vels') | x <- xList 8]
+                   , goals = case l of 1         -> [newGoal ((initSizeX/2) - 12) 0]
+                                       2         -> [newGoal ((initSizeX/2) - x) 0 | x <- [-22, 44]]
+                                       3         -> [newGoal ((initSizeX/2) - x) 0 | x <- [-84, 12, 108]]
+                                       4         -> [newGoal ((initSizeX/2) - x) 0 | x <- [-96, -24, 48, 120]]
+                                       otherwise -> [newGoal ((initSizeX/2) - x) 0 | x <- [-180, -84, 12, 108, 204]]
+
+                   , riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
+                                           ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
+                                           ,[setX x (newCroc 8 vels')         | x <- xList 9]
+                                           ,[setX x (newTurtles 7 vels')      | x <- xList 6]
+                                           ,[setX x (newLog 6 vels')          | x <- xList 8]
                                     ]
-                   , roadEnemies = concat [[setX (x+offset) (newCar 4 vels') | x <- xList 3
-                                                                                  , offset <- [0, 60.0, 120.0]]
-                                          ,[setX (x+offset) (newCar 3 vels') | x' <- xList 2
-                                                                                  , offset <- [0, 60.0]
-                                                                                  , let x = initSizeX - x']
-                                          ,[setX x (newCar 2 vels') | x <- xList 5]
-                                          ,[setX (x+offset) (newCar 1 vels')| x' <- xList 3
-                                                                                  , offset <- [0,50.0]
-                                                                                  , let x = initSizeX - x']
-                                          ,[setX x (newCar 0 vels')| x <- xList 6]
+                   , roadEnemies = concat [[setX (x+offset) (newCar 4 vels')  | x <- xList 3
+                                                                              , offset <- [0, 60.0, 120.0]]
+                                          ,[setX (x+offset) (newCar 3 vels')  | x' <- xList 2
+                                                                              , offset <- [0, 60.0]
+                                                                              , let x = initSizeX - x']
+                                          ,[setX x (newCar 2 vels')           | x <- xList 5]
+                                          ,[setX (x+offset) (newCar 1 vels')  | x' <- xList 3
+                                                                              , offset <- [0,50.0]
+                                                                              , let x = initSizeX - x']
+                                          ,[setX x (newCar 0 vels')           | x <- xList 6]
                                           ]
                    , frames = 0
                    , time = 0
