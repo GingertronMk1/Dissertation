@@ -18,7 +18,7 @@ updateEnv e = let frogger' = update (player e)
                                                           Right v -> (v, Playing)
                   gameScore' = let s = gameScore e
                                 in if gameState' == LevelComplete
-                                      then s + 1000
+                                      then s + (1000 * level e)
                                    else s
                in e {player = frogger' {f_V = f_V'}
                     ,roadEnemies = roadEnemies'
