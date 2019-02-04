@@ -41,13 +41,13 @@ inputPaused _ _ _ _ _ = return ()
 inputPlaying :: IORef Env -> KeyboardMouseCallback
 inputPlaying m c Down _ _
   | c == (Char 'w') || c == (Char 'W') = m $~! \e -> let p = player e
-                                                     in e {player = p {f_Y = f_Y p + step}}
+                                                     in e {player = setY (getY p + step) p}
   | c == (Char 'a') || c == (Char 'A') = m $~! \e -> let p = player e
-                                                     in e {player = p {f_X = f_X p - step}}
+                                                     in e {player = setX (getX p - step) p}
   | c == (Char 's') || c == (Char 'S') = m $~! \e -> let p = player e
-                                                     in e {player = p {f_Y = f_Y p - step}}
+                                                     in e {player = setY (getY p - step) p}
   | c == (Char 'd') || c == (Char 'D') = m $~! \e -> let p = player e
-                                                     in e {player = p {f_X = f_X p + step}}
+                                                     in e {player = setX (getX p + step) p}
   | c == (Char ' ')                    = m $~! \e -> e {gameState = Paused}
   | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead "You quit"}
   | otherwise                          = return ()
