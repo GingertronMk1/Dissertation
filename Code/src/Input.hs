@@ -13,17 +13,19 @@ input m k ks mo p = get m >>= \m' -> case gameState m' of PreStart      -> input
 
 inputComplete :: IORef Env -> KeyboardMouseCallback
 inputComplete m c Down _ _
-  | c == (Char ' ') = m $~! \e -> startEnv { frames = frames e
-                                           , time = time e
-                                           , gameState = Playing
-                                           , gameScore = gameScore e
-                                           }
+  | c == (Char ' ') = m $~! \e -> let nextLevel = level e + 1
+                                   in (startEnv nextLevel) { frames = frames e
+                                                           , time = time e
+                                                           , gameState = Playing
+                                                           , gameScore = gameScore e
+                                                           , level = nextLevel
+                                                           }
   | otherwise       = return ()
 inputComplete _ _ _ _ _ = return ()
 
 inputDead :: IORef Env -> KeyboardMouseCallback
 inputDead m c Down _ _
-  | c == (Char ' ') = m $~! \_ -> startEnv
+  | c == (Char ' ') = m $~! \_ -> startEnv 1
   | otherwise       = return ()
 inputDead _ _ _ _ _ = return ()
 

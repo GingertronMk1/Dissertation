@@ -96,11 +96,13 @@ data Env = E { -- The Frogger
                -- The total elapsed number of frames
              , frames :: Int
                -- The total elapsed time since game start
-             , time :: Int
+             , time :: Float
                -- The current state of the game
              , gameState :: GameState
                -- The current score
              , gameScore :: Int
+               -- The current level
+             , level :: Int
          }
          deriving Show
 
@@ -127,60 +129,63 @@ class Drawable a where
 
 -- TYPE "CONSTRUCTORS"
 
-newCar :: Int -> RoadMover
-newCar l = let x = case mod l 2 of 0 -> 0.0
-                                   1 -> initSizeX
-               nv = vels !! l
-            in Car {ro_X = x, ro_Y = lanes!!l + 2, ro_V = nv, ro_L = 48.0 * signum nv, ro_W = 24.0}
+newCar :: Int -> [Float] -> RoadMover
+newCar l v = let x = case mod l 2 of 0 -> 0.0
+                                     1 -> initSizeX
+                 nv = v !! l
+              in Car {ro_X = x, ro_Y = lanes!!l + 2, ro_V = nv, ro_L = 48.0 * signum nv, ro_W = 24.0}
 
-newCroc :: Int -> RiverMover
-newCroc l = let x = case mod l 2 of 0 -> 0.0
-                                    1 -> initSizeX
-                nv = vels !! l
-            in Croc {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0}
+newCroc :: Int -> [Float] -> RiverMover
+newCroc l v = let x = case mod l 2 of 0 -> 0.0
+                                      1 -> initSizeX
+                  nv = v !! l
+               in Croc {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0}
 
-newTurtles :: Int -> RiverMover
-newTurtles l = let x = case mod l 2 of 0 -> 0.0
-                                       1 -> initSizeX
-                   nv = vels !! l
-            in Turtles {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0, aboveWater = True}
+newTurtles :: Int -> [Float] -> RiverMover
+newTurtles l v = let x = case mod l 2 of 0 -> 0.0
+                                         1 -> initSizeX
+                     nv = v !! l
+                  in Turtles {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0, aboveWater = True}
 
-newLog :: Int -> RiverMover
-newLog l = let x = case mod l 2 of 0 -> 0.0
-                                   1 -> initSizeX
-               nv = vels !! l
-            in Log {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 48.0 * signum nv, ri_W = 24.0}
+newLog :: Int -> [Float] -> RiverMover
+newLog l v = let x = case mod l 2 of 0 -> 0.0
+                                     1 -> initSizeX
+                 nv = v !! l
+              in Log {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 48.0 * signum nv, ri_W = 24.0}
 
 newGoal :: Float -> Int -> Goal
 newGoal gx l = Goal {g_X = gx, g_Y = lanes!!l + 2, g_S = 24}
 
-startEnv :: Env
-startEnv = E { player = Frogger {f_X = 310.0, f_Y = 4.0, f_S = 20.0, f_V = 0.0}
-             , goals = [newGoal 308.0 11]
-             , riverEnemies = concat [[(newTurtles 10) {ri_X = x} | x <- xList 5]
-                                     ,[(newLog 9) {ri_X = x - offset} | x <- xList 3, offset <- [0,48.0]]
-                                     ,[(newCroc 8) {ri_X = x}     | x <- xList 9]
-                                     ,[(newTurtles 7) {ri_X = x}  | x <- xList 6]
-                                     ,[(newLog 6) {ri_X = x}      | x <- xList 8]
-                              ]
-             , roadEnemies = concat [[(newCar 4) {ro_X = x - offset} | x <- xList 3
-                                                                     , offset <- [0, 60.0, 120.0]]
-                                    ,[(newCar 3) {ro_X = x + offset} | x' <- xList 2
-                                                                     , offset <- [0, 60.0]
-                                                                     , let x = initSizeX - x']
-                                    ,[(newCar 2) {ro_X = x} | x <- xList 5]
-                                    ,[(newCar 1) {ro_X = x + offset} | x' <- xList 3
-                                                                     , offset <- [0,50.0]
-                                                                     , let x = initSizeX - x']
-                                    ,[(newCar 0) {ro_X = x} | x <- xList 6]
+startEnv :: Int -> Env
+startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
+                 vels' = fmap (*l') vels
+              in E { player = let fWidth = 20.0 in Frogger {f_X = (initSizeX - fWidth)/2.0, f_Y = 4.0, f_S = fWidth, f_V = 0.0}
+                   , goals = [newGoal ((initSizeX - 24)/2) 11]
+                   , riverEnemies = concat [[(newTurtles 10 vels') {ri_X = x} | x <- xList 5]
+                                           ,[(newLog 9 vels') {ri_X = x - offset} | x <- xList 3, offset <- [0,48.0]]
+                                           ,[(newCroc 8 vels') {ri_X = x}     | x <- xList 9]
+                                           ,[(newTurtles 7 vels') {ri_X = x}  | x <- xList 6]
+                                           ,[(newLog 6 vels') {ri_X = x}      | x <- xList 8]
                                     ]
-             , frames = 0
-             , time = 0
-             , gameState = PreStart
-             , gameScore = 0
-         }
-         where xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
-               modFrac n d = mod (round n) (round d)
+                   , roadEnemies = concat [[(newCar 4 vels') {ro_X = x - offset} | x <- xList 3
+                                                                           , offset <- [0, 60.0, 120.0]]
+                                          ,[(newCar 3 vels') {ro_X = x + offset} | x' <- xList 2
+                                                                           , offset <- [0, 60.0]
+                                                                           , let x = initSizeX - x']
+                                          ,[(newCar 2 vels') {ro_X = x} | x <- xList 5]
+                                          ,[(newCar 1 vels') {ro_X = x + offset} | x' <- xList 3
+                                                                           , offset <- [0,50.0]
+                                                                           , let x = initSizeX - x']
+                                          ,[(newCar 0 vels') {ro_X = x} | x <- xList 6]
+                                          ]
+                   , frames = 0
+                   , time = 0
+                   , gameState = PreStart
+                   , gameScore = 0
+                   , level = 1
+                   }
+               where xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
+                     modFrac n d = mod (round n) (round d)
 
 -- CLASS INSTANCE DECLARATIONS
 
@@ -269,11 +274,13 @@ makeVertex (x,y,z) = vertex $ Vertex3 x y z
 
 -- INITIAL VALUES FOR THINGS
 
-initSizeX :: Float    -- The initial size of the window
-initSizeX = 640.0
+initSizeX :: Float    -- The initial width of the window
+initSizeX = 640
+--initSizeX = 800
 
 initSizeY :: Float    -- The initial height of the window
 initSizeY = 480.0
+--initSizeY = 600
 
 screenEdge :: Float   -- The distance off-screen for objects to be drawn
 screenEdge = 100.0

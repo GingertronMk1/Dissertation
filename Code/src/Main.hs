@@ -16,7 +16,7 @@ main = do (_progName, _args) <- getArgsAndInitialize
           initialWindowSize $= Size iX iY
           createWindow "Frogger"
           reshapeCallback $= Just reshape
-          f <- newIORef startEnv
+          f <- newIORef $ startEnv 1
           keyboardMouseCallback $= Just (input f)
           displayCallback $= display f
           idleCallback $= Just (idle f)
