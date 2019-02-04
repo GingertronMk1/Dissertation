@@ -15,6 +15,23 @@ import Graphics.UI.GLUT
 
 -- TYPE DECLARATIONS
 
+-- A data type to be contained by all drawn objects
+-- Cuts down on boilerplate x, y, v, l, w values all over the place
+data Entity = Entity { -- Position in x
+                       x :: Float
+                       -- Position in y
+                     , y :: Float
+                       -- Velocity in x
+                     , dX :: Float
+                       -- Velocity in y
+                     , dY :: Float
+                       -- Length
+                     , l  :: Float
+                       -- Width
+                     , w  :: Float
+                     }
+                     deriving (Eq, Show)
+
 data Frogger = Frogger { -- The position of the frog, in x
                          f_X :: Float
                         -- The position of the frog, in x
@@ -23,6 +40,8 @@ data Frogger = Frogger { -- The position of the frog, in x
                        , f_S :: Float
                         -- The velocity of the Frogger when moving on the back of a RiverObject
                        , f_V :: Float
+                        -- The Entity containing important values about the Frogger
+                       , fr_Entity :: Entity
                }
                deriving Show
 
@@ -36,6 +55,8 @@ data RoadMover = Car { -- The position of the car in x
                  , ro_W :: Float
                    -- The velocity of the car (+ve means going left-to-right)
                  , ro_V :: Float
+                  -- The Entity containing important values about the Car
+                 , ro_Entity :: Entity
            }
            deriving Show
 
@@ -49,6 +70,8 @@ data RiverMover = Croc { -- The position of the croc in x
                        , ri_W :: Float
                          -- Velocity in x (+ve means going left-to-right)
                        , ri_V :: Float
+                         -- The Entity containing important values about the Croc
+                       , ri_Entity :: Entity
                 }
                 | Turtles { -- Position in x
                             ri_X :: Float
@@ -62,6 +85,8 @@ data RiverMover = Croc { -- The position of the croc in x
                           , ri_V :: Float
                             -- Are the turtles above water?
                           , aboveWater :: Bool
+                             -- The Entity containing important values about the Turtles
+                          , ri_Entity :: Entity
                 }
                 | Log { -- Position in x
                         ri_X :: Float
@@ -73,6 +98,8 @@ data RiverMover = Croc { -- The position of the croc in x
                       , ri_W :: Float
                         -- Velocity in x
                       , ri_V :: Float
+                         -- The Entity containing important values about the Log
+                      , ri_Entity :: Entity
                 }
                 deriving Show
 
@@ -82,6 +109,8 @@ data Goal =  Goal { -- Position in x
                   , g_Y :: Float
                   -- Size (length of one edge of the square)
                   , g_S :: Float
+                  -- The Entity containing important values about the Goal
+                  , go_Entity :: Entity
           }
           deriving Show
 
@@ -118,6 +147,7 @@ data GameState = PreStart
 class Drawable a where
   -- A function to update the object over time
   update :: a -> a
+  update = updateX . updateY
   -- A function to draw the object to the screen
   draw :: a -> IO()
   -- A function to draw the object, preserving the current transformation matrix
@@ -126,6 +156,36 @@ class Drawable a where
   -- Preserved drawing multiple items in a list
   preservingDraws :: [a] -> IO[()]
   preservingDraws = sequence . map preservingDraw
+  -- Get the Entity out of the object
+  getEntity :: a -> Entity
+  -- Get the x value out of that entity
+  getX :: a -> Float
+  getX = x . getEntity
+  -- Get the y value out of that entity
+  getY :: a -> Float
+  getY = y . getEntity
+  -- Get the dX value out of that entity
+  getdX :: a -> Float
+  getdX = dX . getEntity
+  -- Get the dY value out of that entity
+  getdY :: a -> Float
+  getdY = dY . getEntity
+  -- Get the l value out of that entity
+  getL :: a -> Float
+  getL = l . getEntity
+  -- Get the w value out of that entity
+  getW :: a -> Float
+  getW = w . getEntity
+  -- Update values in entities
+  updateX :: a -> a
+  updateX d = setX (getX d + getdX d) d
+  updateY :: a -> a
+  updateY d = setY (getY d + getdY d) d
+  -- Set values in entities
+  setX :: Float -> a -> a
+  setY :: Float -> a -> a
+  setdX :: Float -> a -> a
+  setdY :: Float -> a -> a
 
 -- TYPE "CONSTRUCTORS"
 
@@ -133,50 +193,121 @@ newCar :: Int -> [Float] -> RoadMover
 newCar l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
-              in Car {ro_X = x, ro_Y = lanes!!l + 2, ro_V = nv, ro_L = 48.0 * signum nv, ro_W = 24.0}
+              in Car {ro_X = x
+                     ,ro_Y = lanes!!l + 2
+                     ,ro_V = nv
+                     ,ro_L = 48.0 * signum nv
+                     ,ro_W = 24.0
+                     ,ro_Entity = Entity {x = x
+                                         ,y = lanes !! l + 2
+                                         ,dX = nv
+                                         ,dY = 0
+                                         ,l = 48.0 * signum nv
+                                         ,w = 24.0
+                                         }
+                     }
 
 newCroc :: Int -> [Float] -> RiverMover
 newCroc l v = let x = case mod l 2 of 0 -> 0.0
                                       1 -> initSizeX
                   nv = v !! l
-               in Croc {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0}
+               in Croc {ri_X = x
+                       ,ri_Y = lanes!!l + 2
+                       ,ri_V = nv
+                       ,ri_L = 72.0 * signum nv
+                       ,ri_W = 24.0
+                       ,ri_Entity = Entity {x = x
+                                           ,y = lanes !! l + 2
+                                           ,dX = nv
+                                           ,dY = 0
+                                           ,l = 72.0 * signum nv
+                                           ,w = 24.0
+                                           }
+                       }
 
 newTurtles :: Int -> [Float] -> RiverMover
 newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                          1 -> initSizeX
                      nv = v !! l
-                  in Turtles {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 72.0 * signum nv, ri_W = 24.0, aboveWater = True}
+                  in Turtles {ri_X = x
+                             ,ri_Y = lanes!!l + 2
+                             ,ri_V = nv
+                             ,ri_L = 72.0 * signum nv
+                             ,ri_W = 24.0
+                             ,aboveWater = True
+                             ,ri_Entity = Entity {x = x
+                                                 ,y = lanes !! l + 2
+                                                 ,dX = nv
+                                                 ,dY = 0
+                                                 ,l = 72.0 * signum nv
+                                                 ,w = 24.0
+                                                 }
+                             }
 
 newLog :: Int -> [Float] -> RiverMover
 newLog l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
-              in Log {ri_X = x, ri_Y = lanes!!l + 2, ri_V = nv, ri_L = 48.0 * signum nv, ri_W = 24.0}
+              in Log {ri_X = x
+                     ,ri_Y = lanes!!l + 2
+                     ,ri_V = nv
+                     ,ri_L = 48.0 * signum nv
+                     ,ri_W = 24.0
+                     ,ri_Entity = Entity {x = x
+                                         ,y = lanes !! l + 2
+                                         ,dX = nv
+                                         ,dY = 0
+                                         ,l = 48.0 * signum nv
+                                         ,w = 24.0
+                                         }
+                     }
 
 newGoal :: Float -> Int -> Goal
-newGoal gx l = Goal {g_X = gx, g_Y = lanes!!l + 2, g_S = 24}
+newGoal gx l = Goal {g_X = gx
+                    ,g_Y = lanes!!l + 2
+                    ,g_S = 24
+                    ,go_Entity = Entity {x = gx
+                                        ,y = lanes !! l + 2
+                                        ,dX = 0.0
+                                        ,dY = 0.0
+                                        ,l = 24.0
+                                        ,w = 24.0
+                                        }
+                    }
 
 startEnv :: Int -> Env
 startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                  vels' = fmap (*l') vels
-              in E { player = let fWidth = 20.0 in Frogger {f_X = (initSizeX - fWidth)/2.0, f_Y = 4.0, f_S = fWidth, f_V = 0.0}
+              in E { player = let fWidth = 20.0
+                               in Frogger {f_X = (initSizeX - fWidth)/2.0
+                                          ,f_Y = 4.0
+                                          ,f_S = fWidth
+                                          ,f_V = 0.0
+                                          ,fr_Entity = Entity {x = (initSizeX - fWidth)/2.0
+                                                              ,y = 4.0
+                                                              ,dX = 0.0
+                                                              ,dY = 0.0
+                                                              ,l = fWidth
+                                                              ,w = fWidth
+                                                              }
+                                          }
                    , goals = [newGoal ((initSizeX - 24)/2) 11]
-                   , riverEnemies = concat [[(newTurtles 10 vels') {ri_X = x} | x <- xList 5]
-                                           ,[(newLog 9 vels') {ri_X = x - offset} | x <- xList 3, offset <- [0,48.0]]
-                                           ,[(newCroc 8 vels') {ri_X = x}     | x <- xList 9]
-                                           ,[(newTurtles 7 vels') {ri_X = x}  | x <- xList 6]
-                                           ,[(newLog 6 vels') {ri_X = x}      | x <- xList 8]
+                   , riverEnemies = concat [[setX x (newTurtles 10 vels')| x <- xList 5]
+                                           ,[setX (x-offset) (newLog 9 vels')| x <- xList 3, offset <- [0,48.0]]
+                                           ,[setX x (newCroc 8 vels') | x <- xList 9]
+                                           ,[setX x (newTurtles 7 vels') | x <- xList 6]
+                                           ,[setX x (newLog 6 vels') | x <- xList 8]
                                     ]
-                   , roadEnemies = concat [[(newCar 4 vels') {ro_X = x - offset} | x <- xList 3
-                                                                           , offset <- [0, 60.0, 120.0]]
-                                          ,[(newCar 3 vels') {ro_X = x + offset} | x' <- xList 2
-                                                                           , offset <- [0, 60.0]
-                                                                           , let x = initSizeX - x']
-                                          ,[(newCar 2 vels') {ro_X = x} | x <- xList 5]
-                                          ,[(newCar 1 vels') {ro_X = x + offset} | x' <- xList 3
-                                                                           , offset <- [0,50.0]
-                                                                           , let x = initSizeX - x']
-                                          ,[(newCar 0 vels') {ro_X = x} | x <- xList 6]
+                   , roadEnemies = concat [[setX (x+offset) (newCar 4 vels') | x <- xList 3
+                                                                                  , offset <- [0, 60.0, 120.0]]
+                                          ,[setX (x+offset) (newCar 3 vels') | x' <- xList 2
+                                                                                  , offset <- [0, 60.0]
+                                                                                  , let x = initSizeX - x']
+                                          ,[setX x (newCar 2 vels') | x <- xList 5]
+                                          ,[setX (x+offset) (newCar 1 vels')| x' <- xList 3
+                                                                                  , offset <- [0,50.0]
+                                                                                  , let x = initSizeX - x']
+                                          ,[setX x (newCar 0 vels')| x <- xList 6]
                                           ]
                    , frames = 0
                    , time = 0
@@ -190,13 +321,20 @@ startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
 -- CLASS INSTANCE DECLARATIONS
 
 instance Drawable RiverMover where
-  update c@(Croc {ri_X = cx, ri_V = cv})   = c {ri_X = loopX $ cx + cv}
-  update t@(Turtles{ri_X = tx, ri_V = tv}) = t {ri_X = loopX $ tx + tv}
-  update l@(Log{ri_X = lx, ri_V = lv})     = l {ri_X = loopX $ lx + lv}
-  draw Croc {ri_X = cx, ri_Y = cy, ri_L = cl, ri_W = cw, ri_V = cv}
+  getEntity = ri_Entity
+  setX x' r = let re = ri_Entity r
+                  in r {ri_Entity = re {x = x'}}
+  setY y' r = let re = ri_Entity r
+                  in r {ri_Entity = re {y = y'}}
+  setdX dx' r = let re = ri_Entity r
+                    in r {ri_Entity = re {dX = dx'}}
+  setdY dy' r = let re = ri_Entity r
+                    in r {ri_Entity = re {dY = dy'}}
+  update ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
+  draw c@(Croc {})
     = do color $ Color3 0.0 0.5 (0.0 :: Float)
-         translate $ Vector3 cx cy 0.0
-         scale cl cw 1.0
+         translate $ Vector3 (getX c) (getY c) 0.0
+         scale (getL c) (getW c) 1.0
          unitSquare
          color $ Color3 1.0 1.0 (1.0 :: Float)
          preservingMatrix $ do translate $ Vector3 0.8 (0.1) (0.0 :: Float)
@@ -204,9 +342,9 @@ instance Drawable RiverMover where
                                unitSquare
                                translate $ Vector3 0.0 3.0 (0.0 :: Float)
                                unitSquare
-  draw Turtles {ri_X = tx, ri_Y = ty, ri_L = tl, ri_W = tw, ri_V = tv}
-    = do translate $ Vector3 tx ty 0.0
-         scale (tw * signum tv) tw 1.0
+  draw t@(Turtles {})
+    = do translate $ Vector3 (getX t) (getY t) 0.0
+         scale (getL t / 3.0) (getW t) 1.0
          drawTurtles
       where drawTurtles = do drawTurtle
                              translate $ Vector3 1.0 0.0 (0.0 :: Float)
@@ -220,37 +358,62 @@ instance Drawable RiverMover where
                                                   color $ Color3 1.0 0.6 (0.0 :: Float)
                                                   unitCircle
 
-  draw Log {ri_X = lx, ri_Y = ly, ri_L = ll, ri_W = lw, ri_V = lv}
+  draw l@(Log {})
     = do color $ Color3 0.6 0.3 (0.2 :: Float)
-         translate $ Vector3 lx ly 0.0
-         scale ll lw 1.0
+         translate $ Vector3 (getX l) (getY l) 0.0
+         scale (getL l) (getW l) 1.0
          unitSquare
 
 instance Drawable Goal where
+  getEntity = go_Entity
+  setX _ = id
+  setY _ = id
+  setdX _ = id
+  setdY _ = id
   update = id
-  draw Goal {g_X = gx, g_Y = gy, g_S = gs}
+  draw g@(Goal {g_X = gx, g_Y = gy, g_S = gs})
     = do color $ Color3 0.8 0.7 (0.2 :: Float)
-         translate $ Vector3 gx gy 0.0
-         scale gs gs 1.0
+         translate $ Vector3 (getX g) (getY g) 0.0
+         scale (getL g) (getW g) 1.0
          unitSquare
 
 instance Drawable Frogger where
-  update f@(Frogger {f_X = fx, f_V = fv}) = f {f_X = fx + fv}
-  draw Frogger {f_X = fx, f_Y = fy, f_S = fs} = do color $ Color3 0.0 1.0 (0.0 :: Float)
-                                                   translate $ Vector3 fx fy 0.0
-                                                   scale fs fs 1.0
-                                                   unitSquare
+  getEntity = fr_Entity
+  setX x' f = let fe = fr_Entity f
+                  in f {fr_Entity = fe {x = x'}}
+  setY y' f = let fe = fr_Entity f
+                  in f {fr_Entity = fe {y = y'}}
+  setdX dx' f = let fe = fr_Entity f
+                    in f {fr_Entity = fe {dX = dx'}}
+  setdY dy' f = let fe = fr_Entity f
+                    in f {fr_Entity = fe {dY = dy'}}
+  --update f = updateX (getX f + getdX f) . updateY (getY f + getdY f) $ f
+  draw f@(Frogger {})
+    = do color $ Color3 0.0 1.0 (0.0 :: Float)
+         translate $ Vector3 (getX f) (getY f) 0.0
+         scale (getL f) (getW f) 1.0
+         unitSquare
 
 instance Drawable RoadMover where
-  update c@(Car {ro_X = cx, ro_V = cv}) = c {ro_X = loopX $ cx + cv}
-  draw Car {ro_X = cx, ro_Y = cy, ro_L = cl, ro_W = cw} = do color $ Color3 1.0 0.0 (0.0 :: Float)
-                                                             translate $ Vector3 cx cy 0.0
-                                                             scale cl cw 1.0
-                                                             unitSquare
-                                                             color $ Color3 0.3 0.3 (1.0 :: Float)
-                                                             translate $ Vector3 0.8 0.0 (0.0 :: Float)
-                                                             scale 0.1 1.0 (1.0 :: Float)
-                                                             unitSquare
+  getEntity = ro_Entity
+  setX x' r = let re = ro_Entity r
+                  in r {ro_Entity = re {x = x'}}
+  setY y' r = let re = ro_Entity r
+                  in r {ro_Entity = re {y = y'}}
+  setdX dx' r = let re = ro_Entity r
+                    in r {ro_Entity = re {dX = dx'}}
+  setdY dy' r = let re = ro_Entity r
+                    in r {ro_Entity = re {dY = dy'}}
+  update ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
+  draw c@(Car {})
+    = do color $ Color3 1.0 0.0 (0.0 :: Float)
+         translate $ Vector3 (getX c) (getY c) 0.0
+         scale (getL c) (getW c) 1.0
+         unitSquare
+         color $ Color3 0.3 0.3 (1.0 :: Float)
+         translate $ Vector3 0.8 0.0 (0.0 :: Float)
+         scale 0.1 1.0 (1.0 :: Float)
+         unitSquare
 
 -- ADDITIONAL HELPER FUNCTIONS
 
