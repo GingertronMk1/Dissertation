@@ -9,11 +9,14 @@ module Type ( RoadMover(..)
             , initSizeX
             , initSizeY
             , lanes
+            , newPlayer
             ) where
 
 import Graphics.UI.GLUT
 
 -- TYPE DECLARATIONS
+
+type Lane = Int
 
 -- A data type to be contained by all drawn objects
 -- Cuts down on boilerplate x, y, v, l, w values all over the place
@@ -35,12 +38,12 @@ data Entity = Entity { -- Position in x
 data Frogger = Frogger { -- The Entity containing important values about the Frogger
                          fr_Entity :: Entity
                }
-               deriving Show
+               deriving (Eq, Show)
 
 data RoadMover = Car { -- The Entity containing important values about the Car
                        ro_Entity :: Entity
                  }
-                 deriving Show
+                 deriving (Eq, Show)
 
 data RiverMover = Croc { -- The Entity containing important values about the Croc
                          ri_Entity :: Entity
@@ -53,14 +56,14 @@ data RiverMover = Croc { -- The Entity containing important values about the Cro
                 | Log { -- The Entity containing important values about the Log
                         ri_Entity :: Entity
                 }
-                deriving Show
+                deriving (Eq, Show)
 
 data Goal =  Goal { -- The Entity containing important values about the Goal
                     go_Entity :: Entity
                     -- Does the goal currently have a Frogger on it?
                   , is_Occupied :: Bool
           }
-          deriving Show
+          deriving (Eq, Show)
 
 data Env = E { -- The Frogger
                player :: Frogger
@@ -81,7 +84,7 @@ data Env = E { -- The Frogger
                -- The current level
              , level :: Int
          }
-         deriving Show
+         deriving (Eq, Show)
 
 data GameState = PreStart
                | Playing
@@ -137,7 +140,17 @@ class Drawable a where
 
 -- TYPE "CONSTRUCTORS"
 
-newCar :: Int -> [Float] -> RoadMover
+newFrogger :: Frogger
+newFrogger = Frogger {fr_Entity = Entity { dX = 0
+                                         , dY = 0
+                                         , l = 20
+                                         , w = 20}
+                     }
+
+newPlayer :: Frogger
+newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ newFrogger
+
+newCar :: Lane -> [Float] -> RoadMover
 newCar l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
@@ -151,7 +164,7 @@ newCar l v = let x = case mod l 2 of 0 -> 0.0
                                          }
                      }
 
-newCroc :: Int -> [Float] -> RiverMover
+newCroc :: Lane -> [Float] -> RiverMover
 newCroc l v = let x = case mod l 2 of 0 -> 0.0
                                       1 -> initSizeX
                   nv = v !! l
@@ -165,7 +178,7 @@ newCroc l v = let x = case mod l 2 of 0 -> 0.0
                                            }
                        }
 
-newTurtles :: Int -> [Float] -> RiverMover
+newTurtles :: Lane -> [Float] -> RiverMover
 newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                          1 -> initSizeX
                      nv = v !! l
@@ -180,7 +193,7 @@ newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                                  }
                              }
 
-newLog :: Int -> [Float] -> RiverMover
+newLog :: Lane -> [Float] -> RiverMover
 newLog l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
@@ -194,7 +207,7 @@ newLog l v = let x = case mod l 2 of 0 -> 0.0
                                          }
                      }
 
-newGoal :: Float -> Int -> Goal
+newGoal :: Float -> Lane -> Goal
 newGoal gx l = Goal {
                       go_Entity = Entity {x = gx
                                          ,y = lanes !! l + 2
@@ -209,16 +222,7 @@ newGoal gx l = Goal {
 startEnv :: Int -> Env
 startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                  vels' = fmap (*l') vels
-              in E { player = let fWidth = 20.0
-                               in Frogger {
-                                          fr_Entity = Entity {x = (initSizeX - fWidth)/2.0
-                                                              ,y = 4.0
-                                                              ,dX = 0.0
-                                                              ,dY = 0.0
-                                                              ,l = fWidth
-                                                              ,w = fWidth
-                                                              }
-                                          }
+              in E { player = newPlayer
                    , goals = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
                                        2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
                                        3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
@@ -304,7 +308,8 @@ instance Drawable Goal where
   setdX _ = id
   setdY _ = id
   update = id
-  draw g = do color $ Color3 0.8 0.7 (0.2 :: Float)
+  draw g = do if is_Occupied g then color $ Color3 0.0 1.0 (0.0 :: Float)
+                               else color $ Color3 0.8 0.7 (0.2 :: Float)
               translate $ Vector3 (getX g) (getY g) 0.0
               scale (getL g) (getW g) 1.0
               unitSquare
@@ -319,7 +324,6 @@ instance Drawable Frogger where
                     in f {fr_Entity = fe {dX = dx'}}
   setdY dy' f = let fe = fr_Entity f
                     in f {fr_Entity = fe {dY = dy'}}
-  --update f = updateX (getX f + getdX f) . updateY (getY f + getdY f) $ f
   draw f@(Frogger {})
     = do color $ Color3 0.0 1.0 (0.0 :: Float)
          translate $ Vector3 (getX f) (getY f) 0.0
