@@ -102,18 +102,42 @@ hitCheckRiver f rs = let cs = map (riverCollision f) rs
                       in hcri' cs
                      where hcri' [] = Left (PlayerDead "You drowned!")
                            hcri' (s:ss) = case s of Right _ -> s
-                                                    Left (PlayerDead "You got eaten by a croc!") -> s
+                                                    Left (PlayerDead "You got eaten by a crocodile!") -> s
                                                     otherwise -> hcri' ss
 
 -- |Detecting collision with a 'RoadMover'.
 --  When the 'RoadMover' type gets more member options this will be expanded.
 roadCollision :: Frogger -> RoadMover -> GameState
-roadCollision f r = if hasCollided f r then PlayerDead "You got hit by a car!"
-                                       else Playing
+roadCollision f c@(Car {}) = if hasCollided f c then PlayerDead "You got hit by a car!"
+                                                else Playing
 
--- |Detecting collision with a 'RiverMover'
+-- |Detecting collision with a 'RiverMover'.
+--  Stepping on a 'RiverMover' will set the Frogger's 'dX' value to that of the 'RiverMover'.
+--  The exception to this is stepping on (and only on) the first third of a Croc's length - its head.
+--  If you step on a Croc's head you get eaten.
 riverCollision :: Frogger -> RiverMover -> Either GameState Float
-riverCollision f r = if hasCollided f r then Right (getdX r)
+riverCollision f c@(Croc {}) = let cx = getX c
+                                   cy = getY c
+                                   l' = (getL c)/3
+                                   cw = getW c
+                                   crocHead = Croc {ri_Entity = Entity {x = (2 * l') + cx
+                                                                       ,y = cy
+                                                                       ,l = l'
+                                                                       ,w = cw
+                                                                       }
+                                                   }
+                                   crocBody = Croc {ri_Entity = Entity {x = cx
+                                                                       ,y = cy
+                                                                       ,l = 2 * l'
+                                                                       ,w = cw
+                                                                       }
+                                                   }
+                                   headColl = hasCollided f crocHead
+                                   bodyColl = hasCollided f crocBody
+                                in if headColl && not (bodyColl) then Left $ PlayerDead "You got eaten by a crocodile!"
+                                   else if not (headColl || bodyColl) then Left $ PlayerDead "You drowned!"
+                                   else Right $ getdX c
+riverCollision f r = if hasCollided f r then Right $ getdX r
                                         else Left $ PlayerDead "You drowned!"
 
 -- |Detecting collision with a 'Goal'
