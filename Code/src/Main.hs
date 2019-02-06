@@ -1,3 +1,4 @@
+-- |Module: Frogger.Main
 module Main where
 
 import Graphics.UI.GLUT
@@ -7,6 +8,8 @@ import Idle
 import Input
 import Type
 
+-- |'main' takes the arguments given on program launch and creates the initial environment.
+--  It then creates a window of size given by the values 'initSizeX' and 'initSizeY' stored in 'Type'.
 main :: IO()
 main = do (_progName, _args) <- getArgsAndInitialize
           putStrLn (_progName ++ " " ++ concat _args)
@@ -23,5 +26,6 @@ main = do (_progName, _args) <- getArgsAndInitialize
           mainLoop
 
 
+-- |'reshape' is the reshapeCallback, which is called when the window is resized
 reshape size = do viewport $= (Position 0 0, size)
                   postRedisplay Nothing
