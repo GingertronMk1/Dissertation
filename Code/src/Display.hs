@@ -1,10 +1,13 @@
-module Display (display) where
+-- |Module: Frogger.Display
+module Display where
 
 import Graphics.UI.GLUT
 import Data.IORef
 import Data.List (intersperse)
 import Type
 
+-- |A function to draw an 'Env' to the screen.
+--  Clearing the ColorBuffer and loading the Identity are required for animation to work.
 display :: IORef Env -> DisplayCallback
 display m = do fr <- get m
                clear [ColorBuffer]
@@ -61,14 +64,17 @@ display m = do fr <- get m
                      textTranslateScale = do translate $ Vector3 32.0 240.0 (0.0 :: Float)
                                              scale 0.1 0.1 (1.0 :: Float)
 
+-- |Draws a lane, coloured blue.
 drawRiverLane :: Float -> IO()
 drawRiverLane y = preservingMatrix $ do color $ Color3 0.2 0.2 (1.0 :: Float)
                                         drawLane y
 
+-- |Draws a lane, coloured grey.
 drawRoadLane :: Float -> IO()
 drawRoadLane y = preservingMatrix $ do color $ Color3 0.3 0.3 (0.3 :: Float)
                                        drawLane y
 
+-- |Draws a quadrilateral the width of the screen.
 drawLane :: Float -> IO()
 drawLane y = do translate $ Vector3 0.0 y 0.0
                 scale initSizeX 30.0 (1.0 :: Float)

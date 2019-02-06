@@ -1,156 +1,172 @@
-module Type ( RoadMover(..)
-            , RiverMover(..)
-            , Frogger(..)
-            , Goal (..)
-            , Env(..)
-            , GameState(..)
-            , startEnv
-            , Drawable(..)
-            , initSizeX
-            , initSizeY
-            , lanes
-            , newPlayer
-            ) where
+-- |Module: Frogger.Type
+module Type where
 
 import Graphics.UI.GLUT
 
--- TYPE DECLARATIONS
+-- * Initial Values
 
+-- |The initial width of the window.
+--  The window is initially set to 640x480px.
+initSizeX :: Float
+initSizeX = 640
+
+-- |The initial height of the window.
+--  The window is initially set to 640x480px.
+initSizeY :: Float
+initSizeY = 480.0
+
+-- |The distance off-screen for objects to be drawn.
+-- This is to be used when an object "loops" around, such that it does not disappear as soon as it reaches the edge of the screen.
+screenEdge :: Float
+screenEdge = 100.0
+
+-- |The full distance from the origin to the edge of the "screen" in x.
+screenWidth :: Float
+screenWidth = initSizeX + screenEdge
+
+-- |The y values for each lane, starting at the first road lane
+lanes :: [Float]
+lanes = let lane = realToFrac (initSizeY / 15) :: Float
+         in tail [0.0,lane..]
+
+-- |The initial velocities for each lanes
+--  Ideally this will at some point be generated more randomly, however for the moment it is statically defined
+vels :: [Float]
+vels = [0.5, -0.3, 0.6, -0.4, 0.7, 0.0, 0.4, -0.3, 0.6, -0.8, 0.5]
+
+-- * Type Declarations
+
+-- |'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
 type Lane = Int
 
--- A data type to be contained by all drawn objects
--- Cuts down on boilerplate x, y, v, l, w values all over the place
-data Entity = Entity { -- Position in x
-                       x :: Float
-                       -- Position in y
-                     , y :: Float
-                       -- Velocity in x
-                     , dX :: Float
-                       -- Velocity in y
-                     , dY :: Float
-                       -- Length
-                     , l  :: Float
-                       -- Width
-                     , w  :: Float
+-- |A data type to be contained by all drawn objects
+--  Cuts down on boilerplate x, y, v, l, w values all over the place
+data Entity = Entity {
+                       x :: Float   -- ^ Position in x
+                     , y :: Float   -- ^ Position in y
+                     , dX :: Float  -- ^ Velocity in x
+                     , dY :: Float  -- ^ Velocity in y
+                     , l  :: Float  -- ^ Length
+                     , w  :: Float  -- ^ Width
               }
               deriving (Eq, Show)
 
-data Frogger = Frogger { -- The Entity containing important values about the Frogger
-                         fr_Entity :: Entity
+-- |The data type for the player.
+data Frogger = Frogger {fr_Entity :: Entity -- ^ The Entity containing important values about the Frogger
                }
                deriving (Eq, Show)
 
-data RoadMover = Car { -- The Entity containing important values about the Car
-                       ro_Entity :: Entity
+-- |The data type for all vehicles on the Road.
+data RoadMover = -- | A Car
+                 Car {ro_Entity :: Entity -- ^ The Entity containing important values about the Car
                  }
                  deriving (Eq, Show)
 
-data RiverMover = Croc { -- The Entity containing important values about the Croc
-                         ri_Entity :: Entity
+-- |The data type for all objects on the River.
+data RiverMover = -- | A Crocodile
+                  Croc { ri_Entity :: Entity    -- ^ The Entity containing important values about the Croc
                   }
-                | Turtles {  -- Are the turtles above water?
-                            aboveWater :: Bool
-                             -- The Entity containing important values about the Turtles
-                          , ri_Entity :: Entity
+                  -- | Some Turtles
+                | Turtles { aboveWater :: Bool  -- ^ Are the turtles above water?
+                          , ri_Entity :: Entity -- ^ The Entity containing important values about the Turtles
                 }
-                | Log { -- The Entity containing important values about the Log
-                        ri_Entity :: Entity
+                  -- | A Log
+                | Log { ri_Entity :: Entity     -- ^ The Entity containing important values about the Log
                 }
                 deriving (Eq, Show)
 
-data Goal =  Goal { -- The Entity containing important values about the Goal
-                    go_Entity :: Entity
-                    -- Does the goal currently have a Frogger on it?
-                  , is_Occupied :: Bool
+-- |The data type for the goals of each level.
+data Goal =  Goal { go_Entity :: Entity -- ^ The Entity containing important values about the Goal
+                  , is_Occupied :: Bool -- ^ Does the goal currently have a Frogger on it?
           }
           deriving (Eq, Show)
 
-data Env = E { -- The Frogger
-               player :: Frogger
-               -- The enemies on the road
-             , roadEnemies :: [RoadMover]
-               -- The "enemies" on the river
-             , riverEnemies :: [RiverMover]
-               -- The goal/s
-             , goals :: [Goal]
-               -- The total elapsed number of frames
-             , frames :: Int
-               -- The total elapsed time since game start
-             , time :: Float
-               -- The current state of the game
-             , gameState :: GameState
-               -- The current score
-             , gameScore :: Int
-               -- The current level
-             , level :: Int
+-- |A data type describing the state of the game - playing, paused, etc.
+data GameState = PreStart           -- ^ Before the start of the first level.
+               | Playing            -- ^ While the game is in progress.
+               | Paused             -- ^ The player has paused the game.
+               | PlayerDead String  -- ^ The String here is to be used as a "cause of death" message.
+               | LevelComplete      -- ^ The level is complete.
+               deriving (Eq, Show)
+
+
+-- |The data type that will describe the overall state, or Environment" of the game at any given time.
+data Env = E { player :: Frogger            -- ^The Frogger.
+             , roadEnemies :: [RoadMover]   -- ^The enemies on the road.
+             , riverEnemies :: [RiverMover] -- ^The "enemies" on the river.
+             , goals :: [Goal]              -- ^The goal/s.
+             , frames :: Int                -- ^The total elapsed number of frames.
+             , time :: Float                -- ^The total elapsed time since game start.
+             , gameState :: GameState       -- ^The current state of the game.
+             , gameScore :: Int             -- ^The current score.
+             , level :: Int                 -- ^The current level.
          }
          deriving (Eq, Show)
 
-data GameState = PreStart
-               | Playing
-               | Paused
-               | PlayerDead String
-               | LevelComplete
-               deriving (Eq, Show)
+-- * Class Declarations
 
--- CLASS DECLARATIONS
-
+-- |A typeclass which will contain all objects that are drawn to the screen.
+--  This should cut down enormously on boilerplate code, and allow for some level of polymorphism whilst maintaining type clarity.
 class Drawable a where
-  -- A function to draw the object to the screen
+  -- | A function to draw the object to the screen.
   draw :: a -> IO()
-  -- A function to draw the object, preserving the current transformation matrix
+  -- | Get the Entity out of the object.
+  getEntity :: a -> Entity
+  -- | Set the x value of the entity within the Drawable.
+  setX :: Float -> a -> a
+  -- | Set the y value of the entity within the Drawable.
+  setY :: Float -> a -> a
+  -- | Set the dX value of the entity within the Drawable.
+  setdX :: Float -> a -> a
+  -- | Set the dY value of the entity within the Drawable.
+  setdY :: Float -> a -> a
+  -- | A function to draw the object, preserving the current transformation matrix.
   preservingDraw :: a -> IO()
   preservingDraw = preservingMatrix . draw
-  -- Preserved drawing multiple items in a list
+  -- | Preserved drawing multiple items in a list.
   preservingDraws :: [a] -> IO[()]
   preservingDraws = sequence . map preservingDraw
-  -- Get the Entity out of the object
-  getEntity :: a -> Entity
-  -- Get the x value out of that entity
+  -- | Get the x value out of that entity.
   getX :: a -> Float
   getX = x . getEntity
-  -- Get the y value out of that entity
+  -- | Get the y value out of that entity.
   getY :: a -> Float
   getY = y . getEntity
-  -- Get the dX value out of that entity
+  -- | Get the dX value out of that entity.
   getdX :: a -> Float
   getdX = dX . getEntity
-  -- Get the dY value out of that entity
+  -- | Get the dY value out of that entity.
   getdY :: a -> Float
   getdY = dY . getEntity
-  -- Get the l value out of that entity
+  -- | Get the length value out of that entity.
   getL :: a -> Float
   getL = l . getEntity
-  -- Get the w value out of that entity
+  -- | Get the width value out of that entity.
   getW :: a -> Float
   getW = w . getEntity
-  -- Update values in entities
+  -- | Update the x value of an entity based on its dX value.
   updateX :: a -> a
   updateX d = setX (getX d + getdX d) d
+  -- | Update the y value of an entity based on its dY value.
   updateY :: a -> a
   updateY d = setY (getY d + getdY d) d
-  -- Set values in entities
-  setX :: Float -> a -> a
-  setY :: Float -> a -> a
-  setdX :: Float -> a -> a
-  setdY :: Float -> a -> a
-  -- A function to update the object over time
+  -- | A function to update the object over time.
   update :: a -> a
   update = updateX . updateY
 
--- TYPE "CONSTRUCTORS"
+-- * Type Constructors
 
-newFrogger :: Frogger
-newFrogger = Frogger {fr_Entity = Entity { dX = 0
-                                         , dY = 0
-                                         , l = 20
-                                         , w = 20}
-                     }
+newPlayer :: Frogger  -- ^ Constructing a Frogger at the default start position
+newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ Frogger {fr_Entity = Entity {dX = 0
+                                                                                             ,dY = 0
+                                                                                             ,l  = 20
+                                                                                             ,w  = 20
+                                                                                             }
+                                                                         }
 
-newPlayer :: Frogger
-newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ newFrogger
-
-newCar :: Lane -> [Float] -> RoadMover
+newCar :: Lane      -- ^ The lane the Car should occupy
+       -> [Float]   -- ^ The list of velocities from which the car will take its
+       -> RoadMover -- ^ The resultant Car
 newCar l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
@@ -164,7 +180,9 @@ newCar l v = let x = case mod l 2 of 0 -> 0.0
                                          }
                      }
 
-newCroc :: Lane -> [Float] -> RiverMover
+newCroc :: Lane       -- ^ The lane the Croc should occupy
+        -> [Float]    -- ^ The list of velocities from which the car will take its
+        -> RiverMover -- ^ The resultant Croc
 newCroc l v = let x = case mod l 2 of 0 -> 0.0
                                       1 -> initSizeX
                   nv = v !! l
@@ -178,7 +196,9 @@ newCroc l v = let x = case mod l 2 of 0 -> 0.0
                                            }
                        }
 
-newTurtles :: Lane -> [Float] -> RiverMover
+newTurtles :: Lane        -- ^ The lane the Turtles should occupy
+           -> [Float]     -- ^ The list of velocities from which the car will take its
+           -> RiverMover  -- ^ The resultant Turtles
 newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                          1 -> initSizeX
                      nv = v !! l
@@ -193,7 +213,9 @@ newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                                  }
                              }
 
-newLog :: Lane -> [Float] -> RiverMover
+newLog :: Lane        -- ^ The lane the Log should occupy
+       -> [Float]     -- ^ The list of velocities from which the car will take its
+       -> RiverMover  -- ^ The resultant Log
 newLog l v = let x = case mod l 2 of 0 -> 0.0
                                      1 -> initSizeX
                  nv = v !! l
@@ -207,7 +229,10 @@ newLog l v = let x = case mod l 2 of 0 -> 0.0
                                          }
                      }
 
-newGoal :: Float -> Lane -> Goal
+-- |Constructing a new Goal in lane l and at x position gx
+newGoal :: Float  -- ^ The x position of the Goal
+        -> Lane   -- ^ The lane the Goal should occupy
+        -> Goal   -- ^ The resultant Goal
 newGoal gx l = Goal {
                       go_Entity = Entity {x = gx
                                          ,y = lanes !! l + 2
@@ -219,16 +244,21 @@ newGoal gx l = Goal {
                     , is_Occupied = False
                     }
 
-startEnv :: Int -> Env
+startEnv :: Int   -- ^ The level of the new Env
+         -> Env
 startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                  vels' = fmap (*l') vels
               in E { player = newPlayer
-                   , goals = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
-                                       2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
-                                       3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
-                                       4         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-96, -24, 48, 120]]
-                                       otherwise -> [newGoal ((initSizeX/2) - x) 11 | x <- [-180, -84, 12, 108, 204]]
+                   , goals = case l of
+                                       1         -> [newGoal ((initSizeX/2) - 12) 11]
 
+                                       2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
+
+                                       3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
+
+                                       4         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-96, -24, 48, 120]]
+
+                                       otherwise -> [newGoal ((initSizeX/2) - x) 11 | x <- [-180, -84, 12, 108, 204]]
                    , riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
                                            ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
                                            ,[setX x (newCroc 8 vels')         | x <- xList 9]
@@ -252,10 +282,11 @@ startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                    , gameScore = 0
                    , level = 1
                    }
-               where xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
+               where -- |The function to generate the list of x values for a given lane, of length n
+                     xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
                      modFrac n d = mod (round n) (round d)
 
--- CLASS INSTANCE DECLARATIONS
+-- * Class Instance Declarations
 
 instance Drawable RiverMover where
   getEntity = ri_Entity
@@ -351,45 +382,25 @@ instance Drawable RoadMover where
          scale 0.1 1.0 (1.0 :: Float)
          unitSquare
 
--- ADDITIONAL HELPER FUNCTIONS
+-- * Additional Helper Functions
 
+-- |'loopX' is used to loop the x-value of moving objects
 loopX :: Float -> Float
 loopX n = if n < (-screenEdge) then screenWidth
           else if n > screenWidth then (-screenEdge)
           else n
 
+-- |Drawing a circle of radius 1
 unitCircle :: IO()
 unitCircle = let n = 50.0
                  points = [(0.5*(sin (2*pi*k/n)+1.0), 0.5*(cos (2*pi*k/n)+1.0), 0) | k <- [1..n]]
               in (renderPrimitive Polygon . mapM_ makeVertex) points
 
+-- |Drawing a square of size 1x1
 unitSquare :: IO()
 unitSquare = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float)]
              in (renderPrimitive Quads . mapM_ makeVertex) us
 
-
+-- |A function to essentially curry the vertex constructor in the GLUT library
 makeVertex :: (Float, Float, Float) -> IO()
 makeVertex (x,y,z) = vertex $ Vertex3 x y z
-
--- INITIAL VALUES FOR THINGS
-
-initSizeX :: Float    -- The initial width of the window
-initSizeX = 640
---initSizeX = 800
-
-initSizeY :: Float    -- The initial height of the window
-initSizeY = 480.0
---initSizeY = 600
-
-screenEdge :: Float   -- The distance off-screen for objects to be drawn
-screenEdge = 100.0
-
-screenWidth :: Float
-screenWidth = initSizeX + screenEdge
-
-lanes :: [Float]
-lanes = let lane = realToFrac (initSizeY / 15) :: Float
-         in tail [0.0,lane..]
-
-vels :: [Float]
-vels = [0.5, -0.3, 0.6, -0.4, 0.7, 0.0, 0.4, -0.3, 0.6, -0.8, 0.5]
