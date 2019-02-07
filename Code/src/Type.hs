@@ -100,15 +100,17 @@ data GameState = PreStart           -- ^ Before the start of the first level.
 
 
 -- |The data type that will describe the overall state, or Environment" of the game at any given time.
-data Env = E { player :: Frogger            -- ^The Frogger.
-             , roadEnemies :: [RoadMover]   -- ^The enemies on the road.
+data Env = E { player       :: Frogger      -- ^The Frogger.
+             , roadEnemies  :: [RoadMover]  -- ^The enemies on the road.
              , riverEnemies :: [RiverMover] -- ^The "enemies" on the river.
-             , goals :: [Goal]              -- ^The goal/s.
-             , frames :: Int                -- ^The total elapsed number of frames.
-             , time :: Float                -- ^The total elapsed time since game start.
-             , gameState :: GameState       -- ^The current state of the game.
-             , gameScore :: Int             -- ^The current score.
-             , level :: Int                 -- ^The current level.
+             , goals        :: [Goal]       -- ^The goal/s.
+             , frames       :: Int          -- ^The total elapsed number of frames.
+             , time         :: Float        -- ^The total elapsed time since game start.
+             , gameState    :: GameState    -- ^The current state of the game.
+             , gameScore    :: Int          -- ^The current score.
+             , level        :: Int          -- ^The current level.
+             , sWidth  :: Float        -- ^The width of the window in pixels
+             , sHeight :: Float        -- ^The height of the window in pixels
          }
          deriving (Eq, Show)
 
@@ -261,16 +263,7 @@ startEnv :: Int   -- ^ The level of the new Env
 startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                  vels' = fmap (*l') vels
               in E { player = newPlayer
-                   , goals = case l of
-                                       1         -> [newGoal ((initSizeX/2) - 12) 11]
-
-                                       2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
-
-                                       3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
-
-                                       4         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-96, -24, 48, 120]]
-
-                                       otherwise -> [newGoal ((initSizeX/2) - x) 11 | x <- [-180, -84, 12, 108, 204]]
+                   , goals = goalGen l
                    , riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
                                            ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
                                            ,[setX x (newCroc 8 vels')         | x <- xList 9]
@@ -322,7 +315,9 @@ instance Drawable Goal where
   setdX _ = id
   setdY _ = id
   update = id
-  draw g = Color yellow . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
+  draw g = let c = if is_Occupied g then Color green
+                                    else Color yellow 
+            in c . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
 
 instance Drawable Frogger where
   getEntity = fr_Entity
@@ -339,7 +334,7 @@ instance Drawable Frogger where
       else if ijx && getX f == tx then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingX = False}
       else                             updateX . updateY $ f
 
-  draw f@(Frogger {}) = Color chartreuse . translate (getX f) (getY f) . scale (getL f) (getW f) $ unitSquare
+  draw f@(Frogger {}) = Color white . translate (getX f) (getY f) . scale (getL f) (getW f) $ unitSquare
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
@@ -366,6 +361,14 @@ loopX :: Float -> Float
 loopX n = if n < (-screenEdge) then screenWidth
           else if n > screenWidth then (-screenEdge)
           else n
+
+goalGen :: Int -> [Goal]
+goalGen l = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
+                      2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
+                      3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
+                      4         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-96, -24, 48, 120]]
+                      otherwise -> [newGoal ((initSizeX/2) - x) 11 | x <- [-180, -84, 12, 108, 204]]
+
 
 unitSquare :: Picture
 unitSquare = Polygon [(1,0),(1,1),(0,1),(0,0)]
