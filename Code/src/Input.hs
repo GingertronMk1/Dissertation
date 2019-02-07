@@ -49,21 +49,25 @@ inputPaused m c Down _ _
 inputPaused _ _ _ _ _ = return ()
 
 -- |The input handler for when the game is in progress.
---  'w', 'a', 's', and 'd' move the player up, left, down, and right respectively.
+--  'w', 'a', 's', and 'd' cause the player to jump up, left, down, and right respectively.
 --  Pressing space will pause the level, and pressing Esc will quit the game.
 inputPlaying :: IORef Env -> KeyboardMouseCallback
 inputPlaying m c Down _ _
-  | c == (Char 'w') || c == (Char 'W') = m $~! \e -> e {player = playerJumpY (player e) 1}
-  | c == (Char 'a') || c == (Char 'A') = m $~! \e -> e {player = playerJumpX (player e) (-1)}
-  | c == (Char 's') || c == (Char 'S') = m $~! \e -> e {player = playerJumpY (player e) (-1)}
-  | c == (Char 'd') || c == (Char 'D') = m $~! \e -> e {player = playerJumpX (player e) 1}
-  | c == (Char ' ')                    = m $~! \e -> e {gameState = Paused}
-  | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead "You quit"}
-  | otherwise                          = return ()
+  | c == (Char 'w')   = m $~! \e -> e {player = playerJumpY (player e) 1}
+  | c == (Char 'a')   = m $~! \e -> e {player = playerJumpX (player e) (-1)}
+  | c == (Char 's')   = m $~! \e -> e {player = playerJumpY (player e) (-1)}
+  | c == (Char 'd')   = m $~! \e -> e {player = playerJumpX (player e) 1}
+  | c == (Char 'W')   = m $~! \e -> e {player = playerJumpY (player e) 2}
+  | c == (Char 'A')   = m $~! \e -> e {player = playerJumpX (player e) (-2)}
+  | c == (Char 'S')   = m $~! \e -> e {player = playerJumpY (player e) (-2)}
+  | c == (Char 'D')   = m $~! \e -> e {player = playerJumpX (player e) 2}
+  | c == (Char ' ')   = m $~! \e -> e {gameState = Paused}
+  | c == (Char '\27') = m $~! \e -> e {gameState = PlayerDead "You quit"}
+  | otherwise         = return ()
   where step = 32
         speed = 1.0
         setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
         ignoringJump p f n = if is_Jumping p then p else f n p
-        playerJumpX p = ignoringJump p (\n f -> setdX (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + (step*n)})
-        playerJumpY p = ignoringJump p (\n f -> setdY (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + (step*n)})
+        playerJumpX p = ignoringJump p (\n f -> let stepNo = step * (signum n) in setdX (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + stepNo})
+        playerJumpY p = ignoringJump p (\n f -> let stepNo = step * (signum n) in setdY (speed*n) . setPrevs $ f {is_JumpingY = True, targetY = getY f + stepNo})
 inputPlaying _ _ _ _ _ = return ()
