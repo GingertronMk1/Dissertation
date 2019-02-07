@@ -8,34 +8,40 @@ import Type
 
 -- |A function to draw an 'Env' to the screen.
 gameDisplay :: Env -> Picture
-gameDisplay e
-  = translate (-320) (-240) $ case (gameState e) of PreStart          -> Pictures [translate 0 320 . textDraw $ "Welcome to Functional Frogger!"
-                                                                                  ,translate 0 300 . textDraw $ "W, A, S, and D are your movement keys!"
-                                                                                  ,translate 0 280 . textDraw $ "Space to pause, and ESC to quit!"
-                                                                                  ,translate 0 260 . textDraw $ "Press any key to start!"
-                                                                                  ]
-                                                    PlayerDead cause  -> Pictures [translate 0 320 . textDraw $ cause
-                                                                                  ,translate 0 300 . textDraw $ "You died with " ++ show (gameScore e) ++ " points!"
-                                                                                  ,translate 0 280 . textDraw $ "Press space to play again!"
-                                                                                  ]
-                                                    LevelComplete     -> Pictures [translate 0 320 . textDraw $ "You completed level " ++ show (level e) ++ " with " ++ show (gameScore e) ++" points!"
-                                                                                  ,translate 0 300 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
-                                                                                  ]
-                                                    otherwise         -> Pictures [
-                                                                                   drawRoads
-                                                                                  ,drawRiver
-                                                                                  ,translate 0 440 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
-                                                                                  ,translate 400 440 . textDraw . show . round $  time e
-                                                                                  ,draws $ riverEnemies e
-                                                                                  ,draws $ roadEnemies e
-                                                                                  ,draws $ goals e
-                                                                                  ,draw $ player e
-                                                                                  ]
+gameDisplay e@E{sWidth = sw, sHeight = sh}
+  = scale (sw/640) (sh/480) . translate (-320) (-240) $ case (gameState e) of {-PreStart          -> Pictures [translate 0 320 . textDraw $ "Welcome to Functional Frogger!"
+                                                                                                            ,translate 0 300 . textDraw $ "W, A, S, and D are your movement keys!"
+                                                                                                            ,translate 0 280 . textDraw $ "Space to pause, and ESC to quit!"
+                                                                                                            ,translate 0 260 . textDraw $ "Press any key to start!"
+                                                                                                            ]-}
+                                                                              PlayerDead cause  -> Pictures [translate 0 320 . textDraw $ cause
+                                                                                                            ,translate 0 300 . textDraw $ "You died with " ++ show (gameScore e) ++ " points!"
+                                                                                                            ,translate 0 280 . textDraw $ "Press space to play again!"
+                                                                                                            ]
+                                                                              LevelComplete     -> Pictures [translate 0 320 . textDraw $ "You completed level " ++ show (level e) ++ " with " ++ show (gameScore e) ++" points!"
+                                                                                                            ,translate 0 300 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
+                                                                                                            ]
+                                                                              otherwise         -> Pictures [
+                                                                                                            drawRoads
+                                                                                                            ,drawRiver
+                                                                                                            ,translate 0 440 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
+                                                                                                            ,translate 400 440 . textDraw . show . round $  time e
+                                                                                                            ,draws $ riverEnemies e
+                                                                                                            ,draws $ roadEnemies e
+                                                                                                            ,draws $ goals e
+                                                                                                            ,draw $ player e
+                                                                                                            ,drawSides
+                                                                                                            ]
     where textDraw = Color white . Scale 0.1 0.1 . Text
 
 drawRoads :: Picture
 drawRoads = Pictures [Color (greyN 0.5) $ drawLane n | n <- [0..4]]
+
 drawRiver :: Picture
 drawRiver = Pictures [Color blue $ drawLane n | n <- [6..10]]
-
 drawLane n = translate 0 (lanes!!n) . Scale 640 30 $ unitSquare
+
+drawSides = let w = 200
+             in Pictures [translate (640) 0 . scale w 480 $ unitSquare
+                         ,translate (-w) 0 . scale w 480 $ unitSquare]
+
