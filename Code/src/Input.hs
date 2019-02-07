@@ -8,25 +8,25 @@ import Type
 
 gameInput :: Event -> Env -> Env
 gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart ev en
-                                                Playing       -> inputPlaying ev en
-                                                Paused        -> inputPaused ev en
-                                                PlayerDead _  -> inputDead ev en
-                                                LevelComplete -> inputComplete ev en
+                                               Playing       -> inputPlaying ev en
+                                               Paused        -> inputPaused ev en
+                                               PlayerDead _  -> inputDead ev en
+                                               LevelComplete -> inputComplete ev en
 
 inputPreStart :: Event -> Env -> Env
 inputPreStart (EventKey (SpecialKey KeySpace) Down _ _) e = e {player = newPlayer, gameState = Playing}
 inputPreStart _ e                                         = e
 
 inputPlaying :: Event -> Env -> Env
-inputPlaying (EventKey c Down _ _) e
-  | c == (Char 'w') = e {player = jumpY 1    (player e)}
-  | c == (Char 'a') = e {player = jumpX (-1) (player e)}
-  | c == (Char 's') = e {player = jumpY (-1) (player e)}
-  | c == (Char 'd') = e {player = jumpX 1    (player e)}
-  | c == (Char 'W') = e {player = jumpY 4    (player e)}
-  | c == (Char 'A') = e {player = jumpX (-4) (player e)}
-  | c == (Char 'S') = e {player = jumpY (-4) (player e)}
-  | c == (Char 'D') = e {player = jumpX 4    (player e)}
+inputPlaying (EventKey c Down _ _) e@E {player = p}
+  | c == (Char 'w') = e {player = jumpY 1    p}
+  | c == (Char 'a') = e {player = jumpX (-1) p}
+  | c == (Char 's') = e {player = jumpY (-1) p}
+  | c == (Char 'd') = e {player = jumpX 1    p}
+  | c == (Char 'W') = e {player = jumpY 4    p}
+  | c == (Char 'A') = e {player = jumpX (-4) p}
+  | c == (Char 'S') = e {player = jumpY (-4) p}
+  | c == (Char 'D') = e {player = jumpX 4    p}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
   where step = 32
@@ -54,7 +54,7 @@ inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = l}
           ,riverEnemies = map moddX $ riverEnemies e
           ,goals = goalGen l'
           ,level = l'
-          ,gameState = PreStart
+          ,gameState = Playing
           }
   where moddX m = setdX (getdX m * 1.05) m
 inputComplete _ e                                                       = e
