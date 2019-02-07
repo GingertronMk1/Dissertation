@@ -30,7 +30,7 @@ screenWidth = initSizeX + screenEdge
 -- |The y values for each lane, starting at the first road lane
 lanes :: [Float]
 lanes = let lane = realToFrac (initSizeY / 15) :: Float
-         in tail [0.0,lane..]
+         in takeWhile (<initSizeY) . tail $ [0.0,lane..]
 
 -- |The initial velocities for each lanes
 --  Ideally this will at some point be generated more randomly, however for the moment it is statically defined
@@ -372,21 +372,6 @@ goalGen l = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
 
 unitSquare :: Picture
 unitSquare = Polygon [(1,0),(1,1),(0,1),(0,0)]
+
 unitCircle :: Picture
 unitCircle = let k = 10 in Polygon [(0.5*(sin (2*pi*k)+1.0), 0.5*(cos (2*pi*k)+1.0)) | k <- [1..k]]
-{-
--- |Drawing a circle of radius 1
-unitCircle :: IO()
-unitCircle = let n = 50.0
-                 points = [(0.5*(sin (2*pi*k/n)+1.0), 0.5*(cos (2*pi*k/n)+1.0), 0) | k <- [1..n]]
-              in (renderPrimitive Polygon . mapM_ makeVertex) points
-
--- |Drawing a square of size 1x1
-unitSquare :: IO()
-unitSquare = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float)]
-             in (renderPrimitive Quads . mapM_ makeVertex) us
-
--- |A function to essentially curry the vertex constructor in the GLUT library
-makeVertex :: (Float, Float, Float) -> IO()
-makeVertex (x,y,z) = vertex $ Vertex3 x y z
--}
