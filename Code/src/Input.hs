@@ -54,15 +54,36 @@ inputPaused _ _ _ _ _ = return ()
 inputPlaying :: IORef Env -> KeyboardMouseCallback
 inputPlaying m c Down _ _
   | c == (Char 'w') || c == (Char 'W') = m $~! \e -> let p = player e
-                                                     in e {player = setY (getY p + step) p}
+                                                     in e {player = setdY speed p {is_JumpingY = True
+                                                                                  ,targetY = getY p + step
+                                                                                  ,prev_dX = getdX p
+                                                                                  ,prev_dY = getdY p
+                                                                                  }
+                                                          }
   | c == (Char 'a') || c == (Char 'A') = m $~! \e -> let p = player e
-                                                     in e {player = setX (getX p - step) p}
+                                                     in e {player = setdX (-speed) p {is_JumpingX = True
+                                                                                     ,targetX = getX p - step
+                                                                                     ,prev_dX = getdX p
+                                                                                     ,prev_dY = getdY p
+                                                                                     }
+                                                          }
   | c == (Char 's') || c == (Char 'S') = m $~! \e -> let p = player e
-                                                     in e {player = setY (getY p - step) p}
+                                                     in e {player = setdY (-speed) p {is_JumpingY = True
+                                                                                     ,targetY = getY p - step
+                                                                                     ,prev_dX = getdX p
+                                                                                     ,prev_dY = getdY p
+                                                                                     }
+                                                          }
   | c == (Char 'd') || c == (Char 'D') = m $~! \e -> let p = player e
-                                                     in e {player = setX (getX p + step) p}
+                                                     in e {player = setdX speed p {is_JumpingX = True
+                                                                                  ,targetX = getX p + step
+                                                                                  ,prev_dX = getdX p
+                                                                                  ,prev_dY = getdY p
+                                                                                  }
+                                                          }
   | c == (Char ' ')                    = m $~! \e -> e {gameState = Paused}
   | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead "You quit"}
   | otherwise                          = return ()
   where step = 32
+        speed = 1.0
 inputPlaying _ _ _ _ _ = return ()
