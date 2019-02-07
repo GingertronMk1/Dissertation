@@ -53,38 +53,17 @@ inputPaused _ _ _ _ _ = return ()
 --  Pressing space will pause the level, and pressing Esc will quit the game.
 inputPlaying :: IORef Env -> KeyboardMouseCallback
 inputPlaying m c Down _ _
-  | c == (Char 'w') || c == (Char 'W') = m $~! \e -> let p = player e
-                                                     in if is_Jumping p
-                                                        then e
-                                                        else e {player = setdY speed . setPrevs $ p {is_JumpingY = True
-                                                                                                    ,targetY = getY p + step
-                                                                                                    }
-                                                               }
-  | c == (Char 'a') || c == (Char 'A') = m $~! \e -> let p = player e
-                                                     in if is_Jumping p
-                                                        then e
-                                                        else e {player = setdX (-speed) . setPrevs $ p {is_JumpingX = True
-                                                                                                       ,targetX = getX p - step
-                                                                                                       }
-                                                               }
-  | c == (Char 's') || c == (Char 'S') = m $~! \e -> let p = player e
-                                                     in if is_Jumping p
-                                                        then e
-                                                        else e {player = setdY (-speed) . setPrevs $ p {is_JumpingY = True
-                                                                                                       ,targetY = getY p - step
-                                                                                                       }
-                                                               }
-  | c == (Char 'd') || c == (Char 'D') = m $~! \e -> let p = player e
-                                                     in if is_Jumping p
-                                                        then e
-                                                        else e {player = setdX speed . setPrevs $  p {is_JumpingX = True
-                                                                                                     ,targetX = getX p + step
-                                                                                                     }
-                                                               }
+  | c == (Char 'w') || c == (Char 'W') = m $~! \e -> e {player = playerJumpY (player e) 1}
+  | c == (Char 'a') || c == (Char 'A') = m $~! \e -> e {player = playerJumpX (player e) (-1)}
+  | c == (Char 's') || c == (Char 'S') = m $~! \e -> e {player = playerJumpY (player e) (-1)}
+  | c == (Char 'd') || c == (Char 'D') = m $~! \e -> e {player = playerJumpX (player e) 1}
   | c == (Char ' ')                    = m $~! \e -> e {gameState = Paused}
   | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead "You quit"}
   | otherwise                          = return ()
   where step = 32
         speed = 1.0
         setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
+        ignoringJump p f n = if is_Jumping p then p else f n p
+        playerJumpX p = ignoringJump p (\n f -> setdX (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + (step*n)})
+        playerJumpY p = ignoringJump p (\n f -> setdY (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + (step*n)})
 inputPlaying _ _ _ _ _ = return ()
