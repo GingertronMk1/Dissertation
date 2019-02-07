@@ -56,38 +56,30 @@ inputPlaying m c Down _ _
   | c == (Char 'w') || c == (Char 'W') = m $~! \e -> let p = player e
                                                      in if is_Jumping p
                                                         then e
-                                                        else e {player = setdY speed p {is_JumpingY = True
-                                                                                       ,targetY = getY p + step
-                                                                                       ,prev_dX = getdX p
-                                                                                       ,prev_dY = getdY p
-                                                                                      }
+                                                        else e {player = setdY speed . setPrevs $ p {is_JumpingY = True
+                                                                                                    ,targetY = getY p + step
+                                                                                                    }
                                                                }
   | c == (Char 'a') || c == (Char 'A') = m $~! \e -> let p = player e
                                                      in if is_Jumping p
                                                         then e
-                                                        else e {player = setdX (-speed) p {is_JumpingX = True
-                                                                                          ,targetX = getX p - step
-                                                                                          ,prev_dX = getdX p
-                                                                                          ,prev_dY = getdY p
-                                                                                          }
+                                                        else e {player = setdX (-speed) . setPrevs $ p {is_JumpingX = True
+                                                                                                       ,targetX = getX p - step
+                                                                                                       }
                                                                }
   | c == (Char 's') || c == (Char 'S') = m $~! \e -> let p = player e
                                                      in if is_Jumping p
                                                         then e
-                                                        else e {player = setdY (-speed) p {is_JumpingY = True
-                                                                                          ,targetY = getY p - step
-                                                                                          ,prev_dX = getdX p
-                                                                                          ,prev_dY = getdY p
-                                                                                          }
+                                                        else e {player = setdY (-speed) . setPrevs $ p {is_JumpingY = True
+                                                                                                       ,targetY = getY p - step
+                                                                                                       }
                                                                }
   | c == (Char 'd') || c == (Char 'D') = m $~! \e -> let p = player e
                                                      in if is_Jumping p
                                                         then e
-                                                        else e {player = setdX speed p {is_JumpingX = True
-                                                                                       ,targetX = getX p + step
-                                                                                       ,prev_dX = getdX p
-                                                                                       ,prev_dY = getdY p
-                                                                                       }
+                                                        else e {player = setdX speed . setPrevs $  p {is_JumpingX = True
+                                                                                                     ,targetX = getX p + step
+                                                                                                     }
                                                                }
   | c == (Char ' ')                    = m $~! \e -> e {gameState = Paused}
   | c == (Char '\27')                  = m $~! \e -> e {gameState = PlayerDead "You quit"}
@@ -95,4 +87,5 @@ inputPlaying m c Down _ _
   where step = 32
         speed = 1.0
         is_Jumping p = is_JumpingX p || is_JumpingY p
+        setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
 inputPlaying _ _ _ _ _ = return ()
