@@ -2,12 +2,12 @@
 module Main where
 
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Data.Bitmap
+import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.Environment
 import System.Environment
 import Display
-import Idle
+import Update
 import Input
 import Type
 
@@ -16,11 +16,13 @@ import Type
 main :: IO()
 main = do argc <- getArgs
           (initX,initY) <- getScreenSize
-          let startLevel = startEnv 1
-              x43 = 4 * (fromIntegral initY/3)
+          let sH = fromIntegral initY
+              sW = 4 * (sH/3)
+              startLevel = (startEnv 1) {sWidth = sW
+                                        ,sHeight = sH}
           putStrLn $ show argc
           putStrLn $ "x: " ++ show initX ++ ", y: " ++ show initY
-          putStrLn $ "width: " ++ show x43
+          putStrLn $ "width: " ++ show sW ++ ", height: " ++ show sH
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black
@@ -29,3 +31,4 @@ main = do argc <- getArgs
             gameDisplay     -- The function that draws a game
             gameInput       -- The function that passes input through
             gameUpdate      -- The function that updates the game
+          putStrLn "Finished"
