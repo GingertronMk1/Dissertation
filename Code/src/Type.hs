@@ -168,6 +168,12 @@ newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ Frogger {fr_Ent
                                                                                              ,l  = 20
                                                                                              ,w  = 20
                                                                                              }
+                                                                         ,is_JumpingX = False
+                                                                         ,is_JumpingY = False
+                                                                         ,targetX = 0.0
+                                                                         ,targetY = 0.0
+                                                                         ,prev_dX = 0.0
+                                                                         ,prev_dY = 0.0
                                                                          }
 
 newCar :: Lane      -- ^ The lane the Car should occupy
@@ -361,6 +367,10 @@ instance Drawable Frogger where
                     in f {fr_Entity = fe {dX = dx'}}
   setdY dy' f = let fe = fr_Entity f
                     in f {fr_Entity = fe {dY = dy'}}
+  update f@(Frogger{fr_Entity = fe, is_JumpingX = ijx, is_JumpingY = ijy, targetX = tx, targetY = ty, prev_dX = pdx, prev_dY = pdy})
+    =      if ijy && getY f == ty then updateX . updateY . setdY pdy $ f {is_JumpingY = False}
+      else if ijx && getX f == tx then updateX . updateY . setdX pdx $ f {is_JumpingX = False}
+      else                             updateX . updateY $ f
   draw f@(Frogger {})
     = do color $ Color3 0.0 1.0 (0.0 :: Float)
          translate $ Vector3 (getX f) (getY f) 0.0
