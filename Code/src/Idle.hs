@@ -16,7 +16,11 @@ idle e = do e' <- get e
 
 -- |'updateEnv' is a composition of 4 functions which update the positions of moving objects, detect collision between the player and those objects, detect a collision between the player and a goal, and update the score respectively.
 updateEnv :: Env -> Env
-updateEnv = scoreUpdate . hitGoal . seeIfHit . updateMovers
+updateEnv e = let p = player e
+                  coll = if is_Jumping p
+                         then id
+                         else hitGoal . moverCollisions
+               in scoreUpdate . coll . updateMovers $ e
 
 -- |'hitGoal' deals with the player colliding with a Goal.
 --  If the goal is unoccupied, it is made occupied and the player's position is reset.
@@ -53,13 +57,14 @@ scoreUpdate :: Env -> Env
 scoreUpdate e = if gameState e == LevelComplete then e {gameScore = gameScore e + (1000 * level e)}
                                                 else e
 
--- |'seeIfHit' calls 'hitCheck' and uses it to update either the 'GameState' of the 'Env' or the 'dX' value of the 'Frogger'
-seeIfHit :: Env -> Env
-seeIfHit e = let (frogdX, gameState') = case hitCheck e of Left gs -> (0.0, gs)
-                                                           Right v -> (v, gameState e)
-              in e {player = setdX frogdX . player $ e
-                   ,gameState = gameState'
-                   }
+-- |'moverCollisions' calls 'hitCheck' and uses it to update either the 'GameState' of the 'Env' or the 'dX' value of the 'Frogger'
+moverCollisions :: Env -> Env
+moverCollisions e = let p = player e
+                        (frogdX, gameState') = case hitCheck e of Left gs -> (0.0, gs)
+                                                                  Right v -> (v, gameState e)
+                     in e {player = setdX frogdX p
+                          ,gameState = gameState'
+                          }
 
 -- |'updateMovers' simply applies the 'update' function required of all 'Drawable's to the all moving objects
 updateMovers :: Env -> Env
@@ -80,7 +85,7 @@ hitCheck e = let frogger = player e
               in if inRange (0,initSizeX) fx && inRange (0,initSizeY) fy    -- If the player is in the bounds of the screen
                  then if inRange ((head lanes),(lanes !! 5)) fy                 -- If they're on the road bit
                          then Left $ hitCheckRoad frogger (roadEnemies e)
-                      else if inRange ((lanes !! 6),(lanes !! 12)) fy           -- If they're on the river bit
+                      else if inRange ((lanes !! 6),(lanes !! 11)) fy           -- If they're on the river bit
                          then hitCheckRiver frogger (riverEnemies e)
                       else Left $ gameState e
                  else Left $ PlayerDead "You moved out of bounds!"

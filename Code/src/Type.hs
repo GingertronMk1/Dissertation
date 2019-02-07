@@ -52,7 +52,13 @@ data Entity = Entity {
               deriving (Eq, Show)
 
 -- |The data type for the player.
-data Frogger = Frogger {fr_Entity :: Entity -- ^ The Entity containing important values about the Frogger
+data Frogger = Frogger {fr_Entity   :: Entity -- ^ The Entity containing important values about the Frogger
+                       ,is_JumpingX :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping left or right
+                       ,is_JumpingY :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping up or down
+                       ,targetX     :: Float  -- ^ If the Frogger is jumping this is its target position in x
+                       ,targetY     :: Float  -- ^ If the Frogger is jumping this is its target position in y
+                       ,prev_dX     :: Float  -- ^ The dX value the Frogger had before jumping
+                       ,prev_dY     :: Float  -- ^ The dY value the Frogger had before jumping
                }
                deriving (Eq, Show)
 
@@ -162,6 +168,12 @@ newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ Frogger {fr_Ent
                                                                                              ,l  = 20
                                                                                              ,w  = 20
                                                                                              }
+                                                                         ,is_JumpingX = False
+                                                                         ,is_JumpingY = False
+                                                                         ,targetX = 0.0
+                                                                         ,targetY = 0.0
+                                                                         ,prev_dX = 0.0
+                                                                         ,prev_dY = 0.0
                                                                          }
 
 newCar :: Lane      -- ^ The lane the Car should occupy
@@ -355,6 +367,10 @@ instance Drawable Frogger where
                     in f {fr_Entity = fe {dX = dx'}}
   setdY dy' f = let fe = fr_Entity f
                     in f {fr_Entity = fe {dY = dy'}}
+  update f@(Frogger{fr_Entity = fe, is_JumpingX = ijx, is_JumpingY = ijy, targetX = tx, targetY = ty, prev_dX = pdx, prev_dY = pdy})
+    =      if ijy && getY f == ty then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingY = False}
+      else if ijx && getX f == tx then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingX = False}
+      else                             updateX . updateY $ f
   draw f@(Frogger {})
     = do color $ Color3 0.0 1.0 (0.0 :: Float)
          translate $ Vector3 (getX f) (getY f) 0.0
@@ -383,6 +399,10 @@ instance Drawable RoadMover where
          unitSquare
 
 -- * Additional Helper Functions
+
+-- |'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
+is_Jumping :: Frogger -> Bool
+is_Jumping f = is_JumpingX f || is_JumpingY f
 
 -- |'loopX' is used to loop the x-value of moving objects
 loopX :: Float -> Float
