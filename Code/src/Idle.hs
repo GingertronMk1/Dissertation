@@ -16,7 +16,9 @@ idle e = do e' <- get e
 
 -- |'updateEnv' is a composition of 4 functions which update the positions of moving objects, detect collision between the player and those objects, detect a collision between the player and a goal, and update the score respectively.
 updateEnv :: Env -> Env
-updateEnv = scoreUpdate . hitGoal . seeIfHit . updateMovers
+updateEnv e = let p = player e
+               in if is_JumpingX p || is_JumpingY p then scoreUpdate . updateMovers $ e
+                                                    else scoreUpdate . hitGoal . seeIfHit . updateMovers $ e
 
 -- |'hitGoal' deals with the player colliding with a Goal.
 --  If the goal is unoccupied, it is made occupied and the player's position is reset.
@@ -55,9 +57,11 @@ scoreUpdate e = if gameState e == LevelComplete then e {gameScore = gameScore e 
 
 -- |'seeIfHit' calls 'hitCheck' and uses it to update either the 'GameState' of the 'Env' or the 'dX' value of the 'Frogger'
 seeIfHit :: Env -> Env
-seeIfHit e = let (frogdX, gameState') = case hitCheck e of Left gs -> (0.0, gs)
+seeIfHit e = let p = player e
+                 (frogdX, gameState') = case hitCheck e of Left gs -> (0.0, gs)
                                                            Right v -> (v, gameState e)
-              in e {player = setdX frogdX . player $ e
+              in e {player = if is_JumpingY p then p
+                                              else setdX frogdX p
                    ,gameState = gameState'
                    }
 
