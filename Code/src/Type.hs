@@ -55,8 +55,8 @@ data Entity = Entity {
 data Frogger = Frogger {fr_Entity   :: Entity -- ^ The Entity containing important values about the Frogger
                        ,is_JumpingX :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping left or right
                        ,is_JumpingY :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping up or down
-                       ,targetX     :: Float  -- ^ If the Frogger 'is_Jumping' this is its target position in x
-                       ,targetY     :: Float  -- ^ If the Frogger 'is_Jumping' this is its target position in y
+                       ,targetX     :: Float  -- ^ If the Frogger is_Jumping this is its target position in x
+                       ,targetY     :: Float  -- ^ If the Frogger is_Jumping this is its target position in y
                        ,prev_dX     :: Float  -- ^ The dX value the Frogger had before jumping
                        ,prev_dY     :: Float  -- ^ The dY value the Frogger had before jumping
                }
@@ -399,6 +399,10 @@ instance Drawable RoadMover where
          unitSquare
 
 -- * Additional Helper Functions
+
+-- |'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
+is_Jumping :: Frogger -> Bool
+is_Jumping f = is_JumpingX f || is_JumpingY f
 
 -- |'loopX' is used to loop the x-value of moving objects
 loopX :: Float -> Float
