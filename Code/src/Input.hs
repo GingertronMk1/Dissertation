@@ -86,6 +86,5 @@ inputPlaying m c Down _ _
   | otherwise                          = return ()
   where step = 32
         speed = 1.0
-        is_Jumping p = is_JumpingX p || is_JumpingY p
         setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
 inputPlaying _ _ _ _ _ = return ()
