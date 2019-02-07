@@ -60,8 +60,7 @@ seeIfHit :: Env -> Env
 seeIfHit e = let p = player e
                  (frogdX, gameState') = case hitCheck e of Left gs -> (0.0, gs)
                                                            Right v -> (v, gameState e)
-              in e {player = if is_JumpingY p then p
-                                              else setdX frogdX p
+              in e {player = setdX frogdX p
                    ,gameState = gameState'
                    }
 
