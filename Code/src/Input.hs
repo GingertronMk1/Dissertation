@@ -17,15 +17,15 @@ input m k ks mo p = get m >>= \m' -> case gameState m' of PreStart      -> input
 --  Pressing space will advance to the next level, any other input is ignored.
 inputComplete :: IORef Env -> KeyboardMouseCallback
 inputComplete m c Down _ _
-  | c == (Char ' ') = m $~! \e -> let nextLevel = level e + 1
-                                   in (startEnv nextLevel) { frames = frames e
-                                                           , time = time e
-                                                           , gameState = Playing
-                                                           , gameScore = gameScore e
-                                                           , level = nextLevel
-                                                           }
+  | c == (Char ' ')   = m $~! \e -> let nextLevel = level e + 1
+                                     in (startEnv nextLevel) { frames = frames e
+                                                             , time = time e
+                                                             , gameState = Playing
+                                                             , gameScore = gameScore e
+                                                             , level = nextLevel
+                                                             }
   | c == (Char '\27') = m $~! \e -> e {gameState = PlayerDead "You quit"}
-  | otherwise       = return ()
+  | otherwise         = return ()
 inputComplete _ _ _ _ _ = return ()
 
 -- |The input handler for when the player is dead.
@@ -45,9 +45,9 @@ inputPreStart m _ _ _ _ = m $~! \e -> e {gameState = Playing}
 --  Pressing space will unpause, any other input is ignored.
 inputPaused :: IORef Env -> KeyboardMouseCallback
 inputPaused m c Down _ _
-  | c == (Char ' ') = m $~! \e -> e {gameState = Playing}
+  | c == (Char ' ')   = m $~! \e -> e {gameState = Playing}
   | c == (Char '\27') = m $~! \e -> e {gameState = PlayerDead "You quit"}
-  | otherwise       = return ()
+  | otherwise         = return ()
 inputPaused _ _ _ _ _ = return ()
 
 -- |The input handler for when the game is in progress.
