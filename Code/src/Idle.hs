@@ -1,18 +1,17 @@
 -- |Module: Frogger.Idle
 module Idle where
 
-import Graphics.UI.GLUT
-import Data.IORef
+import Graphics.Gloss
+import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Data.Bitmap
 import Type
 
 -- |The IdleCallback function.
 --  This is responsible for updating the game as it goes.
 --  Only update the game while it is in the "Playing" state.
-idle :: IORef Env -> IdleCallback
-idle e = do e' <- get e
-            if gameState e' == Playing then e $~! \_ -> updateEnv e'
-                                       else return ()
-            postRedisplay Nothing
+gameUpdate :: Float -> Env -> Env
+gameUpdate n e@(E {gameState = gs, time = t}) = if gs == Playing then updateEnv $ e {time = t + n}
+                                                                 else e
 
 -- |'updateEnv' is a composition of 4 functions which update the positions of moving objects, detect collision between the player and those objects, detect a collision between the player and a goal, and update the score respectively.
 updateEnv :: Env -> Env

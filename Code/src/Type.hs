@@ -1,7 +1,10 @@
 -- |Module: Frogger.Type
 module Type where
 
-import Graphics.UI.GLUT
+
+import Graphics.Gloss
+import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Data.Bitmap
 
 -- * Initial Values
 
@@ -115,7 +118,10 @@ data Env = E { player :: Frogger            -- ^The Frogger.
 --  This should cut down enormously on boilerplate code, and allow for some level of polymorphism whilst maintaining type clarity.
 class Drawable a where
   -- | A function to draw the object to the screen.
-  draw :: a -> IO()
+  draw :: a -> Picture
+  -- | A function to draw a list of objects to the screen.
+  draws :: [a] -> Picture
+  draws = Pictures . map draw
   -- | Get the Entity out of the object.
   getEntity :: a -> Entity
   -- | Set the x value of the entity within the Drawable.
@@ -126,12 +132,6 @@ class Drawable a where
   setdX :: Float -> a -> a
   -- | Set the dY value of the entity within the Drawable.
   setdY :: Float -> a -> a
-  -- | A function to draw the object, preserving the current transformation matrix.
-  preservingDraw :: a -> IO()
-  preservingDraw = preservingMatrix . draw
-  -- | Preserved drawing multiple items in a list.
-  preservingDraws :: [a] -> IO[()]
-  preservingDraws = sequence . map preservingDraw
   -- | Get the x value out of that entity.
   getX :: a -> Float
   getX = x . getEntity
@@ -311,38 +311,9 @@ instance Drawable RiverMover where
   setdY dy' r = let re = ri_Entity r
                     in r {ri_Entity = re {dY = dy'}}
   update ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
-  draw c@(Croc {})
-    = do color $ Color3 0.0 0.5 (0.0 :: Float)
-         translate $ Vector3 (getX c) (getY c) 0.0
-         scale (getL c) (getW c) 1.0
-         unitSquare
-         color $ Color3 1.0 1.0 (1.0 :: Float)
-         preservingMatrix $ do translate $ Vector3 0.8 (0.1) (0.0 :: Float)
-                               scale 0.1 0.2 (1.0 :: Float)
-                               unitSquare
-                               translate $ Vector3 0.0 3.0 (0.0 :: Float)
-                               unitSquare
-  draw t@(Turtles {})
-    = do translate $ Vector3 (getX t) (getY t) 0.0
-         scale (getL t / 3.0) (getW t) 1.0
-         drawTurtles
-      where drawTurtles = do drawTurtle
-                             translate $ Vector3 1.0 0.0 (0.0 :: Float)
-                             drawTurtle
-                             translate $ Vector3 1.0 0.0 (0.0 :: Float)
-                             drawTurtle
-            drawTurtle = do preservingMatrix $ do translate $ Vector3 0.1 0.1 (0.0 :: Float)
-                                                  scale 0.8 0.8 (1.0 :: Float)
-                                                  color $ Color3 0.0 1.0 (0.0 :: Float)
-                                                  unitSquare
-                                                  color $ Color3 1.0 0.6 (0.0 :: Float)
-                                                  unitCircle
-
-  draw l@(Log {})
-    = do color $ Color3 0.6 0.3 (0.2 :: Float)
-         translate $ Vector3 (getX l) (getY l) 0.0
-         scale (getL l) (getW l) 1.0
-         unitSquare
+  draw c@(Croc {}) = Color green . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
+  draw t@(Turtles {}) = Color orange . translate (getX t) (getY t) . scale (getL t) (getW t) $ unitSquare
+  draw l@(Log {}) = Color chartreuse . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
 
 instance Drawable Goal where
   getEntity = go_Entity
@@ -351,11 +322,7 @@ instance Drawable Goal where
   setdX _ = id
   setdY _ = id
   update = id
-  draw g = do if is_Occupied g then color $ Color3 0.0 1.0 (0.0 :: Float)
-                               else color $ Color3 0.8 0.7 (0.2 :: Float)
-              translate $ Vector3 (getX g) (getY g) 0.0
-              scale (getL g) (getW g) 1.0
-              unitSquare
+  draw g = Color yellow . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
 
 instance Drawable Frogger where
   getEntity = fr_Entity
@@ -371,11 +338,8 @@ instance Drawable Frogger where
     =      if ijy && getY f == ty then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingY = False}
       else if ijx && getX f == tx then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingX = False}
       else                             updateX . updateY $ f
-  draw f@(Frogger {})
-    = do color $ Color3 0.0 1.0 (0.0 :: Float)
-         translate $ Vector3 (getX f) (getY f) 0.0
-         scale (getL f) (getW f) 1.0
-         unitSquare
+
+  draw f@(Frogger {}) = Color chartreuse . translate (getX f) (getY f) . scale (getL f) (getW f) $ unitSquare
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
@@ -388,15 +352,8 @@ instance Drawable RoadMover where
   setdY dy' r = let re = ro_Entity r
                     in r {ro_Entity = re {dY = dy'}}
   update ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
-  draw c@(Car {})
-    = do color $ Color3 1.0 0.0 (0.0 :: Float)
-         translate $ Vector3 (getX c) (getY c) 0.0
-         scale (getL c) (getW c) 1.0
-         unitSquare
-         color $ Color3 0.3 0.3 (1.0 :: Float)
-         translate $ Vector3 0.8 0.0 (0.0 :: Float)
-         scale 0.1 1.0 (1.0 :: Float)
-         unitSquare
+
+  draw c@(Car {}) = Color red . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
 
 -- * Additional Helper Functions
 
@@ -410,6 +367,11 @@ loopX n = if n < (-screenEdge) then screenWidth
           else if n > screenWidth then (-screenEdge)
           else n
 
+unitSquare :: Picture
+unitSquare = Polygon [(1,0),(1,1),(0,1),(0,0)]
+unitCircle :: Picture
+unitCircle = let k = 10 in Polygon [(0.5*(sin (2*pi*k)+1.0), 0.5*(cos (2*pi*k)+1.0)) | k <- [1..k]]
+{-
 -- |Drawing a circle of radius 1
 unitCircle :: IO()
 unitCircle = let n = 50.0
@@ -424,3 +386,4 @@ unitSquare = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float
 -- |A function to essentially curry the vertex constructor in the GLUT library
 makeVertex :: (Float, Float, Float) -> IO()
 makeVertex (x,y,z) = vertex $ Vertex3 x y z
+-}
