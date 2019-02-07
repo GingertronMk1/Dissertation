@@ -17,8 +17,9 @@ idle e = do e' <- get e
 -- |'updateEnv' is a composition of 4 functions which update the positions of moving objects, detect collision between the player and those objects, detect a collision between the player and a goal, and update the score respectively.
 updateEnv :: Env -> Env
 updateEnv e = let p = player e
-                  coll = if is_JumpingX p || is_JumpingY p then id
-                                                           else hitGoal . moverCollisions
+                  coll = if is_Jumping p
+                         then id
+                         else hitGoal . moverCollisions
                in scoreUpdate . coll . updateMovers $ e
 
 -- |'hitGoal' deals with the player colliding with a Goal.
