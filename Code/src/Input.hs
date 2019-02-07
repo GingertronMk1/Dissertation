@@ -8,10 +8,10 @@ import Type
 
 gameInput :: Event -> Env -> Env
 gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart ev en
-                                               Playing       -> inputPlaying ev en
-                                               Paused        -> inputPaused ev en
-                                               PlayerDead _  -> inputDead ev en
-                                               LevelComplete -> inputComplete ev en
+                                                Playing       -> inputPlaying ev en
+                                                Paused        -> inputPaused ev en
+                                                PlayerDead _  -> inputDead ev en
+                                                LevelComplete -> inputComplete ev en
 
 inputPreStart :: Event -> Env -> Env
 inputPreStart (EventKey (SpecialKey KeySpace) Down _ _) e = e {player = newPlayer, gameState = Playing}
