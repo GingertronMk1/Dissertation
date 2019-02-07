@@ -80,7 +80,7 @@ hitCheck e = let frogger = player e
               in if inRange (0,initSizeX) fx && inRange (0,initSizeY) fy    -- If the player is in the bounds of the screen
                  then if inRange ((head lanes),(lanes !! 5)) fy                 -- If they're on the road bit
                          then Left $ hitCheckRoad frogger (roadEnemies e)
-                      else if inRange ((lanes !! 6),(lanes !! 12)) fy           -- If they're on the river bit
+                      else if inRange ((lanes !! 6),(lanes !! 11)) fy           -- If they're on the river bit
                          then hitCheckRiver frogger (riverEnemies e)
                       else Left $ gameState e
                  else Left $ PlayerDead "You moved out of bounds!"
