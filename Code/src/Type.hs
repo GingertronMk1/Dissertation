@@ -304,9 +304,23 @@ instance Drawable RiverMover where
   setdY dy' r = let re = ri_Entity r
                     in r {ri_Entity = re {dY = dy'}}
   update ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
-  draw c@(Croc {}) = Color green . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
-  draw t@(Turtles {}) = Color orange . translate (getX t) (getY t) . scale (getL t) (getW t) $ unitSquare
-  draw l@(Log {}) = Color chartreuse . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
+  draw c@(Croc {}) = let (cHead, cBody) = splitCroc c
+                         bodyGreen = makeColor 0.0 1.0 0.0 1.0
+                         headGreen = makeColor 0.0 0.8 0.0 1.0
+                      in Pictures [Color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
+                                  ,Color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
+  draw t@(Turtles {}) = let l' = getL t / 3
+                            xt = getX t
+                            yt = getY t
+                            wt = getW t
+                            alphaBlue = makeColor 0.0 0.0 1.0 0.2
+                            drawTurtle x = Pictures [
+                                                     Color green  . translate x yt . scale l' wt $ unitSquare
+                                                    ,Color orange . translate x yt . scale l' wt $ unitCircle
+                                                    ]
+                         in Pictures $ [drawTurtle (xt + (l' * off))| off <- [0,1,2]] ++ [Color alphaBlue . translate xt yt . scale (3*l') wt $ unitSquare]
+  draw l@(Log {})     = let brown = makeColor 0.6 0.3 0.1 1.0
+                         in Color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
 
 instance Drawable Goal where
   getEntity = go_Entity
@@ -334,7 +348,8 @@ instance Drawable Frogger where
       else if ijx && getX f == tx then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingX = False}
       else                             updateX . updateY $ f
 
-  draw f@(Frogger {}) = Color white . translate (getX f) (getY f) . scale (getL f) (getW f) $ unitSquare
+  draw f@Frogger {} = let darkGreen = makeColor 0.2 0.8 0.2 1.0
+                       in Color darkGreen . translate (getX f) (getY f) . scale (getL f) (getW f) $ unitSquare
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
@@ -356,6 +371,25 @@ instance Drawable RoadMover where
 is_Jumping :: Frogger -> Bool
 is_Jumping f = is_JumpingX f || is_JumpingY f
 
+splitCroc :: RiverMover -> (RiverMover, RiverMover)
+splitCroc c@Croc {} = let cx = getX c
+                          cy = getY c
+                          l' = (getL c)/3
+                          cw = getW c
+                          crocHead = Croc {ri_Entity = Entity {x = (2 * l') + cx
+                                                              ,y = cy
+                                                              ,l = l'
+                                                              ,w = cw
+                                                              }
+                                          }
+                          crocBody = Croc {ri_Entity = Entity {x = cx
+                                                              ,y = cy
+                                                              ,l = 2 * l'
+                                                              ,w = cw
+                                                              }
+                                          }
+                       in (crocHead, crocBody)
+
 -- |'loopX' is used to loop the x-value of moving objects
 loopX :: Float -> Float
 loopX n = if n < (-screenEdge) then screenWidth
@@ -371,7 +405,7 @@ goalGen l = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
 
 
 unitSquare :: Picture
-unitSquare = Polygon [(1,0),(1,1),(0,1),(0,0)]
+unitSquare = translate 0.5 0.5 $ rectangleSolid 1.0 1.0
 
 unitCircle :: Picture
-unitCircle = let k = 10 in Polygon [(0.5*(sin (2*pi*k)+1.0), 0.5*(cos (2*pi*k)+1.0)) | k <- [1..k]]
+unitCircle = translate 0.5 0.5 $ circleSolid 0.5
