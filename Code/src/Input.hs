@@ -6,13 +6,18 @@ import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Data.Bitmap
 import Type
 
+baseSpeed :: Float
+baseSpeed = 1
+
+boostSpeed :: Float
+boostSpeed = 4
+
 gameInput :: Event -> Env -> Env
 gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart ev en
                                                 Playing       -> inputPlaying ev en
                                                 Paused        -> inputPaused ev en
                                                 PlayerDead _  -> inputDead ev en
                                                 LevelComplete -> inputComplete ev en
-                                                otherwise     -> en
 
 inputPreStart :: Event -> Env -> Env
 inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
@@ -20,14 +25,14 @@ inputPreStart _ e                     = e
 
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
-  | c == (Char 'w') = e {player = jumpY 1    p}
-  | c == (Char 'a') = e {player = jumpX (-1) p}
-  | c == (Char 's') = e {player = jumpY (-1) p}
-  | c == (Char 'd') = e {player = jumpX 1    p}
-  | c == (Char 'W') = e {player = jumpY 4    p}
-  | c == (Char 'A') = e {player = jumpX (-4) p}
-  | c == (Char 'S') = e {player = jumpY (-4) p}
-  | c == (Char 'D') = e {player = jumpX 4    p}
+  | c == (Char 'w') = e {player = jumpY baseSpeed     p}
+  | c == (Char 'a') = e {player = jumpX (-baseSpeed)  p}
+  | c == (Char 's') = e {player = jumpY (-baseSpeed)  p}
+  | c == (Char 'd') = e {player = jumpX baseSpeed     p}
+  | c == (Char 'W') = e {player = jumpY boostSpeed    p}
+  | c == (Char 'A') = e {player = jumpX (-boostSpeed) p}
+  | c == (Char 'S') = e {player = jumpY (-boostSpeed) p}
+  | c == (Char 'D') = e {player = jumpX boostSpeed    p}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
   where step = 200
