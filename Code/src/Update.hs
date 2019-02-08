@@ -41,17 +41,24 @@ updateMovers e = e {player = update . player $ e
 --  If they are on the Road, it calls 'roadCheck' and conversely it calls 'riverCheck' if they are on the River.
 --  This is in the interest of efficiency; there is no point checking if the player has collided with something that does not exist on their part of the map.
 hitCheck :: Env -> Env
-hitCheck e = let p = player e
-                 px = getX p
-                 py = getY p
-              in if inRange (0, initSizeX) px && inRange (0, initSizeY) py
-                    then if inRange (head lanes, lanes!!6) py      then roadCheck e
-                         else if inRange (lanes!!6, lanes!!12) py  then riverCheck e
-                         else                                           e
-                 else e {gameState = PlayerDead "You went out of bounds!"}
-            where inRange (l,u) n = case compare l u of LT -> u >= n && n >= l
-                                                        EQ -> n == u
-                                                        GT -> l >= n && n >= u
+hitCheck e@E {player = p} = if inRange (0, initSizeX) (getX p) && inRange (0, initSizeY) (getY p)
+                            then inBoundsHitCheck e
+                            else e {gameState = PlayerDead "You went out of bounds!"}
+
+-- |inBoundsHitCheck makes use of Haskell's guarded expressions instead of a pair of if...else expressions
+inBoundsHitCheck :: Env -> Env
+inBoundsHitCheck e@E {player = p}
+  | inRange (head lanes, lanes!! 6) py    = roadCheck e
+  | inRange (lanes !! 6, lanes !! 12) py  = riverCheck e
+  | otherwise                             = e
+  where py = getY p
+
+-- |inRange checks that a value is within a given range
+inRange :: Ord a
+        => (a,a)  -- ^ The lower and upper bounds
+        -> a      -- ^ The value to check
+        -> Bool
+inRange (l,u) n = u >= n && n >= l
 
 -- |roadCheck checks to see if the player has been run over yet.
 --  If the player is hit by a car, they die.
@@ -69,29 +76,19 @@ riverCheck :: Env -> Env
 riverCheck e = let p = player e
                    collRi = lookup True . map (\m -> (hasCollided p m, m)) $ riverEnemies e
                    collGo = lookup True . map (\g -> (hasCollided p g, g)) $ goals e
-                in case collRi of Just c@(Croc {}) -> if onCrocsHead p c
-                                                      then e {gameState = PlayerDead "You got eaten by a crocodile!"}
-                                                      else e {player = setdX (getdX c) p}
-                                  Just m  -> e {player = setdX (getdX m) p}
+                in case collRi of Just m  -> riverCollision m e
                                   Nothing -> case collGo of Just g  -> hitGoal g e
                                                             Nothing -> e {gameState = PlayerDead "You drowned!"}
-               where onCrocsHead p c = let cx = getX c
-                                           cy = getY c
-                                           l' = (getL c)/3
-                                           cw = getW c
-                                           crocHead = Croc {ri_Entity = Entity {x = (2 * l') + cx
-                                                                               ,y = cy
-                                                                               ,l = l'
-                                                                               ,w = cw
-                                                                               }
-                                                           }
-                                           crocBody = Croc {ri_Entity = Entity {x = cx
-                                                                               ,y = cy
-                                                                               ,l = 2 * l'
-                                                                               ,w = cw
-                                                                               }
-                                                           }
-                                        in hasCollided p crocHead && not (hasCollided p crocBody)
+
+riverCollision :: RiverMover -> Env -> Env
+riverCollision c@Croc {} e@E {player = p} = let (cHead, cBody) = splitCroc c
+                                             in if hasCollided p cHead && not (hasCollided p cBody)
+                                                then e {gameState = PlayerDead "You got eaten by a crocodile!"}
+                                                else e {player = setdX (getdX c) p}
+riverCollision t@Turtles {aboveWater = aw} e@E {player = p} 
+  = if aw then e {player = setdX (getdX t) p}
+          else e {gameState = PlayerDead "Those turtles were underwater!"}
+riverCollision rm e@E {player = p} = e {player = setdX (getdX rm) p}
 
 -- |hitGoal deals with when a Goal has been collided with.
 --  If that Goal wa occupied, the player dies.
