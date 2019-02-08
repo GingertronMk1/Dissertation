@@ -30,8 +30,8 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'D') = e {player = jumpX 4    p}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
-  where step = 32
-        speed = 2
+  where step = 200
+        speed = 10
         setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
         ignoringJump f n p = if is_Jumping p then p else f n p
         jumpX p = ignoringJump (\n f -> let stepNo = step * (signum n) in setdX (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + stepNo}) p
@@ -44,7 +44,7 @@ inputPaused _ e                                         = e
 
 inputDead :: Event -> Env -> Env
 inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sw, sHeight = sh}
-  = (startEnv 1) {sWidth = sw, sHeight = sh}
+  = startEnv {sWidth = sw, sHeight = sh}
 inputDead _ e                                         = e
 
 inputComplete :: Event -> Env -> Env
@@ -57,5 +57,5 @@ inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = l}
           ,level = l'
           ,gameState = Playing
           }
-  where moddX m = setdX (getdX m * 1.05) m
+  where moddX m = setdX (getdX m * 1.2) m
 inputComplete _ e                                                       = e
