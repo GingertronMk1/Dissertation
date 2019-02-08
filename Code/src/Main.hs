@@ -31,4 +31,3 @@ main = do argc <- getArgs
             gameDisplay     -- The function that draws a game
             gameInput       -- The function that passes input through
             gameUpdate      -- The function that updates the game
-          putStrLn "Finished"
