@@ -1,84 +1,54 @@
 -- |Module: Frogger.Display
 module Display where
 
-import Graphics.UI.GLUT
-import Data.IORef
-import Data.List (intersperse)
+import Graphics.Gloss
+import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Data.Bitmap
 import Type
 
 -- |A function to draw an 'Env' to the screen.
---  Clearing the ColorBuffer and loading the Identity are required for animation to work.
-display :: IORef Env -> DisplayCallback
-display m = do fr <- get m
-               clear [ColorBuffer]
-               loadIdentity
-               translate $ Vector3 (-1.0) (-1.0) (0.0 :: Float)
-               scale (2.0/initSizeX) (2.0/initSizeY) (0.0 :: Float)
-               color $ Color3 1.0 1.0 (1.0 :: Float)
-               case (gameState fr) of PreStart         -> do let line1 = "Welcome to Functional Frogger!"
-                                                                 line2 = "W, A, S, and D are your movement keys"
-                                                                 line3 = "Space will pause the game"
-                                                                 line4 = "Press any key to start!"
-                                                             preservingMatrix $ do textTranslateScale
-                                                                                   drawString line1
-                                                                                   drawString line2
-                                                                                   drawString line3
-                                                                                   drawString line4
-                                      PlayerDead cause -> do let score = "You died with " ++ show (gameScore fr) ++ " points!"
-                                                                 lev   = "You got to level " ++ show (level fr) ++ "!"
-                                                                 space = "Press space to play again!"
-                                                             preservingMatrix $ do textTranslateScale
-                                                                                   drawString cause
-                                                                                   drawString lev
-                                                                                   drawString score
-                                                                                   drawString space
-                                      LevelComplete    -> do let score = show $ gameScore fr
-                                                                 state = "You completed the level with " ++ score ++ " points!"
-                                                                 space = "Press space to advance to level " ++ show (level fr + 1) ++ "!"
-                                                             preservingMatrix $ do textTranslateScale
-                                                                                   drawString state
-                                                                                   drawString space
-                                      otherwise        -> do t <- get elapsedTime
-                                                             let t = time fr
-                                                                 ppState = show (gameState fr) ++ " Level " ++ show (level fr)
-                                                                 ppScore = show $ gameScore fr
-                                                                 ppTime  = show $ time fr
-                                                              in preservingMatrix $ do translate $ Vector3 32.0 440.0 (0.0 :: Float)
-                                                                                       preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
-                                                                                                             renderString MonoRoman $ ppState
-                                                                                       translate $ Vector3 200.0 0.0 (0.0 :: Float)
-                                                                                       preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
-                                                                                                             renderString MonoRoman $ ppScore
-                                                                                       translate $ Vector3 200.0 0.0 (0.0 :: Float)
-                                                                                       preservingMatrix $ do scale 0.1 0.1 (1.0 :: Float)
-                                                                                                             renderString MonoRoman $ ppTime
-                                                             sequence . map drawRoadLane . take 5 $ lanes
-                                                             sequence . map drawRiverLane . take 5 . drop 6 $ lanes
-                                                             preservingDraws . roadEnemies $ fr
-                                                             preservingDraws . riverEnemies $ fr
-                                                             preservingDraws . goals $ fr
-                                                             preservingDraw . player $ fr
-               swapBuffers
-               where drawString s = do preservingMatrix $ renderString MonoRoman s
-                                       translate $ Vector3 0.0 (-200.0) (0.0 :: Float)
-                     textTranslateScale = do translate $ Vector3 32.0 240.0 (0.0 :: Float)
-                                             scale 0.1 0.1 (1.0 :: Float)
+gameDisplay :: Env -> Picture
+gameDisplay e@E{sWidth = sw, sHeight = sh} = scale (sw/640) (sh/480) . translate (-320) (-240) $ drawGame e
 
--- |Draws a lane, coloured blue.
-drawRiverLane :: Float -> IO()
-drawRiverLane y = preservingMatrix $ do color $ Color3 0.2 0.2 (1.0 :: Float)
-                                        drawLane y
+drawGame :: Env -> Picture
+drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
+                                                                         translate 0 320 . textDraw $ "Welcome to Functional Frogger!"
+                                                                        ,translate 0 300 . textDraw $ "W, A, S, and D are your movement keys!"
+                                                                        ,translate 0 280 . textDraw $ "Space to pause, and ESC to quit!"
+                                                                        ,translate 0 260 . textDraw $ "Press any key to start!"
+                                                                        ]
+                                          PlayerDead cause  -> Pictures [
+                                                                         translate 0 320 . textDraw $ cause
+                                                                        ,translate 0 300 . textDraw $ "You died with " ++ show (gameScore e) ++ " points!"
+                                                                        ,translate 0 280 . textDraw $ "Press space to play again!"
+                                                                        ]
+                                          LevelComplete     -> Pictures [
+                                                                         translate 0 320 . textDraw $ "You completed level " ++ show (level e) ++ " with " ++ show (gameScore e) ++" points!"
+                                                                        ,translate 0 300 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
+                                                                        ]
+                                          otherwise         -> Pictures [
+                                                                         drawRoads
+                                                                        ,drawRiver
+                                                                        ,translate 0 440 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
+                                                                        ,translate 400 440 . textDraw . show . round $  time e
+                                                                        ,draws $ riverEnemies e
+                                                                        ,draws $ roadEnemies e
+                                                                        ,draws $ goals e
+                                                                        ,draw $ player e
+                                                                        ,drawSides
+                                                                        ]
+                               where textDraw = Color white . Scale 0.1 0.1 . Text
 
--- |Draws a lane, coloured grey.
-drawRoadLane :: Float -> IO()
-drawRoadLane y = preservingMatrix $ do color $ Color3 0.3 0.3 (0.3 :: Float)
-                                       drawLane y
+drawRoads :: Picture
+drawRoads = Pictures [Color (greyN 0.5) $ drawLane n | n <- [0..4]]
 
--- |Draws a quadrilateral the width of the screen.
-drawLane :: Float -> IO()
-drawLane y = do translate $ Vector3 0.0 y 0.0
-                scale initSizeX 30.0 (1.0 :: Float)
-                unitSquare
-                where unitSquare = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float, Float, Float)]
-                                  in (renderPrimitive Quads . mapM_ makeVertex) us
-                      makeVertex (x,y,z) = vertex $ Vertex3 x y z
+drawRiver :: Picture
+drawRiver = Pictures [Color blue $ drawLane n | n <- [6..10]]
+
+drawLane :: Lane -> Picture
+drawLane n = translate 0 (lanes!!n) . Scale 640 30 $ unitSquare
+
+drawSides :: Picture
+drawSides = let w = 200
+             in Pictures [translate (640) 0 . scale w 480 $ unitSquare
+                         ,translate (-w) 0 . scale w 480 $ unitSquare]

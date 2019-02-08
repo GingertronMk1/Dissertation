@@ -1,31 +1,33 @@
 -- |Module: Frogger.Main
 module Main where
 
-import Graphics.UI.GLUT
-import Data.IORef
+import Graphics.Gloss
+import Graphics.Gloss.Data.Bitmap
+import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Interface.Environment
+import System.Environment
 import Display
-import Idle
+import Update
 import Input
 import Type
 
 -- |'main' takes the arguments given on program launch and creates the initial environment.
 --  It then creates a window of size given by the values 'initSizeX' and 'initSizeY' stored in 'Type'.
 main :: IO()
-main = do (_progName, _args) <- getArgsAndInitialize
-          putStrLn (_progName ++ " " ++ concat _args)
-          initialDisplayMode $= [DoubleBuffered]
-          let iX = round initSizeX :: GLsizei
-              iY = round initSizeY :: GLsizei
-          initialWindowSize $= Size iX iY
-          createWindow "Frogger"
-          reshapeCallback $= Just reshape
-          f <- newIORef $ startEnv 1
-          keyboardMouseCallback $= Just (input f)
-          displayCallback $= display f
-          idleCallback $= Just (idle f)
-          mainLoop
-
-
--- |'reshape' is the reshapeCallback, which is called when the window is resized
-reshape size = do viewport $= (Position 0 0, size)
-                  postRedisplay Nothing
+main = do argc <- getArgs
+          (initX,initY) <- getScreenSize
+          let sH = fromIntegral initY
+              sW = 4 * (sH/3)
+              startLevel = (startEnv 1) {sWidth = sW
+                                        ,sHeight = sH}
+          putStrLn $ show argc
+          putStrLn $ "x: " ++ show initX ++ ", y: " ++ show initY
+          putStrLn $ "width: " ++ show sW ++ ", height: " ++ show sH
+          play
+            FullScreen      -- Play the game in a fullscreen window
+            black           -- The background should be black
+            60              -- The game should update 60 times per second
+            startLevel      -- The first level
+            gameDisplay     -- The function that draws a game
+            gameInput       -- The function that passes input through
+            gameUpdate      -- The function that updates the game
