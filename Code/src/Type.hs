@@ -164,8 +164,9 @@ class Drawable a where
   update = updateX . updateY
 
 -- * Type Constructors
-
-newPlayer :: Frogger  -- ^ Constructing a Frogger at the default start position
+  
+-- | Constructing a Frogger at the default start position
+newPlayer :: Frogger
 newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ Frogger {fr_Entity = Entity {dX = 0
                                                                                              ,dY = 0
                                                                                              ,l  = 20
@@ -187,12 +188,12 @@ newCar l v = let x = case mod l 2 of 0 -> 0.0
                  nv = v !! l
               in Car {
                      ro_Entity = Entity {x = x
-                                         ,y = lanes !! l + 2
-                                         ,dX = nv
-                                         ,dY = 0
-                                         ,l = 48.0 * signum nv
-                                         ,w = 24.0
-                                         }
+                                        ,y = lanes !! l + 2
+                                        ,dX = nv
+                                        ,dY = 0
+                                        ,l = 48.0 * signum nv
+                                        ,w = 24.0
+                                        }
                      }
 
 newCroc :: Lane       -- ^ The lane the Croc should occupy
