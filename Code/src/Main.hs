@@ -18,8 +18,7 @@ main = do argc <- getArgs
           (initX,initY) <- getScreenSize
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
-              startLevel = (startEnv 1) {sWidth = sW
-                                        ,sHeight = sH}
+              startLevel = startEnv {sWidth = sW ,sHeight = sH}
           putStrLn $ show argc
           putStrLn $ "x: " ++ show initX ++ ", y: " ++ show initY
           putStrLn $ "width: " ++ show sW ++ ", height: " ++ show sH
