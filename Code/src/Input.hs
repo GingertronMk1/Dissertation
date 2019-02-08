@@ -12,10 +12,11 @@ gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart e
                                                 Paused        -> inputPaused ev en
                                                 PlayerDead _  -> inputDead ev en
                                                 LevelComplete -> inputComplete ev en
+                                                otherwise     -> en
 
 inputPreStart :: Event -> Env -> Env
-inputPreStart (EventKey (SpecialKey KeySpace) Down _ _) e = e {player = newPlayer, gameState = Playing}
-inputPreStart _ e                                         = e
+inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
+inputPreStart _ e                     = e
 
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
