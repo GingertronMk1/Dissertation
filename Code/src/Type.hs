@@ -10,32 +10,22 @@ import Graphics.Gloss.Data.Bitmap
 
 -- |The initial width of the window.
 --  The window is initially set to 640x480px.
-initSizeX :: Float
-initSizeX = 640
+--4000 :: Float
+--4000 = 640
 
 -- |The initial height of the window.
 --  The window is initially set to 640x480px.
-initSizeY :: Float
-initSizeY = 480.0
-
--- |The distance off-screen for objects to be drawn.
--- This is to be used when an object "loops" around, such that it does not disappear as soon as it reaches the edge of the screen.
-screenEdge :: Float
-screenEdge = 100.0
-
--- |The full distance from the origin to the edge of the "screen" in x.
-screenWidth :: Float
-screenWidth = initSizeX + screenEdge
+--3000 :: Float
+--3000 = 480.0
 
 -- |The y values for each lane, starting at the first road lane
 lanes :: [Float]
-lanes = let lane = realToFrac (initSizeY / 15) :: Float
-         in takeWhile (<initSizeY) . tail $ [0.0,lane..]
+lanes = [200,400..3000]
 
 -- |The initial velocities for each lanes
 --  Ideally this will at some point be generated more randomly, however for the moment it is statically defined
 vels :: [Float]
-vels = [0.5, -0.3, 0.6, -0.4, 0.7, 0.0, 0.4, -0.3, 0.6, -0.8, 0.5]
+vels = [3.0, -1.8, 3.6, -2.4, 4.2, 0.0, 2.4, -1.8, 3.6, -4.8, 3.0]
 
 -- * Type Declarations
 
@@ -167,132 +157,121 @@ class Drawable a where
   
 -- | Constructing a Frogger at the default start position
 newPlayer :: Frogger
-newPlayer = setY 4.0 . (\s -> setX ((initSizeX - getW s)/2) s) $ Frogger {fr_Entity = Entity {dX = 0
-                                                                                             ,dY = 0
-                                                                                             ,l  = 20
-                                                                                             ,w  = 20
-                                                                                             }
-                                                                         ,is_JumpingX = False
-                                                                         ,is_JumpingY = False
-                                                                         ,targetX = 0.0
-                                                                         ,targetY = 0.0
-                                                                         ,prev_dX = 0.0
-                                                                         ,prev_dY = 0.0
-                                                                         }
+newPlayer = Frogger {fr_Entity = Entity {x  = 1910
+                                        ,y  = 10
+                                        ,dX = 0
+                                        ,dY = 0
+                                        ,l  = 180
+                                        ,w  = 180
+                                        }
+                     ,is_JumpingX = False
+                     ,is_JumpingY = False
+                     ,targetX = 0
+                     ,targetY = 0
+                     ,prev_dX = 0
+                     ,prev_dY = 0
+                     }
 
-newCar :: Lane      -- ^ The lane the Car should occupy
+newCar :: Float     -- ^ The initial x position of the Car
+       -> Lane      -- ^ The lane the Car should occupy
        -> [Float]   -- ^ The list of velocities from which the car will take its
        -> RoadMover -- ^ The resultant Car
-newCar l v = let x = case mod l 2 of 0 -> 0.0
-                                     1 -> initSizeX
-                 nv = v !! l
-              in Car {
-                     ro_Entity = Entity {x = x
-                                        ,y = lanes !! l + 2
-                                        ,dX = nv
-                                        ,dY = 0
-                                        ,l = 48.0 * signum nv
-                                        ,w = 24.0
-                                        }
-                     }
+newCar cx l v = let nv = v !! l
+                 in Car {ro_Entity = Entity {x = cx
+                                            ,y = lanes !! l + 10
+                                            ,dX = nv
+                                            ,dY = 0
+                                            ,l = 360 * signum nv
+                                            ,w = 180
+                                            }
+                        }
 
-newCroc :: Lane       -- ^ The lane the Croc should occupy
+newCroc :: Float      -- ^ The initial x position of the Croc
+        -> Lane       -- ^ The lane the Croc should occupy
         -> [Float]    -- ^ The list of velocities from which the car will take its
         -> RiverMover -- ^ The resultant Croc
-newCroc l v = let x = case mod l 2 of 0 -> 0.0
-                                      1 -> initSizeX
-                  nv = v !! l
-               in Croc {
-                       ri_Entity = Entity {x = x
-                                           ,y = lanes !! l + 2
-                                           ,dX = nv
-                                           ,dY = 0
-                                           ,l = 72.0 * signum nv
-                                           ,w = 24.0
-                                           }
-                       }
+newCroc cx l v = let nv = v !! l
+                  in Croc {ri_Entity = Entity {x = cx
+                                              ,y = lanes !! l + 10
+                                              ,dX = nv
+                                              ,dY = 0
+                                              ,l = 540 * signum nv
+                                              ,w = 180
+                                              }
+                          }
 
-newTurtles :: Lane        -- ^ The lane the Turtles should occupy
+newTurtles :: Float       -- ^ The initial x position of the Turtles
+           -> Lane        -- ^ The lane the Turtles should occupy
            -> [Float]     -- ^ The list of velocities from which the car will take its
            -> RiverMover  -- ^ The resultant Turtles
-newTurtles l v = let x = case mod l 2 of 0 -> 0.0
-                                         1 -> initSizeX
-                     nv = v !! l
-                  in Turtles {
-                              aboveWater = True
-                             ,submergeTimer = 0.0
-                             ,ri_Entity = Entity {x = x
-                                                 ,y = lanes !! l + 2
-                                                 ,dX = nv
-                                                 ,dY = 0
-                                                 ,l = 72.0 * signum nv
-                                                 ,w = 24.0
-                                                 }
-                             }
+newTurtles tx l v = let nv = v !! l
+                     in Turtles {aboveWater = True
+                                ,submergeTimer = 0
+                                ,ri_Entity = Entity {x = tx
+                                                    ,y = lanes !! l + 10
+                                                    ,dX = nv
+                                                    ,dY = 0
+                                                    ,l = 600 * signum nv
+                                                    ,w = 180
+                                                    }
+                                }
 
-newLog :: Lane        -- ^ The lane the Log should occupy
+newLog :: Float       -- ^ The initial x position of the Log
+       -> Lane        -- ^ The lane the Log should occupy
        -> [Float]     -- ^ The list of velocities from which the car will take its
        -> RiverMover  -- ^ The resultant Log
-newLog l v = let x = case mod l 2 of 0 -> 0.0
-                                     1 -> initSizeX
-                 nv = v !! l
-              in Log {
-                     ri_Entity = Entity {x = x
-                                         ,y = lanes !! l + 2
-                                         ,dX = nv
-                                         ,dY = 0
-                                         ,l = 48.0 * signum nv
-                                         ,w = 24.0
-                                         }
-                     }
+newLog lx l v = let nv = v !! l
+                 in Log {ri_Entity = Entity {x = lx
+                                            ,y = lanes !! l + 10
+                                            ,dX = nv
+                                            ,dY = 0
+                                            ,l = 360 * signum nv
+                                            ,w = 180
+                                            }
+                        }
 
 -- |Constructing a new Goal in lane l and at x position gx
 newGoal :: Float  -- ^ The x position of the Goal
         -> Lane   -- ^ The lane the Goal should occupy
         -> Goal   -- ^ The resultant Goal
-newGoal gx l = Goal {
-                      go_Entity = Entity {x = gx
-                                         ,y = lanes !! l + 2
-                                         ,dX = 0.0
-                                         ,dY = 0.0
-                                         ,l = 24.0
-                                         ,w = 24.0
-                                         }
-                    , is_Occupied = False
+newGoal gx l = Goal {go_Entity = Entity {x = gx
+                                        ,y = lanes !! l + 10
+                                        ,dX = 0
+                                        ,dY = 0
+                                        ,l = 180
+                                        ,w = 180
+                                        }
+                    ,is_Occupied = False
                     }
 
-startEnv :: Int   -- ^ The level of the new Env
-         -> Env
-startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
-                 vels' = fmap (*l') vels
-              in E {player = newPlayer
-                   ,goals = goalGen l
-                   ,riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
-                                          ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
-                                          ,[setX x (newCroc 8 vels')         | x <- xList 9]
-                                          ,[setX x (newTurtles 7 vels')      | x <- xList 6]
-                                          ,[setX x (newLog 6 vels')          | x <- xList 8]
+startEnv :: Env
+startEnv = E {player = newPlayer
+             ,goals = goalGen 1
+             ,riverEnemies = concat [[newTurtles x 10 vels     | x <- xList 5]
+                                    ,[newLog (x-offset) 9 vels | x <- xList 3
+                                                               , offset <- [0,500]]
+                                    ,[newCroc x 8 vels         | x <- xList 9]
+                                    ,[newTurtles x 7 vels      | x <- xList 6]
+                                    ,[newLog x 6 vels          | x <- xList 8]
+                                    ]
+             ,roadEnemies = concat [[newCar (x+offset) 4 vels  | x <- xList 3
+                                                               , offset <- [0, 500, 1000]]
+                                   ,[newCar (x+offset) 3 vels  | x' <- xList 2
+                                                               , offset <- [0, 500]
+                                                               , let x = 4000 - x']
+                                   ,[newCar x 2 vels           | x <- xList 5]
+                                   ,[newCar (x+offset) 1 vels  | x' <- xList 3
+                                                               , offset <- [0,500]
+                                                               , let x = 4000 - x']
+                                   ,[newCar x 0 vels           | x <- xList 6]
                                    ]
-                   ,roadEnemies = concat [[setX (x+offset) (newCar 4 vels')  | x <- xList 3
-                                                                             , offset <- [0, 60.0, 120.0]]
-                                         ,[setX (x+offset) (newCar 3 vels')  | x' <- xList 2
-                                                                             , offset <- [0, 60.0]
-                                                                             , let x = initSizeX - x']
-                                         ,[setX x (newCar 2 vels')           | x <- xList 5]
-                                         ,[setX (x+offset) (newCar 1 vels')  | x' <- xList 3
-                                                                             , offset <- [0,50.0]
-                                                                             , let x = initSizeX - x']
-                                         ,[setX x (newCar 0 vels')           | x <- xList 6]
-                                         ]
-                   ,frames = 0
-                   ,time = 0
-                   ,gameState = PreStart
-                   ,gameScore = 0
-                   ,level = 1
-                   }
-               where -- |The function to generate the list of x values for a given lane, of length n
-                     xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
-                     modFrac n d = mod (round n) (round d)
+             ,frames = 0
+             ,time = 0
+             ,gameState = PreStart
+             ,gameScore = 0
+             ,level = 1
+             }
+             where xList n = tail [0,5760/n..5760]
 
 -- * Class Instance Declarations
 
@@ -340,9 +319,11 @@ instance Drawable Goal where
   setdX _ = id
   setdY _ = id
   update = id
-  draw g = let c = if is_Occupied g then Color green
-                                    else Color yellow 
-            in c . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
+  draw g = let gx = getX g
+               gy = getY g
+               dg = Color yellow . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
+            in if is_Occupied g then Pictures [dg, draw . setX gx . setY gy $ newPlayer]
+                                else dg
 
 instance Drawable Frogger where
   getEntity = fr_Entity
@@ -377,7 +358,6 @@ instance Drawable RoadMover where
   setdY dy' r = let re = ro_Entity r
                     in r {ro_Entity = re {dY = dy'}}
   update ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
-
   draw c@(Car {}) = Color red . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
 
 -- * Additional Helper Functions
@@ -407,16 +387,21 @@ splitCroc c@Croc {} = let cx = getX c
 
 -- |'loopX' is used to loop the x-value of moving objects
 loopX :: Float -> Float
-loopX n = if n < (-screenEdge) then screenWidth
-          else if n > screenWidth then (-screenEdge)
-          else n
+loopX n
+  | n < leftMost  = n + 5760
+  | n > rightMost = n - 5760
+  | otherwise     = n
+  where leftMost  = -880
+        rightMost = 4880
 
 goalGen :: Int -> [Goal]
-goalGen l = case l of 1         -> [newGoal ((initSizeX/2) - 12) 11]
-                      2         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-22, 44]]
-                      3         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-84, 12, 108]]
-                      4         -> [newGoal ((initSizeX/2) - x) 11 | x <- [-96, -24, 48, 120]]
-                      otherwise -> [newGoal ((initSizeX/2) - x) 11 | x <- [-180, -84, 12, 108, 204]]
+goalGen l
+  | l == 1    = newGoals [0]
+  | l == 2    = newGoals [-200,200]
+  | l == 3    = newGoals [-400,0,400]
+  | l == 4    = newGoals [-600,-200,200,600]
+  | otherwise = newGoals [-800,-400,0,400,800]
+  where newGoals xs = [newGoal (1910 + x) 11 | x <- xs]
 
 
 unitSquare :: Picture
