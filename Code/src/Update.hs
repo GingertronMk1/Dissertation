@@ -41,7 +41,7 @@ updateMovers e = e {player = update . player $ e
 --  If they are on the Road, it calls 'roadCheck' and conversely it calls 'riverCheck' if they are on the River.
 --  This is in the interest of efficiency; there is no point checking if the player has collided with something that does not exist on their part of the map.
 hitCheck :: Env -> Env
-hitCheck e@E {player = p} = if inRange (0, initSizeX) (getX p) && inRange (0, initSizeY) (getY p)
+hitCheck e@E {player = p} = if inRange (0 - getL p, initSizeX) (getX p) && inRange (0, initSizeY) (getY p)
                             then inBoundsHitCheck e
                             else e {gameState = PlayerDead "You went out of bounds!"}
 
