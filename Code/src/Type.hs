@@ -76,8 +76,9 @@ data RiverMover = -- | A Crocodile
                   Croc { ri_Entity :: Entity    -- ^ The Entity containing important values about the Croc
                   }
                   -- | Some Turtles
-                | Turtles { aboveWater :: Bool  -- ^ Are the turtles above water?
-                          , ri_Entity :: Entity -- ^ The Entity containing important values about the Turtles
+                | Turtles { aboveWater :: Bool      -- ^ Are the turtles above water?
+                          , submergeTimer :: Float  -- ^ Milliseconds before the turtle comes up or submerges
+                          , ri_Entity :: Entity     -- ^ The Entity containing important values about the Turtles
                 }
                   -- | A Log
                 | Log { ri_Entity :: Entity     -- ^ The Entity containing important values about the Log
@@ -217,7 +218,8 @@ newTurtles l v = let x = case mod l 2 of 0 -> 0.0
                                          1 -> initSizeX
                      nv = v !! l
                   in Turtles {
-                             aboveWater = True
+                              aboveWater = True
+                             ,submergeTimer = 0.0
                              ,ri_Entity = Entity {x = x
                                                  ,y = lanes !! l + 2
                                                  ,dX = nv
@@ -262,30 +264,30 @@ startEnv :: Int   -- ^ The level of the new Env
          -> Env
 startEnv l = let l' = (1.0 + ((fromIntegral l) / 10.0)) ^ 2
                  vels' = fmap (*l') vels
-              in E { player = newPlayer
-                   , goals = goalGen l
-                   , riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
-                                           ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
-                                           ,[setX x (newCroc 8 vels')         | x <- xList 9]
-                                           ,[setX x (newTurtles 7 vels')      | x <- xList 6]
-                                           ,[setX x (newLog 6 vels')          | x <- xList 8]
-                                    ]
-                   , roadEnemies = concat [[setX (x+offset) (newCar 4 vels')  | x <- xList 3
-                                                                              , offset <- [0, 60.0, 120.0]]
-                                          ,[setX (x+offset) (newCar 3 vels')  | x' <- xList 2
-                                                                              , offset <- [0, 60.0]
-                                                                              , let x = initSizeX - x']
-                                          ,[setX x (newCar 2 vels')           | x <- xList 5]
-                                          ,[setX (x+offset) (newCar 1 vels')  | x' <- xList 3
-                                                                              , offset <- [0,50.0]
-                                                                              , let x = initSizeX - x']
-                                          ,[setX x (newCar 0 vels')           | x <- xList 6]
-                                          ]
-                   , frames = 0
-                   , time = 0
-                   , gameState = PreStart
-                   , gameScore = 0
-                   , level = 1
+              in E {player = newPlayer
+                   ,goals = goalGen l
+                   ,riverEnemies = concat [[setX x (newTurtles 10 vels')     | x <- xList 5]
+                                          ,[setX (x-offset) (newLog 9 vels') | x <- xList 3, offset <- [0,48.0]]
+                                          ,[setX x (newCroc 8 vels')         | x <- xList 9]
+                                          ,[setX x (newTurtles 7 vels')      | x <- xList 6]
+                                          ,[setX x (newLog 6 vels')          | x <- xList 8]
+                                   ]
+                   ,roadEnemies = concat [[setX (x+offset) (newCar 4 vels')  | x <- xList 3
+                                                                             , offset <- [0, 60.0, 120.0]]
+                                         ,[setX (x+offset) (newCar 3 vels')  | x' <- xList 2
+                                                                             , offset <- [0, 60.0]
+                                                                             , let x = initSizeX - x']
+                                         ,[setX x (newCar 2 vels')           | x <- xList 5]
+                                         ,[setX (x+offset) (newCar 1 vels')  | x' <- xList 3
+                                                                             , offset <- [0,50.0]
+                                                                             , let x = initSizeX - x']
+                                         ,[setX x (newCar 0 vels')           | x <- xList 6]
+                                         ]
+                   ,frames = 0
+                   ,time = 0
+                   ,gameState = PreStart
+                   ,gameScore = 0
+                   ,level = 1
                    }
                where -- |The function to generate the list of x values for a given lane, of length n
                      xList n = filter ((\x -> modFrac x ((screenWidth+screenEdge)/n) == 0) . (+screenEdge)) [-screenEdge+1..screenWidth]
@@ -303,24 +305,32 @@ instance Drawable RiverMover where
                     in r {ri_Entity = re {dX = dx'}}
   setdY dy' r = let re = ri_Entity r
                     in r {ri_Entity = re {dY = dy'}}
+  update t@Turtles {aboveWater = aw, submergeTimer = st}
+    = let st' = fromIntegral $ mod (round (st - (10 / 6))) 360
+          aw' = if st' == 0 then not (aw)
+                            else aw
+       in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw'
+                                                                        ,submergeTimer = st'}
   update ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
-  draw c@(Croc {}) = let (cHead, cBody) = splitCroc c
-                         bodyGreen = makeColor 0.0 1.0 0.0 1.0
-                         headGreen = makeColor 0.0 0.8 0.0 1.0
-                      in Pictures [Color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
-                                  ,Color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
-  draw t@(Turtles {}) = let l' = getL t / 3
-                            xt = getX t
-                            yt = getY t
-                            wt = getW t
-                            alphaBlue = makeColor 0.0 0.0 1.0 0.2
-                            drawTurtle x = Pictures [
-                                                     Color green  . translate x yt . scale l' wt $ unitSquare
-                                                    ,Color orange . translate x yt . scale l' wt $ unitCircle
-                                                    ]
-                         in Pictures $ [drawTurtle (xt + (l' * off))| off <- [0,1,2]] ++ [Color alphaBlue . translate xt yt . scale (3*l') wt $ unitSquare]
-  draw l@(Log {})     = let brown = makeColor 0.6 0.3 0.1 1.0
-                         in Color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
+  draw c@Croc {} = let (cHead, cBody) = splitCroc c
+                       bodyGreen = makeColor 0.0 1.0 0.0 1.0
+                       headGreen = makeColor 0.0 0.8 0.0 1.0
+                    in Pictures [Color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
+                                ,Color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
+  draw t@Turtles {aboveWater = aw} = let l' = getL t / 3
+                                         xt = getX t
+                                         yt = getY t
+                                         wt = getW t
+                                         mask = if not aw then [Color alphaBlue . translate xt yt . scale (3*l') wt $ unitSquare]
+                                                          else []
+                                         alphaBlue = makeColor 0.0 0.0 1.0 0.2
+                                         drawTurtle x = Pictures [
+                                                                  Color green  . translate (x+(0.1*l')) (yt+(0.1*wt)). scale (0.8*l') (0.8*wt) $ unitSquare
+                                                                 ,Color orange . translate x yt . scale l' wt $ unitCircle
+                                                                 ]
+                                      in Pictures $ [drawTurtle (xt + (l' * off))| off <- [0,1,2]] ++ mask
+  draw l@Log {} = let brown = makeColor 0.6 0.3 0.1 1.0
+                   in Color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
 
 instance Drawable Goal where
   getEntity = go_Entity
@@ -344,12 +354,16 @@ instance Drawable Frogger where
   setdY dy' f = let fe = fr_Entity f
                     in f {fr_Entity = fe {dY = dy'}}
   update f@(Frogger{fr_Entity = fe, is_JumpingX = ijx, is_JumpingY = ijy, targetX = tx, targetY = ty, prev_dX = pdx, prev_dY = pdy})
-    =      if ijy && getY f == ty then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingY = False}
+    = if      ijy && getY f == ty then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingY = False}
       else if ijx && getX f == tx then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingX = False}
       else                             updateX . updateY $ f
-
   draw f@Frogger {} = let darkGreen = makeColor 0.2 0.8 0.2 1.0
-                       in Color darkGreen . translate (getX f) (getY f) . scale (getL f) (getW f) $ unitSquare
+                          xf = getX f
+                          yf = getY f
+                          lf = getL f
+                          wf = getW f
+                          (x',y',l',w') = if is_Jumping f then (xf - 0.05 * w', yf - 0.05 * l', lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
+                       in Color darkGreen . translate x' y' . scale l' w' $ unitSquare
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
