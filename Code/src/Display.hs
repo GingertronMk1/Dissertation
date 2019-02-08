@@ -27,7 +27,7 @@ drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
                                                                         ,translate 0 300 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
                                                                         ]
                                           otherwise         -> Pictures [
-                                                                        drawRoads
+                                                                         drawRoads
                                                                         ,drawRiver
                                                                         ,translate 0 440 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
                                                                         ,translate 400 440 . textDraw . show . round $  time e
