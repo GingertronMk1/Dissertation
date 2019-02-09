@@ -11,8 +11,8 @@ import Update
 import Input
 import Type
 
--- |'main' takes the arguments given on program launch and creates the initial environment.
---  It then creates a window of size given by the values 'initSizeX' and 'initSizeY' stored in 'Type'.
+-- | 'main' takes the arguments given on program launch and (currently) only prints them
+--   It then takes the height and width of the window, creates an initial Env with those, and starts the game
 main :: IO()
 main = do argc <- getArgs
           (initX,initY) <- getScreenSize
