@@ -8,34 +8,23 @@ import Graphics.Gloss.Data.Bitmap
 
 -- * Initial Values
 
--- |The initial width of the window.
---  The window is initially set to 640x480px.
---4000 :: Float
---4000 = 640
-
--- |The initial height of the window.
---  The window is initially set to 640x480px.
---3000 :: Float
---3000 = 480.0
-
--- |The y values for each lane, starting at the first road lane
+-- | The y values for each lane, starting at the first road lane
 lanes :: [Float]
 lanes = [200,400..3000]
 
--- |The initial velocities for each lanes
---  Ideally this will at some point be generated more randomly, however for the moment it is statically defined
+-- | The initial velocities for each lanes
+--   Ideally this will at some point be generated more randomly, however for the moment it is statically defined
 vels :: [Float]
 vels = [3.0, -1.8, 3.6, -2.4, 4.2, 0.0, 2.4, -1.8, 3.6, -4.8, 3.0]
 
 -- * Type Declarations
 
--- |'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
+-- | 'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
 type Lane = Int
 
--- |A data type to be contained by all drawn objects
---  Cuts down on boilerplate x, y, v, l, w values all over the place
-data Entity = Entity {
-                       x :: Float   -- ^ Position in x
+-- | A data type to be contained by all drawn objects
+--   Cuts down on boilerplate x, y, v, l, w values all over the place
+data Entity = Entity { x :: Float   -- ^ Position in x
                      , y :: Float   -- ^ Position in y
                      , dX :: Float  -- ^ Velocity in x
                      , dY :: Float  -- ^ Velocity in y
@@ -44,24 +33,24 @@ data Entity = Entity {
               }
               deriving (Eq, Show)
 
--- |The data type for the player.
-data Frogger = Frogger {fr_Entity   :: Entity -- ^ The Entity containing important values about the Frogger
-                       ,is_JumpingX :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping left or right
-                       ,is_JumpingY :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping up or down
-                       ,targetX     :: Float  -- ^ If the Frogger is jumping this is its target position in x
-                       ,targetY     :: Float  -- ^ If the Frogger is jumping this is its target position in y
-                       ,prev_dX     :: Float  -- ^ The dX value the Frogger had before jumping
-                       ,prev_dY     :: Float  -- ^ The dY value the Frogger had before jumping
+-- | The data type for the player.
+data Frogger = Frogger { fr_Entity   :: Entity -- ^ The Entity containing important values about the Frogger
+                       , is_JumpingX :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping left or right
+                       , is_JumpingY :: Bool   -- ^ A boolean flag denoting whether or not the Frogger is jumping up or down
+                       , targetX     :: Float  -- ^ If the Frogger is jumping this is its target position in x
+                       , targetY     :: Float  -- ^ If the Frogger is jumping this is its target position in y
+                       , prev_dX     :: Float  -- ^ The dX value the Frogger had before jumping
+                       , prev_dY     :: Float  -- ^ The dY value the Frogger had before jumping
                }
                deriving (Eq, Show)
 
--- |The data type for all vehicles on the Road.
+-- | The data type for all vehicles on the Road.
 data RoadMover = -- | A Car
-                 Car {ro_Entity :: Entity -- ^ The Entity containing important values about the Car
+                 Car { ro_Entity :: Entity -- ^ The Entity containing important values about the Car
                  }
                  deriving (Eq, Show)
 
--- |The data type for all objects on the River.
+-- | The data type for all objects on the River.
 data RiverMover = -- | A Crocodile
                   Croc { ri_Entity :: Entity    -- ^ The Entity containing important values about the Croc
                   }
@@ -75,13 +64,13 @@ data RiverMover = -- | A Crocodile
                 }
                 deriving (Eq, Show)
 
--- |The data type for the goals of each level.
+-- | The data type for the goals of each level.
 data Goal =  Goal { go_Entity :: Entity -- ^ The Entity containing important values about the Goal
                   , is_Occupied :: Bool -- ^ Does the goal currently have a Frogger on it?
           }
           deriving (Eq, Show)
 
--- |A data type describing the state of the game - playing, paused, etc.
+-- | The data type describing the state of the game - playing, paused, etc.
 data GameState = PreStart           -- ^ Before the start of the first level.
                | Playing            -- ^ While the game is in progress.
                | Paused             -- ^ The player has paused the game.
@@ -90,7 +79,7 @@ data GameState = PreStart           -- ^ Before the start of the first level.
                deriving (Eq, Show)
 
 
--- |The data type that will describe the overall state, or Environment" of the game at any given time.
+-- | The data type that will describe the overall state, or Environment" of the game at any given time.
 data Env = E { player       :: Frogger      -- ^The Frogger.
              , roadEnemies  :: [RoadMover]  -- ^The enemies on the road.
              , riverEnemies :: [RiverMover] -- ^The "enemies" on the river.
@@ -107,8 +96,8 @@ data Env = E { player       :: Frogger      -- ^The Frogger.
 
 -- * Class Declarations
 
--- |A typeclass which will contain all objects that are drawn to the screen.
---  This should cut down enormously on boilerplate code, and allow for some level of polymorphism whilst maintaining type clarity.
+-- | A typeclass which will contain all objects that are drawn to the screen.
+--   This should cut down enormously on boilerplate code, and allow for some level of polymorphism whilst maintaining type clarity.
 class Drawable a where
   -- | A function to draw the object to the screen.
   draw :: a -> Picture
@@ -172,9 +161,10 @@ newPlayer = Frogger {fr_Entity = Entity {x  = 1910
                      ,prev_dY = 0
                      }
 
+-- | Generating a new Car
 newCar :: Float     -- ^ The initial x position of the Car
        -> Lane      -- ^ The lane the Car should occupy
-       -> [Float]   -- ^ The list of velocities from which the car will take its
+       -> [Float]   -- ^ The list of velocities from which the Car will take its velocity
        -> RoadMover -- ^ The resultant Car
 newCar cx l v = let nv = v !! l
                  in Car {ro_Entity = Entity {x = cx
@@ -186,9 +176,10 @@ newCar cx l v = let nv = v !! l
                                             }
                         }
 
+-- | Generating a new Croc
 newCroc :: Float      -- ^ The initial x position of the Croc
         -> Lane       -- ^ The lane the Croc should occupy
-        -> [Float]    -- ^ The list of velocities from which the car will take its
+        -> [Float]    -- ^ The list of velocities from which the Croc will take its velocity
         -> RiverMover -- ^ The resultant Croc
 newCroc cx l v = let nv = v !! l
                   in Croc {ri_Entity = Entity {x = cx
@@ -200,9 +191,10 @@ newCroc cx l v = let nv = v !! l
                                               }
                           }
 
+-- | Generating some new Turtles
 newTurtles :: Float       -- ^ The initial x position of the Turtles
            -> Lane        -- ^ The lane the Turtles should occupy
-           -> [Float]     -- ^ The list of velocities from which the car will take its
+           -> [Float]     -- ^ The list of velocities from which the Turtles will take their velocity
            -> RiverMover  -- ^ The resultant Turtles
 newTurtles tx l v = let nv = v !! l
                      in Turtles {aboveWater = True
@@ -216,9 +208,10 @@ newTurtles tx l v = let nv = v !! l
                                                     }
                                 }
 
+-- | Generating a new Log
 newLog :: Float       -- ^ The initial x position of the Log
        -> Lane        -- ^ The lane the Log should occupy
-       -> [Float]     -- ^ The list of velocities from which the car will take its
+       -> [Float]     -- ^ The list of velocities from which the Log will take its velocity
        -> RiverMover  -- ^ The resultant Log
 newLog lx l v = let nv = v !! l
                  in Log {ri_Entity = Entity {x = lx
@@ -230,7 +223,7 @@ newLog lx l v = let nv = v !! l
                                             }
                         }
 
--- |Constructing a new Goal in lane l and at x position gx
+-- | Constructing a new Goal
 newGoal :: Float  -- ^ The x position of the Goal
         -> Lane   -- ^ The lane the Goal should occupy
         -> Goal   -- ^ The resultant Goal
@@ -244,6 +237,7 @@ newGoal gx l = Goal {go_Entity = Entity {x = gx
                     ,is_Occupied = False
                     }
 
+-- | Generating the initial Env
 startEnv :: Env
 startEnv = E {player = newPlayer
              ,goals = goalGen 1
@@ -270,6 +264,8 @@ startEnv = E {player = newPlayer
              ,gameState = PreStart
              ,gameScore = 0
              ,level = 1
+             ,sWidth = 1    -- This will be updated immediately
+             ,sHeight = 1   -- This will be updated immediately
              }
              where xList n = tail [0,5760/n..5760]
 
@@ -362,11 +358,13 @@ instance Drawable RoadMover where
 
 -- * Additional Helper Functions
 
--- |'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
+-- | 'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
 is_Jumping :: Frogger -> Bool
 is_Jumping f = is_JumpingX f || is_JumpingY f
 
-splitCroc :: RiverMover -> (RiverMover, RiverMover)
+-- | A function to split a Croc into its head and body - used in collision detection and drawing
+splitCroc :: RiverMover               -- ^ The intial Croc
+          -> (RiverMover, RiverMover) -- ^ Its head and body
 splitCroc c@Croc {} = let cx = getX c
                           cy = getY c
                           l' = (getL c)/3
@@ -375,12 +373,16 @@ splitCroc c@Croc {} = let cx = getX c
                                                               ,y = cy
                                                               ,l = l'
                                                               ,w = cw
+                                                              ,dX = 0
+                                                              ,dY = 0
                                                               }
                                           }
                           crocBody = Croc {ri_Entity = Entity {x = cx
                                                               ,y = cy
                                                               ,l = 2 * l'
                                                               ,w = cw
+                                                              ,dX = 0
+                                                              ,dY = 0
                                                               }
                                           }
                        in (crocHead, crocBody)
@@ -394,7 +396,9 @@ loopX n
   where leftMost  = -880
         rightMost = 4880
 
-goalGen :: Int -> [Goal]
+-- | Generating goals for a given level
+goalGen :: Int    -- ^ The level for which to generate the Goals
+        -> [Goal]
 goalGen l
   | l == 1    = newGoals [0]
   | l == 2    = newGoals [-200,200]
@@ -403,9 +407,10 @@ goalGen l
   | otherwise = newGoals [-800,-400,0,400,800]
   where newGoals xs = [newGoal (1910 + x) 11 | x <- xs]
 
-
+-- | Drawing a square of size 1x1
 unitSquare :: Picture
 unitSquare = translate 0.5 0.5 $ rectangleSolid 1.0 1.0
 
+-- | Drawing a circle of diameter 1
 unitCircle :: Picture
 unitCircle = translate 0.5 0.5 $ circleSolid 0.5
