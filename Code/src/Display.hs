@@ -7,9 +7,12 @@ import Graphics.Gloss.Data.Bitmap
 import Type
 
 -- |A function to draw an 'Env' to the screen.
+--  It scales and translates the 'drawGame' function to the correct window size.
 gameDisplay :: Env -> Picture
 gameDisplay e@E{sWidth = sw, sHeight = sh} = scale (sw/4000) (sh/3000) . translate (-2000) (-1500) $ drawGame e
 
+-- | drawGame draws the game at a resolution of 4000x3000
+--   This makes a great deal of the maths involved in the game logic considerably simpler, and the result can simply be scaled down to the actual window size.
 drawGame :: Env -> Picture
 drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
                                                                          translate 0 1800 . textDraw $ "Welcome to Functional Frogger!"
@@ -40,18 +43,23 @@ drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
                                                                         ]
                                where textDraw = Color white . Text
 
+-- | Drawing the verge at the top of the screen that the Froggers call home.
 drawVerge :: Picture
 drawVerge = Color green . translate 0 (lanes!!12) . Scale 4000 400 $ unitSquare
 
+-- | Drawing the lanes of the Road.
 drawRoads :: Picture
 drawRoads = Pictures [Color (greyN 0.5) $ drawLane n | n <- [0..4]]
 
+-- | Drawing the lanes of the River.
 drawRiver :: Picture
 drawRiver = Pictures [Color blue $ drawLane n | n <- [6..11]]
 
+-- | A function to draw a lane - a rectangle of height 190 that fills the width of the screen.
 drawLane :: Lane -> Picture
 drawLane n = translate 0 (lanes!!n + 5) . Scale 4000 190 $ unitSquare
 
+-- | Drawing the sides of the map - the moving objects go beyond the width of the lanes and this hides them from view.
 drawSides :: Float -> Picture
 drawSides w = let w' = 0.5 * (4000-w)
                in Pictures [translate (4000) 0 . scale w' 3000 $ unitSquare
