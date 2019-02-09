@@ -6,12 +6,15 @@ import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Data.Bitmap
 import Type
 
+-- | The base speed of the player while jumping
 baseSpeed :: Float
-baseSpeed = 1
+baseSpeed = 10
 
+-- | The boosted speed of the player while jumping
 boostSpeed :: Float
-boostSpeed = 4
+boostSpeed = 40
 
+-- | A routing function of sorts: it takes the event and the current Env and, based on the current gameState, determines which function to call to give the correct result.
 gameInput :: Event -> Env -> Env
 gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart ev en
                                                 Playing       -> inputPlaying ev en
@@ -19,10 +22,15 @@ gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart e
                                                 PlayerDead _  -> inputDead ev en
                                                 LevelComplete -> inputComplete ev en
 
+-- | The function for dealing with inputs before the game has started proper.
+--   Pressing any key down will start the game, other input is ignored.
 inputPreStart :: Event -> Env -> Env
 inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
 inputPreStart _ e                     = e
 
+-- | The function for dealing with inputs during gameplay.
+--   'w', 'a', 's', and 'd' cause the player to jump up, left, down, and right respectively at the speed denoted by 'baseSpeed'.
+--   Shift + the above cause the player to move at the speed denoted by 'boostSpeed'
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'w') = e {player = jumpY baseSpeed     p}
@@ -35,23 +43,29 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'D') = e {player = jumpX boostSpeed    p}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
-  where step = 200
-        speed = 10
-        setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
+  where setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
         ignoringJump f n p = if is_Jumping p then p else f n p
-        jumpX p = ignoringJump (\n f -> let stepNo = step * (signum n) in setdX (speed*n) . setPrevs $ f {is_JumpingX = True, targetX = getX f + stepNo}) p
-        jumpY p = ignoringJump (\n f -> let stepNo = step * (signum n) in setdY (speed*n) . setPrevs $ f {is_JumpingY = True, targetY = getY f + stepNo}) p
+        jumpX p = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) p
+        jumpY p = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) p
 inputPlaying _ e    = e
 
+-- | The function for dealing with inputs while the game is paused.
+--   Pressing space resumes the game, all other input is ignored.
 inputPaused :: Event -> Env -> Env
 inputPaused (EventKey (SpecialKey KeySpace) Down _ _) e = e {gameState = Playing}
 inputPaused _ e                                         = e
 
+-- | The function for dealing with inputs when the player has died.
+--   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
+--   Other input is ignored.
 inputDead :: Event -> Env -> Env
 inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sw, sHeight = sh}
   = startEnv {sWidth = sw, sHeight = sh}
 inputDead _ e                                         = e
 
+-- | The function for dealing with input when a level is complete.
+--   Pressing space increases the level by 1, generates new goals based on the level and the 'goalGen' function in 'Type', increases all enemy speeds by a factor of 1.2, and resets the player position.
+--   All other input is ignored.
 inputComplete :: Event -> Env -> Env
 inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = l}
   = let l' = l + 1
