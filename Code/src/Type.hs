@@ -55,9 +55,10 @@ data RiverMover = -- | A Crocodile
                   Croc { ri_Entity :: Entity    -- ^ The Entity containing important values about the Croc
                   }
                   -- | Some Turtles
-                | Turtles { aboveWater :: Bool      -- ^ Are the turtles above water?
-                          , submergeTimer :: Float  -- ^ Milliseconds before the turtle comes up or submerges
-                          , ri_Entity :: Entity     -- ^ The Entity containing important values about the Turtles
+                | Turtles { aboveWater :: Bool          -- ^ Are the Turtles above water?
+                          , submergeTimer :: Float      -- ^ Milliseconds before the Turtles come up or submerge
+                          , submergeDuration  :: Float  -- ^ The number of seconds the Turtles should remain submerged/above water for
+                          , ri_Entity :: Entity         -- ^ The Entity containing important values about the Turtles
                 }
                   -- | A Log
                 | Log { ri_Entity :: Entity     -- ^ The Entity containing important values about the Log
@@ -89,8 +90,8 @@ data Env = E { player       :: Frogger      -- ^The Frogger.
              , gameState    :: GameState    -- ^The current state of the game.
              , gameScore    :: Int          -- ^The current score.
              , level        :: Int          -- ^The current level.
-             , sWidth  :: Float        -- ^The width of the window in pixels
-             , sHeight :: Float        -- ^The height of the window in pixels
+             , sWidth  :: Float             -- ^The width of the window in pixels.
+             , sHeight :: Float             -- ^The height of the window in pixels.
          }
          deriving (Eq, Show)
 
@@ -139,8 +140,10 @@ class Drawable a where
   updateY :: a -> a
   updateY d = setY (getY d + getdY d) d
   -- | A function to update the object over time.
-  update :: a -> a
-  update = updateX . updateY
+  update :: Float -- ^ The number of seconds to update the object by
+         -> a     -- ^ The object to be updated
+         -> a     -- ^ The resultant object
+  update t = updateX . updateY
 
 -- * Type Constructors
   
@@ -195,18 +198,20 @@ newCroc cx l v = let nv = v !! l
 newTurtles :: Float       -- ^ The initial x position of the Turtles
            -> Lane        -- ^ The lane the Turtles should occupy
            -> [Float]     -- ^ The list of velocities from which the Turtles will take their velocity
+           -> Float       -- ^ How long they should stay submerged/above water for (in seconds)
            -> RiverMover  -- ^ The resultant Turtles
-newTurtles tx l v = let nv = v !! l
-                     in Turtles {aboveWater = True
-                                ,submergeTimer = 0
-                                ,ri_Entity = Entity {x = tx
-                                                    ,y = lanes !! l + 10
-                                                    ,dX = nv
-                                                    ,dY = 0
-                                                    ,l = 600 * signum nv
-                                                    ,w = 180
-                                                    }
-                                }
+newTurtles tx l v sd = let nv = v !! l
+                        in Turtles {aboveWater = True
+                                   ,submergeTimer = 0
+                                   ,submergeDuration = sd
+                                   ,ri_Entity = Entity {x = tx
+                                                       ,y = lanes !! l + 10
+                                                       ,dX = nv
+                                                       ,dY = 0
+                                                       ,l = 600 * signum nv
+                                                       ,w = 180
+                                                       }
+                                   }
 
 -- | Generating a new Log
 newLog :: Float       -- ^ The initial x position of the Log
@@ -241,23 +246,23 @@ newGoal gx l = Goal {go_Entity = Entity {x = gx
 startEnv :: Env
 startEnv = E {player = newPlayer
              ,goals = goalGen 1
-             ,riverEnemies = concat [[newTurtles x 10 vels     | x <- xList 5]
-                                    ,[newLog (x-offset) 9 vels | x <- xList 3
-                                                               , offset <- [0,500]]
-                                    ,[newCroc x 8 vels         | x <- xList 9]
-                                    ,[newTurtles x 7 vels      | x <- xList 6]
-                                    ,[newLog x 6 vels          | x <- xList 8]
+             ,riverEnemies = concat [[newTurtles x 10 vels 6    | x <- xList 5]
+                                    ,[newLog (x-offset) 9 vels  | x <- xList 3
+                                                                , offset <- [0,500]]
+                                    ,[newCroc x 8 vels          | x <- xList 9]
+                                    ,[newTurtles x 7 vels 5     | x <- xList 6]
+                                    ,[newLog x 6 vels           | x <- xList 8]
                                     ]
-             ,roadEnemies = concat [[newCar (x+offset) 4 vels  | x <- xList 3
-                                                               , offset <- [0, 500, 1000]]
-                                   ,[newCar (x+offset) 3 vels  | x' <- xList 2
-                                                               , offset <- [0, 500]
-                                                               , let x = 4000 - x']
-                                   ,[newCar x 2 vels           | x <- xList 5]
-                                   ,[newCar (x+offset) 1 vels  | x' <- xList 3
-                                                               , offset <- [0,500]
-                                                               , let x = 4000 - x']
-                                   ,[newCar x 0 vels           | x <- xList 6]
+             ,roadEnemies = concat [[newCar (x+offset) 4 vels   | x <- xList 3
+                                                                , offset <- [0, 500, 1000]]
+                                   ,[newCar (x+offset) 3 vels   | x' <- xList 2
+                                                                , offset <- [0, 500]
+                                                                , let x = 4000 - x']
+                                   ,[newCar x 2 vels            | x <- xList 5]
+                                   ,[newCar (x+offset) 1 vels   | x' <- xList 3
+                                                                , offset <- [0,500]
+                                                                , let x = 4000 - x']
+                                   ,[newCar x 0 vels            | x <- xList 6]
                                    ]
              ,frames = 0
              ,time = 0
@@ -281,13 +286,13 @@ instance Drawable RiverMover where
                     in r {ri_Entity = re {dX = dx'}}
   setdY dy' r = let re = ri_Entity r
                     in r {ri_Entity = re {dY = dy'}}
-  update t@Turtles {aboveWater = aw, submergeTimer = st}
-    = let st' = fromIntegral $ mod (round (st - (10 / 6))) 360
-          aw' = if st' == 0 then not (aw)
+  update ms t@Turtles {aboveWater = aw, submergeTimer = st, submergeDuration = sd}
+    = let st' = let new = st + ms
+                 in if new >= sd then 0 else new
+          aw' = if st' == 0 then not aw
                             else aw
-       in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw'
-                                                                        ,submergeTimer = st'}
-  update ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
+       in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw', submergeTimer = st'}
+  update ms ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
   draw c@Croc {} = let (cHead, cBody) = splitCroc c
                        bodyGreen = makeColor 0.0 1.0 0.0 1.0
                        headGreen = makeColor 0.0 0.8 0.0 1.0
@@ -314,7 +319,7 @@ instance Drawable Goal where
   setY _ = id
   setdX _ = id
   setdY _ = id
-  update = id
+  update _ = id
   draw g = let gx = getX g
                gy = getY g
                dg = Color yellow . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
@@ -331,10 +336,12 @@ instance Drawable Frogger where
                     in f {fr_Entity = fe {dX = dx'}}
   setdY dy' f = let fe = fr_Entity f
                     in f {fr_Entity = fe {dY = dy'}}
-  update f@(Frogger{fr_Entity = fe, is_JumpingX = ijx, is_JumpingY = ijy, targetX = tx, targetY = ty, prev_dX = pdx, prev_dY = pdy})
-    = if      ijy && getY f == ty then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingY = False}
-      else if ijx && getX f == tx then updateX . updateY . setdX pdx . setdY pdy $ f {is_JumpingX = False}
-      else                             updateX . updateY $ f
+  update ms f@Frogger{is_JumpingX = ijx, is_JumpingY = ijy, targetX = tx, targetY = ty, prev_dX = pdx, prev_dY = pdy}
+    | ijx && getX f == tx = updateResetdXdY $ f {is_JumpingX = False}
+    | ijy && getY f == ty = updateResetdXdY $ f {is_JumpingY = False}
+    | otherwise           = updateXY f
+    where updateXY = updateX . updateY
+          updateResetdXdY = updateXY . setdX pdx . setdY pdy
   draw f@Frogger {} = let darkGreen = makeColor 0.2 0.8 0.2 1.0
                           xf = getX f
                           yf = getY f
@@ -353,7 +360,7 @@ instance Drawable RoadMover where
                     in r {ro_Entity = re {dX = dx'}}
   setdY dy' r = let re = ro_Entity r
                     in r {ro_Entity = re {dY = dy'}}
-  update ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
+  update ms ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
   draw c@(Car {}) = Color red . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
 
 -- * Additional Helper Functions
@@ -405,7 +412,7 @@ goalGen l
   | l == 3    = newGoals [-400,0,400]
   | l == 4    = newGoals [-600,-200,200,600]
   | otherwise = newGoals [-800,-400,0,400,800]
-  where newGoals xs = [newGoal (1910 + x) 11 | x <- xs]
+  where newGoals = map (\x -> newGoal (1910+x) 11)
 
 -- | Drawing a square of size 1x1
 unitSquare :: Picture
