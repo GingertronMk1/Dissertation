@@ -8,19 +8,19 @@ import Data.Maybe
 import Type
 
 -- | The function which updates the game on every 'tick'
-gameUpdate :: Float   -- ^ Delta-t in milliseconds
-              -> Env  -- ^ The current Env
-              -> Env  -- ^ The updated Env
-gameUpdate n e@E{gameState = gs, time = t} = if gs == Playing then updateEnv $ e {time = t + n}
+gameUpdate :: Float -- ^ Delta-t in milliseconds
+           -> Env   -- ^ The current Env
+           -> Env   -- ^ The updated Env
+gameUpdate n e@E{gameState = gs, time = t} = if gs == Playing then updateEnv n $ e {time = t + n}
                                                               else e
 
 -- | updateEnv is a composition of 3 functions which update the positions of moving objects, detect collision between the player and those objects, detect a collision between the player and a goal, and update the score respectively.
-updateEnv :: Env -> Env
-updateEnv e = let p = player e
-                  coll = if is_Jumping p
-                         then id
-                         else hitCheck
-               in scoreUpdate . coll . updateMovers $ e
+updateEnv :: Float -> Env -> Env
+updateEnv n e = let p = player e
+                    coll = if is_Jumping p
+                           then id
+                           else hitCheck
+                 in scoreUpdate . coll . updateMovers n $ e
 
 
 -- | scoreUpdate, if the level is complete, increases the score by an amount proportional to the current level
@@ -29,11 +29,11 @@ scoreUpdate e = if gameState e == LevelComplete then e {gameScore = gameScore e 
                                                 else e
 
 -- | updateMovers applies the update function required of all Drawables to all moving objects
-updateMovers :: Env -> Env
-updateMovers e = e {player = update . player $ e
-                   ,roadEnemies = map update . roadEnemies $ e
-                   ,riverEnemies = map update . riverEnemies $ e
-                   }
+updateMovers :: Float -> Env -> Env
+updateMovers n e = e {player = update n . player $ e
+                     ,roadEnemies = map (update n) . roadEnemies $ e
+                     ,riverEnemies = map (update n) . riverEnemies $ e
+                     }
 
 -- | hitCheck acts as something of a routing function; provided the player is within bounds it calls the relevant function depending upon where on the map they are.
 --   If they are it calls 'inBoundsHitCheck' to determine what to do next.
