@@ -64,10 +64,10 @@ data RiverMover = -- | A Crocodile
                   Croc { ri_Entity :: Entity    -- ^ The Entity containing important values about the Croc
                   }
                   -- | Some Turtles
-                | Turtles { aboveWater :: Bool          -- ^ Are the Turtles above water?
-                          , submergeTimer :: Float      -- ^ Milliseconds before the Turtles come up or submerge
-                          , surfaceDuration  :: Float  -- ^ The number of seconds the Turtles should remain submerged/above water for
-                          , ri_Entity :: Entity         -- ^ The Entity containing important values about the Turtles
+                | Turtles { aboveWater      :: Bool   -- ^ Are the Turtles above water?
+                          , submergeTimer   :: Float  -- ^ Milliseconds before the Turtles come up or submerge
+                          , surfaceDuration :: Float  -- ^ The number of seconds the Turtles should remain submerged/above water for
+                          , ri_Entity       :: Entity -- ^ The Entity containing important values about the Turtles
                 }
                   -- | A Log
                 | Log { ri_Entity :: Entity     -- ^ The Entity containing important values about the Log
@@ -75,8 +75,8 @@ data RiverMover = -- | A Crocodile
                 deriving (Eq, Show)
 
 -- | The data type for the goals of each level.
-data Goal =  Goal { go_Entity :: Entity -- ^ The Entity containing important values about the Goal
-                  , is_Occupied :: Bool -- ^ Does the goal currently have a Frogger on it?
+data Goal =  Goal { go_Entity   :: Entity -- ^ The Entity containing important values about the Goal
+                  , is_Occupied :: Bool   -- ^ Does the goal currently have a Frogger on it?
           }
           deriving (Eq, Show)
 
@@ -90,8 +90,8 @@ data Env = E { player       :: Frogger      -- ^The Frogger.
              , gameState    :: GameState    -- ^The current state of the game.
              , gameScore    :: Int          -- ^The current score.
              , level        :: Int          -- ^The current level.
-             , sWidth  :: Float             -- ^The width of the window in pixels.
-             , sHeight :: Float             -- ^The height of the window in pixels.
+             , sWidth       :: Float        -- ^The width of the window in pixels.
+             , sHeight      :: Float        -- ^The height of the window in pixels.
          }
          deriving (Eq, Show)
 
