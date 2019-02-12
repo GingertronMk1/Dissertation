@@ -86,7 +86,7 @@ riverCollision c@Croc {} e@E {player = p} = let (cHead, cBody) = splitCroc c
                                              in if hasCollided p cHead && not (hasCollided p cBody)
                                                 then e {gameState = PlayerDead "You got eaten by a crocodile!"}
                                                 else e {player = setdX (getdX c) p}
-riverCollision t@Turtles {aboveWater = aw} e@E {player = p} 
+riverCollision t@Turtles {aboveWater = aw} e@E {player = p}
   = if aw then e {player = setdX (getdX t) p}
           else e {gameState = PlayerDead "Those turtles were underwater!"}
 riverCollision rm e@E {player = p} = e {player = setdX (getdX rm) p}
@@ -98,26 +98,24 @@ riverCollision rm e@E {player = p} = e {player = setdX (getdX rm) p}
 hitGoal :: Goal -- ^ The Goal that has been collided with
         -> Env  -- ^ The current Env
         -> Env  -- ^ The resultant Env
-hitGoal g e = let p = player e
-                  gs = goals e
-               in if is_Occupied g
-                  then e {gameState = PlayerDead "That goal had someone on it!"}
-                  else let gs' = g {is_Occupied = True} : filter (/=g) gs
-                        in if all is_Occupied gs' then e {gameState = LevelComplete}
-                                                  else e {player = newPlayer
-                                                         ,goals = gs'
-                                                         }
+hitGoal g e = if is_Occupied g
+              then e {gameState = PlayerDead "That goal had someone on it!"}
+              else let gs' = g {is_Occupied = True} : filter (/=g) (goals e)
+                    in if all is_Occupied gs' then e {gameState = LevelComplete}
+                                              else e {player = newPlayer
+                                                     ,goals = gs'
+                                                     }
 
 -- | Detecting whether or not the Frogger has collided with another Drawable
 hasCollided :: Drawable a => Frogger -> a -> Bool
-hasCollided f d = let xf = getX f
-                      yf = getY f
-                      lf = getL f
-                      wf = getW f
-                      xd = getX d
-                      yd = getY d
-                      ld = getL d
+hasCollided f d = let lf = getL f               -- The length of the Frogger
+                      wf = getW f               -- The width of the Frogger
+                      xf = getX f - (lf/2)      -- The adjusted x-position of the Frogger
+                      yf = getY f - (wf/2)      -- The adjusted y-position of the Frogger
+                      ld = getL d               -- All as above but for the Drawable
                       wd = getW d
+                      xd = getX d - (ld/2)
+                      yd = getY d - (wd/2)
                    in case signum ld of 1         -> xd + ld > xf &&
                                                      yd + wd > yf &&
                                                      xf + lf > xd &&
