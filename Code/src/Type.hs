@@ -66,7 +66,7 @@ data RiverMover = -- | A Crocodile
                   -- | Some Turtles
                 | Turtles { aboveWater :: Bool          -- ^ Are the Turtles above water?
                           , submergeTimer :: Float      -- ^ Milliseconds before the Turtles come up or submerge
-                          , submergeDuration  :: Float  -- ^ The number of seconds the Turtles should remain submerged/above water for
+                          , surfaceDuration  :: Float  -- ^ The number of seconds the Turtles should remain submerged/above water for
                           , ri_Entity :: Entity         -- ^ The Entity containing important values about the Turtles
                 }
                   -- | A Log
@@ -204,7 +204,7 @@ newTurtles :: Float       -- ^ The initial x position of the Turtles
 newTurtles tx l v sd = let nv = v !! l
                         in Turtles {aboveWater = True
                                    ,submergeTimer = 0
-                                   ,submergeDuration = sd
+                                   ,surfaceDuration = sd
                                    ,ri_Entity = Entity {x = tx
                                                        ,y = lanes !! l + 10
                                                        ,dX = nv
@@ -287,7 +287,7 @@ instance Drawable RiverMover where
                     in r {ri_Entity = re {dX = dx'}}
   setdY dy' r = let re = ri_Entity r
                     in r {ri_Entity = re {dY = dy'}}
-  update ms t@Turtles {aboveWater = aw, submergeTimer = st, submergeDuration = sd}
+  update ms t@Turtles {aboveWater = aw, submergeTimer = st, surfaceDuration = sd}
     = let sd' = if aw then sd else sd / 2                   -- They're underwater for half the time they're above it for
           st' = let new = st + ms                           -- New timer = old plus ∂t
                  in if new >= sd' then 0 else new           -- Unless that == duration in which case its 0
