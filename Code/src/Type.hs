@@ -10,17 +10,32 @@ import Graphics.Gloss.Data.Bitmap
 
 -- | The y values for each lane, starting at the first road lane
 lanes :: [Float]
-lanes = [200,400..3000]
+lanes = [100,300..3000]
 
 -- | The initial velocities for each lanes
 --   Ideally this will at some point be generated more randomly, however for the moment it is statically defined
 vels :: [Float]
-vels = [3.0, -1.8, 3.6, -2.4, 4.2, 0.0, 2.4, -1.8, 3.6, -4.8, 3.0]
+vels = [0.0, 3.0, -1.8, 3.6, -2.4, 4.2, 0.0, 2.4, -1.8, 3.6, -4.8, 3.0]
 
 -- * Type Declarations
 
 -- | 'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
 type Lane = Int
+
+-- | The type defining what direction the Frogger is facing
+data Facing = North
+            | East
+            | South
+            | West
+            deriving (Eq, Show)
+
+-- | The data type describing the state of the game - playing, paused, etc.
+data GameState = PreStart           -- ^ Before the start of the first level.
+               | Playing            -- ^ While the game is in progress.
+               | Paused             -- ^ The player has paused the game.
+               | PlayerDead String  -- ^ The String here is to be used as a "cause of death" message.
+               | LevelComplete      -- ^ The level is complete.
+               deriving (Eq, Show)
 
 -- | A data type to be contained by all drawn objects
 --   Cuts down on boilerplate x, y, v, l, w values all over the place
@@ -41,6 +56,7 @@ data Frogger = Frogger { fr_Entity   :: Entity -- ^ The Entity containing import
                        , targetY     :: Float  -- ^ If the Frogger is jumping this is its target position in y
                        , prev_dX     :: Float  -- ^ The dX value the Frogger had before jumping
                        , prev_dY     :: Float  -- ^ The dY value the Frogger had before jumping
+                       , facing      :: Facing -- ^ The direction the Frogger is facing
                }
                deriving (Eq, Show)
 
@@ -70,15 +86,6 @@ data Goal =  Goal { go_Entity :: Entity -- ^ The Entity containing important val
                   , is_Occupied :: Bool -- ^ Does the goal currently have a Frogger on it?
           }
           deriving (Eq, Show)
-
--- | The data type describing the state of the game - playing, paused, etc.
-data GameState = PreStart           -- ^ Before the start of the first level.
-               | Playing            -- ^ While the game is in progress.
-               | Paused             -- ^ The player has paused the game.
-               | PlayerDead String  -- ^ The String here is to be used as a "cause of death" message.
-               | LevelComplete      -- ^ The level is complete.
-               deriving (Eq, Show)
-
 
 -- | The data type that will describe the overall state, or Environment" of the game at any given time.
 data Env = E { player       :: Frogger      -- ^The Frogger.
@@ -133,10 +140,10 @@ class Drawable a where
   -- | Get the width value out of that entity.
   getW :: a -> Float
   getW = w . getEntity
-  -- | Update the x value of an entity based on its dX value.
+  -- | Northdate the x value of an entity based on its dX value.
   updateX :: a -> a
   updateX d = setX (getX d + getdX d) d
-  -- | Update the y value of an entity based on its dY value.
+  -- | Northdate the y value of an entity based on its dY value.
   updateY :: a -> a
   updateY d = setY (getY d + getdY d) d
   -- | A function to update the object over time.
@@ -149,8 +156,8 @@ class Drawable a where
   
 -- | Constructing a Frogger at the default start position
 newPlayer :: Frogger
-newPlayer = Frogger {fr_Entity = Entity {x  = 1910
-                                        ,y  = 10
+newPlayer = Frogger {fr_Entity = Entity {x  = 2000
+                                        ,y  = lanes!!0
                                         ,dX = 0
                                         ,dY = 0
                                         ,l  = 180
@@ -162,6 +169,7 @@ newPlayer = Frogger {fr_Entity = Entity {x  = 1910
                      ,targetY = 0
                      ,prev_dX = 0
                      ,prev_dY = 0
+                     ,facing = North
                      }
 
 -- | Generating a new Car
@@ -246,23 +254,23 @@ newGoal gx l = Goal {go_Entity = Entity {x = gx
 startEnv :: Env
 startEnv = E {player = newPlayer
              ,goals = goalGen 1
-             ,riverEnemies = concat [[newTurtles x 10 vels 6    | x <- xList 5]
-                                    ,[newLog (x-offset) 9 vels  | x <- xList 3
+             ,riverEnemies = concat [[newTurtles x 11 vels 6    | x <- xList 5]
+                                    ,[newLog (x-offset) 10 vels | x <- xList 3
                                                                 , offset <- [0,500]]
-                                    ,[newCroc x 8 vels          | x <- xList 9]
-                                    ,[newTurtles x 7 vels 5     | x <- xList 6]
-                                    ,[newLog x 6 vels           | x <- xList 8]
+                                    ,[newCroc x 9 vels          | x <- xList 5]
+                                    ,[newTurtles x 8 vels 10000 | x <- xList 6]
+                                    ,[newLog x 7 vels           | x <- xList 8]
                                     ]
-             ,roadEnemies = concat [[newCar (x+offset) 4 vels   | x <- xList 3
+             ,roadEnemies = concat [[newCar (x+offset) 5 vels   | x <- xList 3
                                                                 , offset <- [0, 500, 1000]]
-                                   ,[newCar (x+offset) 3 vels   | x' <- xList 2
+                                   ,[newCar (x+offset) 4 vels   | x' <- xList 2
                                                                 , offset <- [0, 500]
                                                                 , let x = 4000 - x']
-                                   ,[newCar x 2 vels            | x <- xList 5]
-                                   ,[newCar (x+offset) 1 vels   | x' <- xList 3
+                                   ,[newCar x 3 vels            | x <- xList 5]
+                                   ,[newCar (x+offset) 2 vels   | x' <- xList 3
                                                                 , offset <- [0,500]
                                                                 , let x = 4000 - x']
-                                   ,[newCar x 0 vels            | x <- xList 6]
+                                   ,[newCar x 1 vels            | x <- xList 6]
                                    ]
              ,frames = 0
              ,time = 0
@@ -272,7 +280,7 @@ startEnv = E {player = newPlayer
              ,sWidth = 1    -- This will be updated immediately
              ,sHeight = 1   -- This will be updated immediately
              }
-             where xList n = tail [0,5760/n..5760]
+             where xList n = map (+100) . tail $ [0,5760/n..5760]
 
 -- * Class Instance Declarations
 
@@ -298,18 +306,18 @@ instance Drawable RiverMover where
                        headGreen = makeColor 0.0 0.8 0.0 1.0
                     in Pictures [Color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
                                 ,Color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
-  draw t@Turtles {aboveWater = aw} = let l' = getL t / 3
+  draw t@Turtles {aboveWater = aw} = let lt = getL t
                                          xt = getX t
                                          yt = getY t
                                          wt = getW t
-                                         mask = if not aw then [Color alphaBlue . translate xt yt . scale (3*l') wt $ unitSquare]
-                                                          else []
-                                         alphaBlue = makeColor 0.0 0.0 1.0 0.2
+                                         l' = lt / 3
+                                         alphaBlue = if aw then makeColor 0.0 0.0 1.0 0.0 else makeColor 0.0 0.0 1.0 0.2
+                                         mask = [Color alphaBlue . translate xt yt . scale lt wt $ unitSquare]
                                          drawTurtle x = Pictures [
-                                                                  Color green  . translate (x+(0.1*l')) (yt+(0.1*wt)). scale (0.8*l') (0.8*wt) $ unitSquare
+                                                                  Color green  . translate (x) (yt). scale (0.8*l') (0.8*wt) $ unitSquare
                                                                  ,Color orange . translate x yt . scale l' wt $ unitCircle
                                                                  ]
-                                      in Pictures $ [drawTurtle (xt + (l' * off))| off <- [0,1,2]] ++ mask
+                                      in Pictures $ [drawTurtle (xt + (l' * off))| off <- [-1,0,1]] ++ mask
   draw l@Log {} = let brown = makeColor 0.6 0.3 0.1 1.0
                    in Color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
 
@@ -322,7 +330,7 @@ instance Drawable Goal where
   update _ = id
   draw g = let gx = getX g
                gy = getY g
-               dg = Color yellow . translate (getX g) (getY g) . scale (getL g) (getW g) $ unitSquare
+               dg = Color yellow . translate gx gy . scale (getL g) (getW g) $ unitSquare
             in if is_Occupied g then Pictures [dg, draw . setX gx . setY gy $ newPlayer]
                                 else dg
 
@@ -342,13 +350,21 @@ instance Drawable Frogger where
     | otherwise           = updateXY f
     where updateXY = updateX . updateY
           updateResetdXdY = updateXY . setdX pdx . setdY pdy
-  draw f@Frogger {} = let darkGreen = makeColor 0.2 0.8 0.2 1.0
-                          xf = getX f
-                          yf = getY f
-                          lf = getL f
-                          wf = getW f
-                          (x',y',l',w') = if is_Jumping f then (xf - 0.05 * w', yf - 0.05 * l', lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
-                       in Color darkGreen . translate x' y' . scale l' w' $ unitSquare
+  draw f@Frogger {facing = dir} 
+    = let darkGreen = makeColor 0.2 0.8 0.2 1.0
+          xf = getX f
+          yf = getY f
+          lf = getL f
+          wf = getW f
+          (x',y',l',w') = if is_Jumping f then (xf, yf, lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
+          theta = case dir of North -> 0
+                              East  -> 90
+                              South -> 180
+                              West  -> 270
+       in translate x' y' . scale l' w' $ Pictures $ map (Rotate theta) [Color darkGreen unitSquare
+                                                                        ,Color white . translate 0.4 0.4 . scale 0.1 0.1 $ unitSquare
+                                                                        ,Color white . translate (-0.4) 0.4 . scale 0.1 0.1 $ unitSquare
+                                                                        ]
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
@@ -376,7 +392,7 @@ splitCroc c@Croc {} = let cx = getX c
                           cy = getY c
                           l' = (getL c)/3
                           cw = getW c
-                          crocHead = Croc {ri_Entity = Entity {x = (2 * l') + cx
+                          crocHead = Croc {ri_Entity = Entity {x = cx + (l'/2)
                                                               ,y = cy
                                                               ,l = l'
                                                               ,w = cw
@@ -384,7 +400,7 @@ splitCroc c@Croc {} = let cx = getX c
                                                               ,dY = 0
                                                               }
                                           }
-                          crocBody = Croc {ri_Entity = Entity {x = cx
+                          crocBody = Croc {ri_Entity = Entity {x = cx - l'
                                                               ,y = cy
                                                               ,l = 2 * l'
                                                               ,w = cw
@@ -412,12 +428,12 @@ goalGen l
   | l == 3    = newGoals [-400,0,400]
   | l == 4    = newGoals [-600,-200,200,600]
   | otherwise = newGoals [-800,-400,0,400,800]
-  where newGoals = map (\x -> newGoal (1910+x) 11)
+  where newGoals = map (\x -> newGoal (1910+x) 12)
 
 -- | Drawing a square of size 1x1
 unitSquare :: Picture
-unitSquare = translate 0.5 0.5 $ rectangleSolid 1.0 1.0
+unitSquare = rectangleSolid 1.0 1.0
 
 -- | Drawing a circle of diameter 1
 unitCircle :: Picture
-unitCircle = translate 0.5 0.5 $ circleSolid 0.5
+unitCircle = circleSolid 0.5
