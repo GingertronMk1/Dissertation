@@ -22,13 +22,6 @@ vels = [0.0, 3.0, -1.8, 3.6, -2.4, 4.2, 0.0, 2.4, -1.8, 3.6, -4.8, 3.0]
 -- | 'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
 type Lane = Int
 
--- | The type defining what direction the Frogger is facing
-data Facing = North
-            | East
-            | South
-            | West
-            deriving (Eq, Show)
-
 -- | The data type describing the state of the game - playing, paused, etc.
 data GameState = PreStart           -- ^ Before the start of the first level.
                | Playing            -- ^ While the game is in progress.
@@ -56,7 +49,7 @@ data Frogger = Frogger { fr_Entity   :: Entity -- ^ The Entity containing import
                        , targetY     :: Float  -- ^ If the Frogger is jumping this is its target position in y
                        , prev_dX     :: Float  -- ^ The dX value the Frogger had before jumping
                        , prev_dY     :: Float  -- ^ The dY value the Frogger had before jumping
-                       , facing      :: Facing -- ^ The direction the Frogger is facing
+                       , facing      :: Float  -- ^ The direction the Frogger is facing (in degrees going clockwise from North)
                }
                deriving (Eq, Show)
 
@@ -153,7 +146,7 @@ class Drawable a where
   update t = updateX . updateY
 
 -- * Type Constructors
-  
+
 -- | Constructing a Frogger at the default start position
 newPlayer :: Frogger
 newPlayer = Frogger {fr_Entity = Entity {x  = 2000
@@ -169,7 +162,7 @@ newPlayer = Frogger {fr_Entity = Entity {x  = 2000
                      ,targetY = 0
                      ,prev_dX = 0
                      ,prev_dY = 0
-                     ,facing = North
+                     ,facing = 0
                      }
 
 -- | Generating a new Car
@@ -254,11 +247,11 @@ newGoal gx l = Goal {go_Entity = Entity {x = gx
 startEnv :: Env
 startEnv = E {player = newPlayer
              ,goals = goalGen 1
-             ,riverEnemies = concat [[newTurtles x 11 vels 6    | x <- xList 5]
+             ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
                                     ,[newLog (x-offset) 10 vels | x <- xList 3
                                                                 , offset <- [0,500]]
                                     ,[newCroc x 9 vels          | x <- xList 5]
-                                    ,[newTurtles x 8 vels 10000 | x <- xList 6]
+                                    ,[newTurtles x 8 vels 5     | x <- xList 6]
                                     ,[newLog x 7 vels           | x <- xList 8]
                                     ]
              ,roadEnemies = concat [[newCar (x+offset) 5 vels   | x <- xList 3
@@ -295,31 +288,32 @@ instance Drawable RiverMover where
   setdY dy' r = let re = ri_Entity r
                     in r {ri_Entity = re {dY = dy'}}
   update ms t@Turtles {aboveWater = aw, submergeTimer = st, submergeDuration = sd}
-    = let st' = let new = st + ms
-                 in if new >= sd then 0 else new
-          aw' = if st' == 0 then not aw
-                            else aw
+    = let sd' = if aw then sd else sd / 2                   -- They're underwater for half the time they're above it for
+          st' = let new = st + ms                           -- New timer = old plus ∂t
+                 in if new >= sd' then 0 else new           -- Unless that == duration in which case its 0
+          aw' = if st' == 0 then not aw                     -- If it is 0 then surface/submerge
+                            else aw                         -- Otherwise don't
        in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw', submergeTimer = st'}
   update ms ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
   draw c@Croc {} = let (cHead, cBody) = splitCroc c
                        bodyGreen = makeColor 0.0 1.0 0.0 1.0
                        headGreen = makeColor 0.0 0.8 0.0 1.0
-                    in Pictures [Color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
-                                ,Color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
+                    in Pictures [color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
+                                ,color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
   draw t@Turtles {aboveWater = aw} = let lt = getL t
                                          xt = getX t
                                          yt = getY t
                                          wt = getW t
                                          l' = lt / 3
                                          alphaBlue = if aw then makeColor 0.0 0.0 1.0 0.0 else makeColor 0.0 0.0 1.0 0.2
-                                         mask = [Color alphaBlue . translate xt yt . scale lt wt $ unitSquare]
+                                         mask = [color alphaBlue . translate xt yt . scale lt wt $ unitSquare]
                                          drawTurtle x = Pictures [
-                                                                  Color green  . translate (x) (yt). scale (0.8*l') (0.8*wt) $ unitSquare
-                                                                 ,Color orange . translate x yt . scale l' wt $ unitCircle
+                                                                  color green  . translate (x) (yt). scale (0.8*l') (0.8*wt) $ unitSquare
+                                                                 ,color orange . translate x yt . scale l' wt $ unitCircle
                                                                  ]
                                       in Pictures $ [drawTurtle (xt + (l' * off))| off <- [-1,0,1]] ++ mask
   draw l@Log {} = let brown = makeColor 0.6 0.3 0.1 1.0
-                   in Color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
+                   in color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
 
 instance Drawable Goal where
   getEntity = go_Entity
@@ -330,8 +324,8 @@ instance Drawable Goal where
   update _ = id
   draw g = let gx = getX g
                gy = getY g
-               dg = Color yellow . translate gx gy . scale (getL g) (getW g) $ unitSquare
-            in if is_Occupied g then Pictures [dg, draw . setX gx . setY gy $ newPlayer]
+               dg = color yellow . translate gx gy . scale (getL g) (getW g) $ unitSquare
+            in if is_Occupied g then Pictures [dg, draw . setX gx . setY gy $ newPlayer {facing = 180}]
                                 else dg
 
 instance Drawable Frogger where
@@ -350,21 +344,17 @@ instance Drawable Frogger where
     | otherwise           = updateXY f
     where updateXY = updateX . updateY
           updateResetdXdY = updateXY . setdX pdx . setdY pdy
-  draw f@Frogger {facing = dir} 
+  draw f@Frogger {facing = dir}
     = let darkGreen = makeColor 0.2 0.8 0.2 1.0
           xf = getX f
           yf = getY f
           lf = getL f
           wf = getW f
           (x',y',l',w') = if is_Jumping f then (xf, yf, lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
-          theta = case dir of North -> 0
-                              East  -> 90
-                              South -> 180
-                              West  -> 270
-       in translate x' y' . scale l' w' $ Pictures $ map (Rotate theta) [Color darkGreen unitSquare
-                                                                        ,Color white . translate 0.4 0.4 . scale 0.1 0.1 $ unitSquare
-                                                                        ,Color white . translate (-0.4) 0.4 . scale 0.1 0.1 $ unitSquare
-                                                                        ]
+       in translate x' y' . scale l' w' $ Pictures $ map (rotate dir) [color darkGreen unitSquare
+                                                                      ,color white . translate 0.4 0.4 . scale 0.1 0.1 $ unitSquare
+                                                                      ,color white . translate (-0.4) 0.4 . scale 0.1 0.1 $ unitSquare
+                                                                      ]
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
@@ -377,7 +367,7 @@ instance Drawable RoadMover where
   setdY dy' r = let re = ro_Entity r
                     in r {ro_Entity = re {dY = dy'}}
   update ms ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
-  draw c@(Car {}) = Color red . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
+  draw c@(Car {}) = color red . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
 
 -- * Additional Helper Functions
 
