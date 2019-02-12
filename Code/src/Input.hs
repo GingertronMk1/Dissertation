@@ -33,14 +33,14 @@ inputPreStart _ e                     = e
 --   Shift + the above cause the player to move at the speed denoted by 'boostSpeed'
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
-  | c == (Char 'w') = e {player = jumpY baseSpeed     p {facing = North}}
-  | c == (Char 'a') = e {player = jumpX (-baseSpeed)  p {facing = West}}
-  | c == (Char 's') = e {player = jumpY (-baseSpeed)  p {facing = South}}
-  | c == (Char 'd') = e {player = jumpX baseSpeed     p {facing = East}}
-  | c == (Char 'W') = e {player = jumpY boostSpeed    p {facing = North}}
-  | c == (Char 'A') = e {player = jumpX (-boostSpeed) p {facing = West}}
-  | c == (Char 'S') = e {player = jumpY (-boostSpeed) p {facing = South}}
-  | c == (Char 'D') = e {player = jumpX boostSpeed    p {facing = East}}
+  | c == (Char 'w') = e {player = jumpY baseSpeed     p {facing = 0}}
+  | c == (Char 'd') = e {player = jumpX baseSpeed     p {facing = 90}}
+  | c == (Char 's') = e {player = jumpY (-baseSpeed)  p {facing = 180}}
+  | c == (Char 'a') = e {player = jumpX (-baseSpeed)  p {facing = 270}}
+  | c == (Char 'W') = e {player = jumpY boostSpeed    p {facing = 0}}
+  | c == (Char 'D') = e {player = jumpX boostSpeed    p {facing = 90}}
+  | c == (Char 'S') = e {player = jumpY (-boostSpeed) p {facing = 180}}
+  | c == (Char 'A') = e {player = jumpX (-boostSpeed) p {facing = 270}}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
   where setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
