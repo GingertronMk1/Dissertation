@@ -30,7 +30,8 @@ drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
                                                                         ,translate 0 1400 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
                                                                         ]
                                           otherwise         -> Pictures [
-                                                                         drawVerge
+                                                                         drawHome
+                                                                        ,drawVerge
                                                                         ,drawRoads
                                                                         ,drawRiver
                                                                         ,translate 0 2850 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
@@ -44,8 +45,12 @@ drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
                                where textDraw = color white . Text
 
 -- | Drawing the verge at the top of the screen that the Froggers call home.
+drawHome :: Picture
+drawHome = color green . translate 2000 (lanes!!14) $ rectangleSolid 4000 600
+
+-- | Drawing the verge between Road and River
 drawVerge :: Picture
-drawVerge = color green . translate 2000 (lanes!!13) . scale 4000 400 $ unitSquare
+drawVerge = color (makeColor 0.85 0.65 0.45 1.0) . translate 2000 (lanes!!6) $ rectangleSolid 4000 300
 
 -- | Drawing the lanes of the Road.
 drawRoads :: Picture
@@ -57,10 +62,10 @@ drawRiver = Pictures [color blue $ drawLane n | n <- [7..12]]
 
 -- | A function to draw a lane - a rectangle of height 190 that fills the width of the screen.
 drawLane :: Lane -> Picture
-drawLane n = translate 2000 (lanes!!n + 5) . scale 4000 190 $ unitSquare
+drawLane n = translate 2000 (lanes!!n + 5) $ rectangleSolid 4000 190
 
 -- | Drawing the sides of the map - the moving objects go beyond the width of the lanes and this hides them from view.
 drawSides :: Float -> Picture
 drawSides w = let wi = 2000
-               in color black $ Pictures [translate (0-(wi/2)) 1500 . scale wi 3000 $ unitSquare
-                                         ,translate (4000+(wi/2)) 1500 . scale wi 3000 $ unitSquare]
+               in color black $ Pictures [translate (0-(wi/2)) 1500 $ rectangleSolid wi 3000
+                                         ,translate (4000+(wi/2)) 1500 $ rectangleSolid wi 3000]
