@@ -1,4 +1,4 @@
--- |Module: Frogger.Display
+-- | Module: Frogger.Display
 module Display where
 
 import Graphics.Gloss
@@ -6,7 +6,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Data.Bitmap
 import Type
 
--- |A function to draw an 'Env' to the screen.
+-- | A function to draw an 'Env' to the screen.
 --  It scales and translates the 'drawGame' function to the correct window size.
 gameDisplay :: Env -> Picture
 gameDisplay e@E{sWidth = sw, sHeight = sh} = scale (sw/4000) (sh/3000) . translate (-2000) (-1500) $ drawGame e

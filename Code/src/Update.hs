@@ -1,4 +1,4 @@
--- |Module: Frogger.Update
+-- | Module: Frogger.Update
 module Update where
 
 import Graphics.Gloss

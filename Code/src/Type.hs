@@ -1,4 +1,4 @@
--- |Module: Frogger.Type
+-- | Module: Frogger.Type
 module Type where
 
 import Graphics.Gloss
@@ -399,7 +399,7 @@ splitCroc c@Croc {} = let cx = getX c
                                           }
                        in (crocHead, crocBody)
 
--- |'loopX' is used to loop the x-value of moving objects
+-- | 'loopX' is used to loop the x-value of moving objects
 loopX :: Float -> Float
 loopX n
   | n < leftMost  = n + 5760

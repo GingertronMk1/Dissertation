@@ -1,4 +1,4 @@
--- |Module: Frogger.Input
+-- | Module: Frogger.Input
 module Input where
 
 import Graphics.Gloss
