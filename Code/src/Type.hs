@@ -1,7 +1,6 @@
 -- |Module: Frogger.Type
 module Type where
 
-
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Data.Bitmap
@@ -298,22 +297,22 @@ instance Drawable RiverMover where
   draw c@Croc {} = let (cHead, cBody) = splitCroc c
                        bodyGreen = makeColor 0.0 1.0 0.0 1.0
                        headGreen = makeColor 0.0 0.8 0.0 1.0
-                    in Pictures [color bodyGreen . translate (getX cBody) (getY cBody) . scale (getL cBody) (getW cBody) $ unitSquare
-                                ,color headGreen . translate (getX cHead) (getY cHead) . scale (getL cHead) (getW cHead) $ unitSquare]
+                    in Pictures [color bodyGreen . translate (getX cBody) (getY cBody) $ rectangleSolid (getL cBody) (getW cBody)
+                                ,color headGreen . translate (getX cHead) (getY cHead) $ rectangleSolid (getL cHead) (getW cHead)]
   draw t@Turtles {aboveWater = aw} = let lt = getL t
                                          xt = getX t
                                          yt = getY t
                                          wt = getW t
                                          l' = lt / 3
                                          alphaBlue = if aw then makeColor 0.0 0.0 1.0 0.0 else makeColor 0.0 0.0 1.0 0.2
-                                         mask = [color alphaBlue . translate xt yt . scale lt wt $ unitSquare]
+                                         mask = [color alphaBlue . translate xt yt $ rectangleSolid lt wt]
                                          drawTurtle x = Pictures [
-                                                                  color green  . translate (x) (yt). scale (0.8*l') (0.8*wt) $ unitSquare
-                                                                 ,color orange . translate x yt . scale l' wt $ unitCircle
+                                                                  color green  . translate (x) (yt) $ rectangleSolid (0.8*l') (0.8*wt)
+                                                                 ,color orange . translate x yt $ circleSolid (wt/2)
                                                                  ]
                                       in Pictures $ [drawTurtle (xt + (l' * off))| off <- [-1,0,1]] ++ mask
   draw l@Log {} = let brown = makeColor 0.6 0.3 0.1 1.0
-                   in color brown . translate (getX l) (getY l) . scale (getL l) (getW l) $ unitSquare
+                   in color brown . translate (getX l) (getY l) $ rectangleSolid (getL l) (getW l)
 
 instance Drawable Goal where
   getEntity = go_Entity
@@ -324,7 +323,7 @@ instance Drawable Goal where
   update _ = id
   draw g = let gx = getX g
                gy = getY g
-               dg = color yellow . translate gx gy . scale (getL g) (getW g) $ unitSquare
+               dg = color yellow . translate gx gy $ rectangleSolid (getL g) (getW g)
             in if is_Occupied g then Pictures [dg, draw . setX gx . setY gy $ newPlayer {facing = 180}]
                                 else dg
 
@@ -351,9 +350,9 @@ instance Drawable Frogger where
           lf = getL f
           wf = getW f
           (x',y',l',w') = if is_Jumping f then (xf, yf, lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
-       in translate x' y' . scale l' w' $ Pictures $ map (rotate dir) [color darkGreen unitSquare
-                                                                      ,color white . translate 0.4 0.4 . scale 0.1 0.1 $ unitSquare
-                                                                      ,color white . translate (-0.4) 0.4 . scale 0.1 0.1 $ unitSquare
+       in translate x' y' . scale l' w' $ Pictures $ map (rotate dir) [color darkGreen $ rectangleSolid 1.0 1.0
+                                                                      ,color white . translate 0.4 0.4 $ rectangleSolid 0.1 0.1
+                                                                      ,color white . translate (-0.4) 0.4  $ rectangleSolid 0.1 0.1
                                                                       ]
 
 instance Drawable RoadMover where
@@ -367,7 +366,7 @@ instance Drawable RoadMover where
   setdY dy' r = let re = ro_Entity r
                     in r {ro_Entity = re {dY = dy'}}
   update ms ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
-  draw c@(Car {}) = color red . translate (getX c) (getY c) . scale (getL c) (getW c) $ unitSquare
+  draw c@(Car {}) = color red . translate (getX c) (getY c) $ rectangleSolid (getL c) (getW c)
 
 -- * Additional Helper Functions
 
@@ -418,12 +417,4 @@ goalGen l
   | l == 3    = newGoals [-400,0,400]
   | l == 4    = newGoals [-600,-200,200,600]
   | otherwise = newGoals [-800,-400,0,400,800]
-  where newGoals = map (\x -> newGoal (1910+x) 12)
-
--- | Drawing a square of size 1x1
-unitSquare :: Picture
-unitSquare = rectangleSolid 1.0 1.0
-
--- | Drawing a circle of diameter 1
-unitCircle :: Picture
-unitCircle = circleSolid 0.5
+  where newGoals = map (\x -> newGoal (2000+x) 12)
