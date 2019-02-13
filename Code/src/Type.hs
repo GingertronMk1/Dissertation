@@ -242,9 +242,11 @@ newGoal gx l = Goal {go_Entity = Entity {x = gx
                     ,is_Occupied = False
                     }
 
--- | Generating the initial Env
-startEnv :: Env
-startEnv = E {player = newPlayer
+-- | Generating the initial Env given a screen width and height
+startEnv :: Float   -- ^ The width of the screen
+         -> Float   -- ^ The height of the screen
+         -> Env
+startEnv sW sH = E {player = newPlayer
              ,goals = goalGen 1
              ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
                                     ,[newLog (x-offset) 10 vels | x <- xList 3
@@ -269,8 +271,8 @@ startEnv = E {player = newPlayer
              ,gameState = PreStart
              ,gameScore = 0
              ,level = 1
-             ,sWidth = 1    -- This will be updated immediately
-             ,sHeight = 1   -- This will be updated immediately
+             ,sWidth = sW
+             ,sHeight = sH
              }
              where xList n = map (+100) . tail $ [0,5760/n..5760]
 

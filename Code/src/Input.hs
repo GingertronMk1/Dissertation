@@ -59,8 +59,8 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sw, sHeight = sh}
-  = startEnv {sWidth = sw, sHeight = sh}
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sW, sHeight = sH}
+  = startEnv sW sH
 inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.

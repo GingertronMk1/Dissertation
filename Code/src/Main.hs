@@ -18,7 +18,7 @@ main = do argc <- getArgs
           (initX,initY) <- getScreenSize
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
-              startLevel = startEnv {sWidth = sW ,sHeight = sH}
+              startLevel = startEnv sW sH
           putStrLn $ show argc
           play
             FullScreen      -- Play the game in a fullscreen window
