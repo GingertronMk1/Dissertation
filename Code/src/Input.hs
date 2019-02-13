@@ -26,7 +26,7 @@ gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart e
 --   Pressing any key down will start the game, other input is ignored.
 inputPreStart :: Event -> Env -> Env
 inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
-inputPreStart _ e                     = e
+inputPreStart _ e = e
 
 -- | The function for dealing with inputs during gameplay.
 --   'w', 'a', 's', and 'd' cause the player to jump up, left, down, and right respectively at the speed denoted by 'baseSpeed'.
@@ -47,13 +47,13 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
         ignoringJump f n p = if is_Jumping p then p else f n p
         jumpX p = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) p
         jumpY p = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) p
-inputPlaying _ e    = e
+inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.
 --   Pressing space resumes the game, all other input is ignored.
 inputPaused :: Event -> Env -> Env
 inputPaused (EventKey (SpecialKey KeySpace) Down _ _) e = e {gameState = Playing}
-inputPaused _ e                                         = e
+inputPaused _ e = e
 
 -- | The function for dealing with inputs when the player has died.
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
@@ -61,7 +61,7 @@ inputPaused _ e                                         = e
 inputDead :: Event -> Env -> Env
 inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sw, sHeight = sh}
   = startEnv {sWidth = sw, sHeight = sh}
-inputDead _ e                                         = e
+inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
 --   Pressing space increases the level by 1, generates new goals based on the level and the 'goalGen' function in 'Type', increases all enemy speeds by a factor of 1.2, and resets the player position.
@@ -77,4 +77,4 @@ inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = l}
           ,gameState = Playing
           }
   where moddX m = setdX (getdX m * 1.2) m
-inputComplete _ e                                                       = e
+inputComplete _ e = e
