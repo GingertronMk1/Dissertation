@@ -6,6 +6,8 @@ import Graphics.Gloss.Data.Bitmap
 import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.Environment
 import System.Environment
+import System.Random
+import Data.Time.Clock
 import Display
 import Update
 import Input
@@ -16,10 +18,14 @@ import Type
 main :: IO()
 main = do argc <- getArgs
           (initX,initY) <- getScreenSize
+          tSeed <- getCurrentTime >>= return . (\n -> mod n 1000) . (\n -> div n 1000000) . fromIntegral . diffTimeToPicoseconds . utctDayTime
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
-              startLevel = startEnv sW sH
+              r  = mkStdGen tSeed
+              startLevel = startEnv sW sH r
           putStrLn $ show argc
+          putStrLn $ show tSeed
+          putStrLn $ show startLevel
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black
