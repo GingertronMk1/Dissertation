@@ -247,8 +247,9 @@ newGoal gx l = Goal {go_Entity = Entity {x = gx
 -- | Generating the initial Env given a screen width and height
 startEnv :: Float   -- ^ The width of the screen
          -> Float   -- ^ The height of the screen
+         -> StdGen  -- ^ The random number generator
          -> Env
-startEnv sW sH = E {player = newPlayer
+startEnv sW sH r = E {player = newPlayer
              ,goals = goalGen 1
              ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
                                     ,[newLog (x-offset) 10 vels | x <- xList 3
