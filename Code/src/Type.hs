@@ -12,11 +12,6 @@ import System.Random
 lanes :: [Float]
 lanes = [100,300..3000]
 
--- | The initial velocities for each lanes
---   Ideally this will at some point be generated more randomly, however for the moment it is statically defined
-vels :: [Float]
-vels = [0.0, 3.0, -1.8, 3.6, -2.4, 4.2, 0.0, 2.4, -1.8, 3.6, -4.8, 3.0]
-
 -- * Type Declarations
 
 -- | 'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
@@ -249,36 +244,53 @@ startEnv :: Float   -- ^ The width of the screen
          -> Float   -- ^ The height of the screen
          -> StdGen  -- ^ The random number generator
          -> Env
-startEnv sW sH r = E {player = newPlayer
-                     ,goals = goalGen 1
-                     ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
-                                            ,[newLog (x-offset) 10 vels | x <- xList 3
-                                                                        , offset <- [0,500]]
-                                            ,[newCroc x 9 vels          | x <- xList 5]
-                                            ,[newTurtles x 8 vels 5     | x <- xList 6]
-                                            ,[newLog x 7 vels           | x <- xList 8]
-                                            ]
-                     ,roadEnemies = concat [[newCar (x+offset) 5 vels   | x <- xList 3
-                                                                        , offset <- [0, 500, 1000]]
-                                           ,[newCar (x+offset) 4 vels   | x' <- xList 2
-                                                                        , offset <- [0, 500]
-                                                                        , let x = 4000 - x']
-                                           ,[newCar x 3 vels            | x <- xList 5]
-                                           ,[newCar (x+offset) 2 vels   | x' <- xList 3
-                                                                        , offset <- [0,500]
-                                                                        , let x = 4000 - x']
-                                           ,[newCar x 1 vels            | x <- xList 6]
-                                           ]
-                     ,frames = 0
-                     ,time = 0
-                     ,gameState = PreStart
-                     ,gameScore = 0
-                     ,level = 1
-                     ,sWidth = sW
-                     ,sHeight = sH
-                     ,rGen = r
-             }
-             where xList n = map (+100) . tail $ [0,5760/n..5760]
+startEnv sW sH r = let vels = velList r
+                       xList n = map (+100) . tail $ [0,5760/n..5760]
+                    in E {player = newPlayer
+                         ,goals = goalGen 1
+                         ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
+                                                ,[newLog (x-offset) 10 vels | x <- xList 3
+                                                                            , offset <- [0,500]]
+                                                ,[newCroc x 9 vels          | x <- xList 5]
+                                                ,[newTurtles x 8 vels 5     | x <- xList 6]
+                                                ,[newLog x 7 vels           | x <- xList 8]
+                                                ]
+                         ,roadEnemies = concat [[newCar (x+offset) 5 vels   | x <- xList 3
+                                                                            , offset <- [0, 500, 1000]]
+                                               ,[newCar (x+offset) 4 vels   | x' <- xList 2
+                                                                            , offset <- [0, 500]
+                                                                            , let x = 4000 - x']
+                                               ,[newCar x 3 vels            | x <- xList 5]
+                                               ,[newCar (x+offset) 2 vels   | x' <- xList 3
+                                                                            , offset <- [0,500]
+                                                                            , let x = 4000 - x']
+                                               ,[newCar x 1 vels            | x <- xList 6]
+                                               ]
+                         ,frames = 0
+                         ,time = 0
+                         ,gameState = PreStart
+                         ,gameScore = 0
+                         ,level = 1
+                         ,sWidth = sW
+                         ,sHeight = sH
+                         ,rGen = r
+                         }
+
+-- | The initial velocities for each lanes
+--   Ideally this will at some point be generated more randomly, however for the moment it is statically defined
+velList :: StdGen -> [Float]
+velList = otherNeg . map (\(n,_) -> (1+) . (5/) . (1+) . fromIntegral $ mod n 5) . rList
+
+
+rList :: StdGen -> [(Int, StdGen)]
+rList r = let n = next r
+           in n : rList (snd n)
+
+otherNeg :: (Ord a, Num a) => [a] -> [a]
+otherNeg [] = []
+otherNeg (x:y:xs) = if x > 1
+                    then x : otherNeg ((-y):xs)
+                    else x : otherNeg (y:xs)
 
 -- * Class Instance Declarations
 
