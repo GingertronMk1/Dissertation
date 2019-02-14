@@ -250,32 +250,33 @@ startEnv :: Float   -- ^ The width of the screen
          -> StdGen  -- ^ The random number generator
          -> Env
 startEnv sW sH r = E {player = newPlayer
-             ,goals = goalGen 1
-             ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
-                                    ,[newLog (x-offset) 10 vels | x <- xList 3
-                                                                , offset <- [0,500]]
-                                    ,[newCroc x 9 vels          | x <- xList 5]
-                                    ,[newTurtles x 8 vels 5     | x <- xList 6]
-                                    ,[newLog x 7 vels           | x <- xList 8]
-                                    ]
-             ,roadEnemies = concat [[newCar (x+offset) 5 vels   | x <- xList 3
-                                                                , offset <- [0, 500, 1000]]
-                                   ,[newCar (x+offset) 4 vels   | x' <- xList 2
-                                                                , offset <- [0, 500]
-                                                                , let x = 4000 - x']
-                                   ,[newCar x 3 vels            | x <- xList 5]
-                                   ,[newCar (x+offset) 2 vels   | x' <- xList 3
-                                                                , offset <- [0,500]
-                                                                , let x = 4000 - x']
-                                   ,[newCar x 1 vels            | x <- xList 6]
-                                   ]
-             ,frames = 0
-             ,time = 0
-             ,gameState = PreStart
-             ,gameScore = 0
-             ,level = 1
-             ,sWidth = sW
-             ,sHeight = sH
+                     ,goals = goalGen 1
+                     ,riverEnemies = concat [[newTurtles x 11 vels 10   | x <- xList 5]
+                                            ,[newLog (x-offset) 10 vels | x <- xList 3
+                                                                        , offset <- [0,500]]
+                                            ,[newCroc x 9 vels          | x <- xList 5]
+                                            ,[newTurtles x 8 vels 5     | x <- xList 6]
+                                            ,[newLog x 7 vels           | x <- xList 8]
+                                            ]
+                     ,roadEnemies = concat [[newCar (x+offset) 5 vels   | x <- xList 3
+                                                                        , offset <- [0, 500, 1000]]
+                                           ,[newCar (x+offset) 4 vels   | x' <- xList 2
+                                                                        , offset <- [0, 500]
+                                                                        , let x = 4000 - x']
+                                           ,[newCar x 3 vels            | x <- xList 5]
+                                           ,[newCar (x+offset) 2 vels   | x' <- xList 3
+                                                                        , offset <- [0,500]
+                                                                        , let x = 4000 - x']
+                                           ,[newCar x 1 vels            | x <- xList 6]
+                                           ]
+                     ,frames = 0
+                     ,time = 0
+                     ,gameState = PreStart
+                     ,gameScore = 0
+                     ,level = 1
+                     ,sWidth = sW
+                     ,sHeight = sH
+                     ,rGen = r
              }
              where xList n = map (+100) . tail $ [0,5760/n..5760]
 
