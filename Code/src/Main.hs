@@ -7,6 +7,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.Environment
 import System.Environment
 import System.Random
+import Data.List
 import Data.Time.Clock
 import Display
 import Update
@@ -25,6 +26,8 @@ main = do argc <- getArgs
               startLevel = startEnv sW sH r
           putStrLn $ show argc
           putStrLn $ show tSeed
+          printSpeeds $ roadEnemies startLevel
+          printSpeeds $ riverEnemies startLevel
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black
@@ -33,3 +36,4 @@ main = do argc <- getArgs
             gameDisplay     -- The function that draws a game
             gameInput       -- The function that passes input through
             gameUpdate      -- The function that updates the game
+        where printSpeeds as = putStrLn . show . map (getdX . head) . groupBy (\x1 x2 -> getY x1 == getY x2) $ as
