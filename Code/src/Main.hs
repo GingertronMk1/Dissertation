@@ -19,7 +19,11 @@ import Type
 main :: IO()
 main = do argc <- getArgs
           (initX,initY) <- getScreenSize
-          tSeed <- getCurrentTime >>= return . (\n -> mod n 1000) . (\n -> div n (10^12)) . fromIntegral . diffTimeToPicoseconds . utctDayTime
+          tSeed <- getCurrentTime >>= return                    -- Return that value
+                                    . (\n -> div n (10^12))     -- Divide by 10^12 to get the number of seconds
+                                    . fromIntegral              -- Convert from an Integer to an Int
+                                    . diffTimeToPicoseconds     -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
+                                    . utctDayTime               -- Get the current time of day in seconds
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
               r  = mkStdGen tSeed
@@ -28,6 +32,7 @@ main = do argc <- getArgs
           putStrLn $ show tSeed
           printSpeeds $ roadEnemies startLevel
           printSpeeds $ riverEnemies startLevel
+          {-
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black
@@ -36,7 +41,11 @@ main = do argc <- getArgs
             gameDisplay     -- The function that draws a game
             gameInput       -- The function that passes input through
             gameUpdate      -- The function that updates the game
-        where printSpeeds as = putStrLn
-                             . show
-                             . map (getdX . head)
-                             . groupBy (\x1 x2 -> getY x1 == getY x2) $ as
+                             -}
+
+-- | A function to print the dX values of a list of Movers
+printSpeeds :: Drawable a => [a] -> IO ()
+printSpeeds = putStrLn                                -- Print it
+            . show                                    -- Show that value
+            . map (getdX . head)                      -- Get the speed of "all of them"
+            . groupBy (\x1 x2 -> getY x1 == getY x2)  -- Group by y values (the lane)
