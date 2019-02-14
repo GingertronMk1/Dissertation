@@ -4,6 +4,7 @@ module Type where
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Data.Bitmap
+import System.Random
 
 -- * Initial Values
 
@@ -91,8 +92,9 @@ data Env = E { player       :: Frogger      -- ^ The Frogger.
              , level        :: Int          -- ^ The current level.
              , sWidth       :: Float        -- ^ The width of the window in pixels.
              , sHeight      :: Float        -- ^ The height of the window in pixels.
+             , rGen         :: StdGen       -- ^ The random number generator used in initialisation
          }
-         deriving (Eq, Show)
+         deriving Show
 
 -- * Class Declarations
 
