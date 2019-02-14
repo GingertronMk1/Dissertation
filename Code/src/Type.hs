@@ -277,7 +277,7 @@ startEnv sW sH r = let vels = velList r
 -- | The initial velocities for each lanes.
 --   This is generated randomly on each call to 'startEnv'.
 velList :: StdGen -> [Float]
-velList = otherNeg . filter (/=0) . map (\n -> (*1.2) . fromIntegral $ mod n 5) . rList
+velList = otherNeg . map (\n -> (*1.2) . fromIntegral $ mod n 5) . rList
 
 -- | rList takes a StdGen and returns a randomly generated list of Ints.
 rList :: StdGen -> [Int]
@@ -286,12 +286,14 @@ rList = map fst . rList'
                           in n : rList' (snd n)
 
 -- | otherNeg is used to flip the velocities of every other lane.
---   Given a list containing only positive numbers it will make every other value negative.
+--   It first filters the list of values less than or equal to 0, then flips the sign on each consecutive value in the list.
 otherNeg :: (Ord a, Num a) => [a] -> [a]
-otherNeg [] = []
-otherNeg (x:y:xs) = if x > 0
-                    then x : otherNeg ((-y):xs)
-                    else x : otherNeg (y:xs)
+otherNeg = otherNeg' . filter (>0)
+           where otherNeg' [] = []
+                 otherNeg' (x:[]) = [x]
+                 otherNeg' (x:y:xs) = if x > 0
+                                     then x : otherNeg' ((-y):xs)
+                                     else x : otherNeg' (y:xs)
 
 -- * Class Instance Declarations
 
