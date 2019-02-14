@@ -25,7 +25,6 @@ main = do argc <- getArgs
               startLevel = startEnv sW sH r
           putStrLn $ show argc
           putStrLn $ show tSeed
-          putStrLn $ show startLevel
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black
