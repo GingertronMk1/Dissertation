@@ -13,7 +13,7 @@ cabal-version:      >=1.10
 executable Frogger
   main-is:          Main.hs
   other-modules:    Display, Input, Type, Update
-  build-depends:    base >=4.11 && <4.12, gloss
+  build-depends:    base >=4.11 && <4.12, gloss, random
   hs-source-dirs:   src
   default-language: Haskell2010
   ghc-options:      -O2 -threaded
