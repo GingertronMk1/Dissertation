@@ -80,7 +80,6 @@ data Env = E { player       :: Frogger      -- ^ The Frogger.
              , roadEnemies  :: [RoadMover]  -- ^ The enemies on the road.
              , riverEnemies :: [RiverMover] -- ^ The "enemies" on the river.
              , goals        :: [Goal]       -- ^ The goal/s.
-             , frames       :: Int          -- ^ The total elapsed number of frames.
              , time         :: Float        -- ^ The total elapsed time since game start.
              , gameState    :: GameState    -- ^ The current state of the game.
              , gameScore    :: Int          -- ^ The current score.
@@ -266,7 +265,6 @@ startEnv sW sH r = let vels = velList r
                                                                             , let x = 4000 - x']
                                                ,[newCar x 1 vels            | x <- xList 6]
                                                ]
-                         ,frames = 0
                          ,time = 0
                          ,gameState = PreStart
                          ,gameScore = 0
