@@ -1,4 +1,4 @@
--- |Module: Frogger.Main
+-- | Module: Frogger.Main
 module Main where
 
 import Graphics.Gloss
@@ -18,10 +18,8 @@ main = do argc <- getArgs
           (initX,initY) <- getScreenSize
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
-              startLevel = startEnv {sWidth = sW ,sHeight = sH}
+              startLevel = startEnv sW sH
           putStrLn $ show argc
-          putStrLn $ "x: " ++ show initX ++ ", y: " ++ show initY
-          putStrLn $ "width: " ++ show sW ++ ", height: " ++ show sH
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black

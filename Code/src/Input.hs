@@ -1,4 +1,4 @@
--- |Module: Frogger.Input
+-- | Module: Frogger.Input
 module Input where
 
 import Graphics.Gloss
@@ -26,42 +26,42 @@ gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart e
 --   Pressing any key down will start the game, other input is ignored.
 inputPreStart :: Event -> Env -> Env
 inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
-inputPreStart _ e                     = e
+inputPreStart _ e = e
 
 -- | The function for dealing with inputs during gameplay.
 --   'w', 'a', 's', and 'd' cause the player to jump up, left, down, and right respectively at the speed denoted by 'baseSpeed'.
 --   Shift + the above cause the player to move at the speed denoted by 'boostSpeed'
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
-  | c == (Char 'w') = e {player = jumpY baseSpeed     p}
-  | c == (Char 'a') = e {player = jumpX (-baseSpeed)  p}
-  | c == (Char 's') = e {player = jumpY (-baseSpeed)  p}
-  | c == (Char 'd') = e {player = jumpX baseSpeed     p}
-  | c == (Char 'W') = e {player = jumpY boostSpeed    p}
-  | c == (Char 'A') = e {player = jumpX (-boostSpeed) p}
-  | c == (Char 'S') = e {player = jumpY (-boostSpeed) p}
-  | c == (Char 'D') = e {player = jumpX boostSpeed    p}
+  | c == (Char 'w') = e {player = jumpY baseSpeed     p {facing = 0}}
+  | c == (Char 'd') = e {player = jumpX baseSpeed     p {facing = 90}}
+  | c == (Char 's') = e {player = jumpY (-baseSpeed)  p {facing = 180}}
+  | c == (Char 'a') = e {player = jumpX (-baseSpeed)  p {facing = 270}}
+  | c == (Char 'W') = e {player = jumpY boostSpeed    p {facing = 0}}
+  | c == (Char 'D') = e {player = jumpX boostSpeed    p {facing = 90}}
+  | c == (Char 'S') = e {player = jumpY (-boostSpeed) p {facing = 180}}
+  | c == (Char 'A') = e {player = jumpX (-boostSpeed) p {facing = 270}}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
   where setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
         ignoringJump f n p = if is_Jumping p then p else f n p
         jumpX p = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) p
         jumpY p = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) p
-inputPlaying _ e    = e
+inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.
 --   Pressing space resumes the game, all other input is ignored.
 inputPaused :: Event -> Env -> Env
 inputPaused (EventKey (SpecialKey KeySpace) Down _ _) e = e {gameState = Playing}
-inputPaused _ e                                         = e
+inputPaused _ e = e
 
 -- | The function for dealing with inputs when the player has died.
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sw, sHeight = sh}
-  = startEnv {sWidth = sw, sHeight = sh}
-inputDead _ e                                         = e
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sW, sHeight = sH}
+  = startEnv sW sH
+inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
 --   Pressing space increases the level by 1, generates new goals based on the level and the 'goalGen' function in 'Type', increases all enemy speeds by a factor of 1.2, and resets the player position.
@@ -77,4 +77,4 @@ inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = l}
           ,gameState = Playing
           }
   where moddX m = setdX (getdX m * 1.2) m
-inputComplete _ e                                                       = e
+inputComplete _ e = e
