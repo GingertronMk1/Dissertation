@@ -277,9 +277,9 @@ startEnv sW sH r = let vels = velList r
                          }
 
 -- | The initial velocities for each lanes
---   Ideally this will at some point be generated more randomly, however for the moment it is statically defined
+--   This is generated randomly on each call to 'startEnv'
 velList :: StdGen -> [Float]
-velList = otherNeg . map (\(n,_) -> (1+) . (5/) . (1+) . fromIntegral $ mod n 5) . rList
+velList = otherNeg . filter (/=0) . map (\(n,_) -> (*1.2) . fromIntegral $ mod n 5) . rList
 
 
 rList :: StdGen -> [(Int, StdGen)]
@@ -288,7 +288,7 @@ rList r = let n = next r
 
 otherNeg :: (Ord a, Num a) => [a] -> [a]
 otherNeg [] = []
-otherNeg (x:y:xs) = if x > 1
+otherNeg (x:y:xs) = if x > 0
                     then x : otherNeg ((-y):xs)
                     else x : otherNeg (y:xs)
 
