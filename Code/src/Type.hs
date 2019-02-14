@@ -86,7 +86,7 @@ data Env = E { player       :: Frogger      -- ^ The Frogger.
              , level        :: Int          -- ^ The current level.
              , sWidth       :: Float        -- ^ The width of the window in pixels.
              , sHeight      :: Float        -- ^ The height of the window in pixels.
-             , rGen         :: StdGen       -- ^ The random number generator used in initialisation
+             , rGen         :: StdGen       -- ^ The random number generator used in initialisation.
          }
          deriving Show
 
