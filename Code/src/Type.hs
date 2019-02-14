@@ -80,17 +80,17 @@ data Goal =  Goal { go_Entity   :: Entity -- ^ The Entity containing important v
           deriving (Eq, Show)
 
 -- | The data type that will describe the overall state, or Environment" of the game at any given time.
-data Env = E { player       :: Frogger      -- ^The Frogger.
-             , roadEnemies  :: [RoadMover]  -- ^The enemies on the road.
-             , riverEnemies :: [RiverMover] -- ^The "enemies" on the river.
-             , goals        :: [Goal]       -- ^The goal/s.
-             , frames       :: Int          -- ^The total elapsed number of frames.
-             , time         :: Float        -- ^The total elapsed time since game start.
-             , gameState    :: GameState    -- ^The current state of the game.
-             , gameScore    :: Int          -- ^The current score.
-             , level        :: Int          -- ^The current level.
-             , sWidth       :: Float        -- ^The width of the window in pixels.
-             , sHeight      :: Float        -- ^The height of the window in pixels.
+data Env = E { player       :: Frogger      -- ^ The Frogger.
+             , roadEnemies  :: [RoadMover]  -- ^ The enemies on the road.
+             , riverEnemies :: [RiverMover] -- ^ The "enemies" on the river.
+             , goals        :: [Goal]       -- ^ The goal/s.
+             , frames       :: Int          -- ^ The total elapsed number of frames.
+             , time         :: Float        -- ^ The total elapsed time since game start.
+             , gameState    :: GameState    -- ^ The current state of the game.
+             , gameScore    :: Int          -- ^ The current score.
+             , level        :: Int          -- ^ The current level.
+             , sWidth       :: Float        -- ^ The width of the window in pixels.
+             , sHeight      :: Float        -- ^ The height of the window in pixels.
          }
          deriving (Eq, Show)
 
