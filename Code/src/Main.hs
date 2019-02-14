@@ -19,7 +19,7 @@ import Type
 main :: IO()
 main = do argc <- getArgs
           (initX,initY) <- getScreenSize
-          tSeed <- getCurrentTime >>= return . (\n -> mod n 1000) . (\n -> div n 1000000) . fromIntegral . diffTimeToPicoseconds . utctDayTime
+          tSeed <- getCurrentTime >>= return . (\n -> mod n 1000) . (\n -> div n (10^12)) . fromIntegral . diffTimeToPicoseconds . utctDayTime
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
               r  = mkStdGen tSeed
@@ -36,4 +36,7 @@ main = do argc <- getArgs
             gameDisplay     -- The function that draws a game
             gameInput       -- The function that passes input through
             gameUpdate      -- The function that updates the game
-        where printSpeeds as = putStrLn . show . map (getdX . head) . groupBy (\x1 x2 -> getY x1 == getY x2) $ as
+        where printSpeeds as = putStrLn
+                             . show
+                             . map (getdX . head)
+                             . groupBy (\x1 x2 -> getY x1 == getY x2) $ as
