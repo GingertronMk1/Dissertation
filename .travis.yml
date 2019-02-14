@@ -2,5 +2,9 @@ language: Haskell
 ghc:
   - "8.4.1"
 
+git:
+  depth: 5
+  lfs_skip_smudge: true
+
 before_install:
   - cd Code/
