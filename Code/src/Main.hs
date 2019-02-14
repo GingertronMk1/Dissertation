@@ -32,7 +32,6 @@ main = do argc <- getArgs
           putStrLn $ show tSeed
           printSpeeds $ roadEnemies startLevel
           printSpeeds $ riverEnemies startLevel
-          {-
           play
             FullScreen      -- Play the game in a fullscreen window
             black           -- The background should be black
@@ -41,9 +40,8 @@ main = do argc <- getArgs
             gameDisplay     -- The function that draws a game
             gameInput       -- The function that passes input through
             gameUpdate      -- The function that updates the game
-                             -}
 
--- | A function to print the dX values of a list of Movers
+-- | A function to print the dX values of a list of Drawables
 printSpeeds :: Drawable a => [a] -> IO ()
 printSpeeds = putStrLn                                -- Print it
             . show                                    -- Show that value
