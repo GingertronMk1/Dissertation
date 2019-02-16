@@ -2,8 +2,6 @@
 module Main where
 
 import Graphics.Gloss
-import Graphics.Gloss.Data.Bitmap
-import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.Environment
 import System.Environment
 import System.Random
@@ -18,12 +16,12 @@ import Type
 --   It then takes the height and width of the window, creates an initial Env with those, and starts the game
 main :: IO()
 main = do argc <- getArgs
-          (initX,initY) <- getScreenSize
-          tSeed <- getCurrentTime >>= return                    -- Return that value
-                                    . (\n -> div n (10^12))     -- Divide by 10^12 to get the number of seconds
-                                    . fromIntegral              -- Convert from an Integer to an Int
-                                    . diffTimeToPicoseconds     -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
-                                    . utctDayTime               -- Get the current time of day in seconds
+          (_,initY) <- getScreenSize
+          tSeed <- getCurrentTime >>= return                              -- Return that value
+                                    . (\n -> div n (10^(12 :: Integer)))  -- Divide by 10^12 to get the number of seconds
+                                    . fromIntegral                        -- Convert from an Integer to an Int
+                                    . diffTimeToPicoseconds               -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
+                                    . utctDayTime                         -- Get the current time of day in seconds
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
               r  = mkStdGen tSeed
