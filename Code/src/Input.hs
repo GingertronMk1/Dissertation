@@ -1,9 +1,7 @@
 -- | Module: Frogger.Input
 module Input where
 
-import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
-import Graphics.Gloss.Data.Bitmap
 import Type
 
 -- | The base speed of the player while jumping
@@ -43,10 +41,10 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'A') = e {player = jumpX (-boostSpeed) p {facing = 270}}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
-  where setPrevs p = p {prev_dX = getdX p, prev_dY = getdY p}
-        ignoringJump f n p = if is_Jumping p then p else f n p
-        jumpX p = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) p
-        jumpY p = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) p
+  where setPrevs f = f {prev_dX = getdX f, prev_dY = getdY f}
+        ignoringJump fn n pl = if is_Jumping pl then pl else fn n pl
+        jumpX pl = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
+        jumpY pl = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
 inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.
@@ -59,7 +57,7 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) e@E {sWidth = sW, sHeight = sH, rGen = r}
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) E {sWidth = sW, sHeight = sH, rGen = r}
   = startEnv sW sH r
 inputDead _ e = e
 
@@ -67,8 +65,8 @@ inputDead _ e = e
 --   Pressing space increases the level by 1, generates new goals based on the level and the 'goalGen' function in 'Type', increases all enemy speeds by a factor of 1.2, and resets the player position.
 --   All other input is ignored.
 inputComplete :: Event -> Env -> Env
-inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = l}
-  = let l' = l + 1
+inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = lev}
+  = let l' = lev + 1
      in e {player = newPlayer
           ,roadEnemies = map moddX $ roadEnemies e
           ,riverEnemies = map moddX $ riverEnemies e
