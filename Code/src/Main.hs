@@ -1,24 +1,27 @@
 -- | Module: Frogger.Main
 module Main where
 
+-- My module imports
+import Display
+import Update
+import Input
+import Type
+
+-- "External" imports
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Environment
 import System.Environment
 import System.Random
 import Data.List
 import Data.Time.Clock
-import Display
-import Update
-import Input
-import Type
 
 -- | 'main' takes the arguments given on program launch and (currently) only prints them
 --   It then takes the height and width of the window, creates an initial Env with those, and starts the game
-main :: IO()
+main :: IO ()
 main = do argc <- getArgs
           (_,initY) <- getScreenSize
           tSeed <- getCurrentTime >>= return                              -- Return that value
-                                    . (\n -> div n (10^(12 :: Integer)))  -- Divide by 10^12 to get the number of seconds
+                                    . (\n -> div n $ 10^(12 :: Integer))  -- Divide by 10^12 to get the number of seconds
                                     . fromIntegral                        -- Convert from an Integer to an Int
                                     . diffTimeToPicoseconds               -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
                                     . utctDayTime                         -- Get the current time of day in seconds
