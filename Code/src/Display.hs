@@ -12,34 +12,34 @@ gameDisplay e@E{sWidth = sw, sHeight = sh} = scale (sw/4000) (sh/3000) . transla
 -- | drawGame draws the game at a resolution of 4000x3000
 --   This makes a great deal of the maths involved in the game logic considerably simpler, and the result can simply be scaled down to the actual window size.
 drawGame :: Env -> Picture
-drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
-                                                                         translate 0 1800 . textDraw $ "Welcome to Functional Frogger!"
-                                                                        ,translate 0 1600 . textDraw $ "W, A, S, and D are your movement keys!"
-                                                                        ,translate 0 1400 . textDraw $ "Space to pause, and ESC to quit!"
-                                                                        ,translate 0 1200 . textDraw $ "Press any key to start!"
-                                                                        ]
-                                          PlayerDead cause  -> Pictures [
-                                                                         translate 0 1700 . textDraw $ cause
-                                                                        ,translate 0 1500 . textDraw $ "You died with " ++ show (gameScore e) ++ " points!"
-                                                                        ,translate 0 1300 . textDraw $ "Press space to play again!"
-                                                                        ]
-                                          LevelComplete     -> Pictures [
-                                                                         translate 0 1600 . textDraw $ "You completed level " ++ show (level e) ++ " with " ++ show (gameScore e) ++" points!"
-                                                                        ,translate 0 1400 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
-                                                                        ]
-                                          _                 -> Pictures [
-                                                                         drawHome
-                                                                        ,drawVerge
-                                                                        ,drawRoads
-                                                                        ,drawRiver
-                                                                        ,translate 0 2850 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
-                                                                        ,translate 3000 2850 . textDraw . show . (\n -> round n :: Int) $  time e
-                                                                        ,draws $ riverEnemies e
-                                                                        ,draws $ roadEnemies e
-                                                                        ,draws $ goals e
-                                                                        ,draw $ player e
-                                                                        ,drawSides
-                                                                        ]
+drawGame e@E{gameState = gs} = case gs of PreStart      -> Pictures [
+                                                                     translate 0 1800 . textDraw $ "Welcome to Functional Frogger!"
+                                                                    ,translate 0 1600 . textDraw $ "W, A, S, and D are your movement keys!"
+                                                                    ,translate 0 1400 . textDraw $ "Space to pause, and ESC to quit!"
+                                                                    ,translate 0 1200 . textDraw $ "Press any key to start!"
+                                                                    ]
+                                          PlayerDead c  -> Pictures [
+                                                                     translate 0 1700 . textDraw $ c
+                                                                    ,translate 0 1500 . textDraw $ "You died with " ++ show (gameScore e) ++ " points!"
+                                                                    ,translate 0 1300 . textDraw $ "Press space to play again!"
+                                                                    ]
+                                          LevelComplete -> Pictures [
+                                                                     translate 0 1600 . textDraw $ "You completed level " ++ show (level e) ++ " with " ++ show (gameScore e) ++" points!"
+                                                                    ,translate 0 1400 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
+                                                                    ]
+                                          _             -> Pictures [
+                                                                     drawHome
+                                                                    ,drawVerge
+                                                                    ,drawRoads
+                                                                    ,drawRiver
+                                                                    ,translate 0 2850 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
+                                                                    ,translate 3000 2850 . textDraw . show . (\n -> round n :: Int) $  time e
+                                                                    ,draws $ riverEnemies e
+                                                                    ,draws $ roadEnemies e
+                                                                    ,draws $ goals e
+                                                                    ,draw $ player e
+                                                                    ,drawSides
+                                                                    ]
                                where textDraw = color white . Text
 
 -- | Drawing the verge at the top of the screen that the Froggers call home.
