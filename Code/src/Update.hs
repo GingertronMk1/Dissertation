@@ -1,10 +1,6 @@
 -- | Module: Frogger.Update
 module Update where
 
-import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
-import Graphics.Gloss.Data.Bitmap
-import Data.Maybe
 import Type
 
 -- | The function which updates the game on every 'tick'
@@ -55,14 +51,14 @@ inRange :: Ord a
         => (a,a)  -- ^ The lower and upper bounds
         -> a      -- ^ The value to check
         -> Bool
-inRange (l,u) n = u >= n && n >= l
+inRange (lower,upper) n = upper >= n && n >= lower
 
 -- | roadCheck checks to see if the player has been run over yet.
 --   If the player is hit by a car, they die.
 roadCheck :: Env -> Env
 roadCheck e = let p = player e
                   coll = lookup True . map (\m -> (hasCollided p m, m)) $ roadEnemies e
-               in case coll of Just m   -> e {gameState = PlayerDead "You got run over!"}
+               in case coll of Just _   -> e {gameState = PlayerDead "You got run over!"}
                                Nothing  -> e {player = setdX 0 p}
 
 -- | riverCheck performs the equal yet opposite function to roadCheck in that it checks to see if the player has saved themself by jumping onto something.
@@ -93,7 +89,7 @@ riverCollision rm e@E {player = p} = e {player = setdX (getdX rm) p}
 
 -- | hitGoal deals with when a Goal has been collided with.
 --   If that Goal wa occupied, the player dies.
---   Otherwise, that Goal is made occupied and the players position resets.
+--   Otherwise that Goal is made occupied and the players position resets.
 --   If all Goals are occupied, the level is complete.
 hitGoal :: Goal -- ^ The Goal that has been collided with
         -> Env  -- ^ The current Env
@@ -116,12 +112,12 @@ hasCollided f d = let lf = getL f               -- The length of the Frogger
                       wd = getW d
                       xd = getX d - (ld/2)
                       yd = getY d - (wd/2)
-                   in case signum ld of 1         -> xd + ld > xf &&
-                                                     yd + wd > yf &&
-                                                     xf + lf > xd &&
-                                                     yf + wf > yd
-                                        -1        -> xd > xf &&
-                                                     yd + wd > yf &&
-                                                     xf + lf > xd + ld &&
-                                                     yf + wf > yd
-                                        otherwise -> False
+                   in case signum ld of 1   -> xd + ld > xf &&
+                                               yd + wd > yf &&
+                                               xf + lf > xd &&
+                                               yf + wf > yd
+                                        -1  -> xd > xf &&
+                                               yd + wd > yf &&
+                                               xf + lf > xd + ld &&
+                                               yf + wf > yd
+                                        _   -> False
