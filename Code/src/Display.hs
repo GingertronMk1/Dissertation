@@ -2,8 +2,6 @@
 module Display where
 
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
-import Graphics.Gloss.Data.Bitmap
 import Type
 
 -- | A function to draw an 'Env' to the screen.
@@ -29,18 +27,18 @@ drawGame e@E{gameState = gs} = case gs of PreStart          -> Pictures [
                                                                          translate 0 1600 . textDraw $ "You completed level " ++ show (level e) ++ " with " ++ show (gameScore e) ++" points!"
                                                                         ,translate 0 1400 . textDraw $ "Press space to advance to level " ++ show (level e + 1) ++ "!"
                                                                         ]
-                                          otherwise         -> Pictures [
+                                          _                 -> Pictures [
                                                                          drawHome
                                                                         ,drawVerge
                                                                         ,drawRoads
                                                                         ,drawRiver
                                                                         ,translate 0 2850 . textDraw $ "Level " ++ show (level e) ++ ", " ++ show (gameScore e) ++ " points"
-                                                                        ,translate 3000 2850 . textDraw . show . round $  time e
+                                                                        ,translate 3000 2850 . textDraw . show . (\n -> round n :: Int) $  time e
                                                                         ,draws $ riverEnemies e
                                                                         ,draws $ roadEnemies e
                                                                         ,draws $ goals e
                                                                         ,draw $ player e
-                                                                        ,drawSides (sWidth e)
+                                                                        ,drawSides
                                                                         ]
                                where textDraw = color white . Text
 
@@ -65,7 +63,7 @@ drawLane :: Lane -> Picture
 drawLane n = translate 2000 (lanes!!n + 5) $ rectangleSolid 4000 190
 
 -- | Drawing the sides of the map - the moving objects go beyond the width of the lanes and this hides them from view.
-drawSides :: Float -> Picture
-drawSides w = let wi = 2000
-               in color black $ Pictures [translate (0-(wi/2)) 1500 $ rectangleSolid wi 3000
-                                         ,translate (4000+(wi/2)) 1500 $ rectangleSolid wi 3000]
+drawSides :: Picture
+drawSides = let wi = 2000
+             in color black $ Pictures [translate (0-(wi/2)) 1500 $ rectangleSolid wi 3000
+                                       ,translate (4000+(wi/2)) 1500 $ rectangleSolid wi 3000]
