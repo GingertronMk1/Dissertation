@@ -311,7 +311,8 @@ instance Drawable RiverMover where
                  in if new >= sd' then 0 else new           -- Unless that == duration in which case its 0
           aw' = if st' == 0 then not aw                     -- If it is 0 then surface/submerge
                             else aw                         -- Otherwise don't
-       in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw', submergeTimer = st'}
+       in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw'
+                                                                        ,submergeTimer = st'}
   update _ ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
   draw c@Croc {} = let (cHead, cBody) = splitCroc c
                        bodyGreen = makeColor 0.0 1.0 0.0 1.0
