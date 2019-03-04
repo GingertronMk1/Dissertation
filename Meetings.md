@@ -27,3 +27,27 @@
   - Citing
     - Things quoted in modules
     - Google Scholar
+
+#2019-02-22
+- Discuss mappings from objects to types and typeclasses
+  - Interesting features, properties thereof
+  - Highlight this (Haskell doesn't like thing x, here's how I worked around that)
+  - Discuss things that could be exploited
+- Formalise a testing plan
+- Investigate other porting jobs (Doom/Quake), compare
+- Discuss similarities in functionality between mine and someone else's
+  - Theirs has thing x, mine also does
+  - Investigate what is considered a feature
+- Additional features, why Haskell's let me do that more easily
+  - Clear claims on uniqueness and benefits
+- ONE STEP FURTHER: user experience
+  - Tricky - people focus on negatives
+- Make them at least visually similar
+- Depending on measurements - difference in terms of speed, difficulty, etc.
+  - 2 test per person: one with the same games, one with different games
+  - Ideal goal: not be able to say which game's which
+  - Google Form questionnaire
+- Measure properties of one game vs another
+- MUST BE EXPERIENTIAL
+- Numerical evaluation of properties
+- Primary evaluation - done by me
