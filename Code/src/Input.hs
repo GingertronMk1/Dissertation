@@ -42,9 +42,10 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
   | otherwise                   = e
   where setPrevs f = f {prev_dX = getdX f, prev_dY = getdY f}
+        stepAbs = lanes !! 1 - lanes !! 0
         ignoringJump fn n pl = if is_Jumping pl then pl else fn n pl
-        jumpX pl = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
-        jumpY pl = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
+        jumpX pl = ignoringJump (\n f -> let step = stepAbs * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
+        jumpY pl = ignoringJump (\n f -> let step = stepAbs * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
 inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.
@@ -57,8 +58,21 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) E {sWidth = sW, sHeight = sH, rGen = r}
-  = startEnv sW sH r
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) l
+  = l {player = newPlayer
+      ,goals = goalGen 1
+      ,riverEnemies = map resEnemy $ riverEnemies l
+      ,roadEnemies = map resEnemy $ roadEnemies l
+      ,time = 0
+      ,gameState = PreStart
+      ,gameScore = 0
+      ,level = 1
+      ,sWidth = sWidth l
+      ,sHeight = sHeight l
+      ,rGen = rGen l
+      ,spriteMap = spriteMap l
+      }
+   where resEnemy e = setdX (getdX e / (1.2 ^ (level l - 1))) e
 inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
