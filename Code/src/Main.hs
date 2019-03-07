@@ -19,6 +19,9 @@ import Data.Time.Clock
 --   It then takes the height and width of the window, creates an initial Env with those, and starts the game
 main :: IO ()
 main = do argc <- getArgs
+          putStrLn $ show lanes
+          allSprites <- loadBMP "img/frogger_sprites.bmp"
+          putStrLn . show . bitmapSize $ (\(Bitmap b) -> b) allSprites
           (_,initY) <- getScreenSize
           tSeed <- getCurrentTime >>= return                              -- Return that value
                                     . (\n -> div n $ 10^(12 :: Integer))  -- Divide by 10^12 to get the number of seconds
@@ -28,7 +31,7 @@ main = do argc <- getArgs
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
               r  = mkStdGen tSeed
-              startLevel = startEnv sW sH r
+              startLevel = (startEnv sW sH r) {spriteMap = allSprites}
           putStrLn $ show argc
           putStrLn $ show tSeed
           printSpeeds $ roadEnemies startLevel
