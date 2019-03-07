@@ -41,6 +41,10 @@ drawGame e@E{gameState = gs}
                                          ,drawVerge
                                          ,drawRoads
                                          ,drawRiver
+                                         ,translate 2000 1500 
+                                          . scale (4000/416) (3000/448) 
+                                          . (BitmapSection (Rectangle {rectPos=(384,600-448), rectSize=(416,448)})) 
+                                          . (\(Bitmap b) -> b) $ spriteMap e
                                          ,translate 0 2850 . textDraw $ "Level "
                                                                      ++ show (level e)
                                                                      ++ ", "
@@ -80,3 +84,5 @@ drawSides :: Picture
 drawSides = let wi = 2000
              in color black $ Pictures [translate (0-(wi/2)) 1500 $ rectangleSolid wi 3000
                                        ,translate (4000+(wi/2)) 1500 $ rectangleSolid wi 3000]
+
+
