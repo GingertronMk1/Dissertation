@@ -8,7 +8,9 @@ import System.Random
 
 -- | The y values for each lane, starting at the first road lane
 lanes :: [Float]
-lanes = [100,300..3000]
+lanes = let l = 15
+            h = 3150
+         in takeWhile (<=h) . map (\n -> (n*h/l) - 100) $ [1,2..]
 
 -- * Type Declarations
 
@@ -85,6 +87,7 @@ data Env = E { player       :: Frogger      -- ^ The Frogger.
              , sWidth       :: Float        -- ^ The width of the window in pixels.
              , sHeight      :: Float        -- ^ The height of the window in pixels.
              , rGen         :: StdGen       -- ^ The random number generator used in initialisation.
+             , spriteMap    :: Picture
          }
          deriving Show
 
