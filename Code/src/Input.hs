@@ -23,7 +23,7 @@ gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart e
 -- | The function for dealing with inputs before the game has started proper.
 --   Pressing any key down will start the game, other input is ignored.
 inputPreStart :: Event -> Env -> Env
-inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
+inputPreStart (EventKey _ Down _ _) e = assignAllSprites $ e {gameState = Playing}
 inputPreStart _ e = e
 
 -- | The function for dealing with inputs during gameplay.
@@ -58,21 +58,17 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) l
-  = l {player = newPlayer
-      ,goals = goalGen 1
-      ,riverEnemies = map resEnemy $ riverEnemies l
-      ,roadEnemies = map resEnemy $ roadEnemies l
-      ,time = 0
-      ,gameState = PreStart
-      ,gameScore = 0
-      ,level = 1
-      ,sWidth = sWidth l
-      ,sHeight = sHeight l
-      ,rGen = rGen l
-      ,spriteMap = spriteMap l
-      }
-   where resEnemy e = setdX (getdX e / (1.2 ^ (level l - 1))) e
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) lev
+  = assignAllSprites $ lev {player = newPlayer
+                           ,goals = goalGen 1
+                           ,riverEnemies = map resEnemy $ riverEnemies lev
+                           ,roadEnemies = map resEnemy $ roadEnemies lev
+                           ,time = 0
+                           ,gameState = PreStart
+                           ,gameScore = 0
+                           ,level = 1
+                           }
+   where resEnemy e = setdX (getdX e / (1.2 ^ (level lev - 1))) e
 inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
@@ -81,12 +77,12 @@ inputDead _ e = e
 inputComplete :: Event -> Env -> Env
 inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = lev}
   = let l' = lev + 1
-     in e {player = newPlayer
-          ,roadEnemies = map moddX $ roadEnemies e
-          ,riverEnemies = map moddX $ riverEnemies e
-          ,goals = goalGen l'
-          ,level = l'
-          ,gameState = Playing
-          }
+     in assignAllSprites $ e {player = newPlayer
+                             ,roadEnemies = map moddX $ roadEnemies e
+                             ,riverEnemies = map moddX $ riverEnemies e
+                             ,goals = goalGen l'
+                             ,level = l'
+                             ,gameState = Playing
+                             }
   where moddX m = setdX (getdX m * 1.2) m
 inputComplete _ e = e
