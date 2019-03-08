@@ -21,7 +21,25 @@ main :: IO ()
 main = do argc <- getArgs
           putStrLn $ show lanes
           allSprites <- loadBMP "img/frogger_sprites.bmp"
-          putStrLn . show . bitmapSize $ (\(Bitmap b) -> b) allSprites
+          let allSpritesData = (\(Bitmap b) -> b) allSprites
+              bg                = defSprite (384,600-448) (416,448) allSpritesData
+              frLanded          = ("Frogger", ("landed", defSprite (0,600-32) (32,32) allSpritesData))
+              frJumping         = ("Frogger", ("jumping", defSprite (160,600-32) (32,32) allSpritesData))
+              car               = ("Car", ("n/a", defSprite (0,600-64) (32,32) allSpritesData))
+              longlog           = ("Log", ("n/a", defSprite (0, 600-160) (128,32) allSpritesData))
+              goal              = ("Goal", ("n/a", defSprite (0, 600-192) (32,32) allSpritesData))
+              croc              = ("Croc", ("n/a", defSprite (0,600-288) (128,32) allSpritesData))
+              turtlesSurfaced   = ("Turtles", ("surfaced", defSprite (0,600-224) (96,32) allSpritesData))
+              turtlesSubmerged  = ("Turtles", ("submerged", defSprite (192, 600-224) (96,32) allSpritesData))
+              initSpriteList    = [frLanded
+                                  ,frJumping
+                                  ,car
+                                  ,longlog
+                                  ,goal
+                                  ,croc
+                                  ,turtlesSurfaced
+                                  ,turtlesSubmerged
+                                  ]
           (_,initY) <- getScreenSize
           tSeed <- getCurrentTime >>= return                              -- Return that value
                                     . (\n -> div n $ 10^(12 :: Integer))  -- Divide by 10^12 to get the number of seconds
@@ -31,19 +49,21 @@ main = do argc <- getArgs
           let sH = fromIntegral initY
               sW = 4 * (sH/3)
               r  = mkStdGen tSeed
-              startLevel = (startEnv sW sH r) {spriteMap = allSprites}
+              startLevel = assignAllSprites $ (startEnv sW sH r) {background = bg, spriteList = initSpriteList}
           putStrLn $ show argc
           putStrLn $ show tSeed
+          putStrLn . show . getSprites $ player startLevel
           printSpeeds $ roadEnemies startLevel
           printSpeeds $ riverEnemies startLevel
           play
-            FullScreen      -- Play the game in a fullscreen window
-            black           -- The background should be black
-            60              -- The game should update 60 times per second
-            startLevel      -- The first level
-            gameDisplay     -- The function that draws a game
-            gameInput       -- The function that passes input through
-            gameUpdate      -- The function that updates the game
+            FullScreen        -- Play the game in a fullscreen window
+            black             -- The background should be black
+            60                -- The game should update 60 times per second
+            startLevel -- The first level
+            gameDisplay       -- The function that draws a game
+            gameInput         -- The function that passes input through
+            gameUpdate        -- The function that updates the game
+        where defSprite pxy sxy d = BitmapSection (Rectangle {rectPos = pxy, rectSize = sxy}) d
 
 -- | A function to print the dX values of a list of Drawables
 printSpeeds :: Drawable a => [a] -> IO ()
