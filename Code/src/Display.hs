@@ -37,14 +37,7 @@ drawGame e@E{gameState = gs}
                                                                      ++ "!"
                                          ]
                _             -> Pictures [
-                                          drawHome
-                                         ,drawVerge
-                                         ,drawRoads
-                                         ,drawRiver
-                                         ,translate 2000 1500 
-                                          . scale (4000/416) (3000/448) 
-                                          . (BitmapSection (Rectangle {rectPos=(384,600-448), rectSize=(416,448)})) 
-                                          . (\(Bitmap b) -> b) $ spriteMap e
+                                          translate 2000 1500 . scale (4000/416) (3000/448) $ background e
                                          ,translate 0 2850 . textDraw $ "Level "
                                                                      ++ show (level e)
                                                                      ++ ", "
