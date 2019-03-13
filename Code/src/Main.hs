@@ -1,4 +1,5 @@
 -- | Module: Frogger.Main
+
 module Main where
 
 -- My module imports
@@ -9,7 +10,6 @@ import Type
 
 -- "External" imports
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Environment
 import System.Environment
 import System.Random
 import Data.List
@@ -40,23 +40,22 @@ main = do argc <- getArgs
                                   ,turtlesSurfaced
                                   ,turtlesSubmerged
                                   ]
-          (_,initY) <- getScreenSize
           tSeed <- getCurrentTime >>= return                              -- Return that value
                                     . (\n -> div n $ 10^(12 :: Integer))  -- Divide by 10^12 to get the number of seconds
                                     . fromIntegral                        -- Convert from an Integer to an Int
                                     . diffTimeToPicoseconds               -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
                                     . utctDayTime                         -- Get the current time of day in seconds
-          let sH = fromIntegral initY
-              sW = 4 * (sH/3)
-              r  = mkStdGen tSeed
-              startLevel = assignAllSprites $ (startEnv sW sH r) {background = bg, spriteList = initSpriteList}
+          let r  = mkStdGen tSeed
+              sW = 448 :: Int
+              sH = 416 :: Int
+              startLevel = assignAllSprites $ (startEnv (fromIntegral sW) (fromIntegral sH) r) {background = bg, spriteList = initSpriteList}
           putStrLn $ show argc
           putStrLn $ show tSeed
           putStrLn . show . getSprites $ player startLevel
           printSpeeds $ roadEnemies startLevel
           printSpeeds $ riverEnemies startLevel
           play
-            FullScreen        -- Play the game in a fullscreen window
+            (InWindow "Frogger" (sW,sH) (0,0)) -- Play the game in a fullscreen window
             black             -- The background should be black
             60                -- The game should update 60 times per second
             startLevel -- The first level
