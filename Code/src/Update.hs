@@ -98,9 +98,9 @@ hitGoal g e = if is_Occupied g
               then e {gameState = PlayerDead "That goal had someone on it!"}
               else let gs' = g {is_Occupied = True} : filter (/=g) (goals e)
                     in if all is_Occupied gs' then e {gameState = LevelComplete}
-                                              else e {player = newPlayer
-                                                     ,goals = gs'
-                                                     }
+                                              else assignAllSprites $ e {player = newPlayer
+                                                                        ,goals = gs'
+                                                                        }
 
 -- | Detecting whether or not the Frogger has collided with another Drawable
 hasCollided :: Drawable a => Frogger -> a -> Bool
