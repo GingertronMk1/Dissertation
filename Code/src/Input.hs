@@ -40,6 +40,7 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'S') = e {player = jumpY (-boostSpeed) p {facing = 180}}
   | c == (Char 'A') = e {player = jumpX (-boostSpeed) p {facing = 270}}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
+  | c == (Char 'l') = e {gameState = LevelComplete}
   | otherwise                   = e
   where setPrevs f = f {prev_dX = getdX f, prev_dY = getdY f}
         stepAbs = lanes !! 1 - lanes !! 0
