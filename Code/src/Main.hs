@@ -28,6 +28,7 @@ main = do argc <- getArgs
               car               = ("Car", ("n/a", defSprite (0,600-64) (32,32) allSpritesData))
               longlog           = ("Log", ("n/a", defSprite (0, 600-160) (128,32) allSpritesData))
               goal              = ("Goal", ("n/a", defSprite (0, 600-192) (32,32) allSpritesData))
+              goalOcc           = ("Goal", ("occupied", Pictures $ map (snd . snd) [goal, frLanded]))
               croc              = ("Croc", ("n/a", defSprite (0,600-288) (128,32) allSpritesData))
               turtlesSurfaced   = ("Turtles", ("surfaced", defSprite (0,600-224) (96,32) allSpritesData))
               turtlesSubmerged  = ("Turtles", ("submerged", defSprite (192, 600-224) (96,32) allSpritesData))
@@ -36,6 +37,7 @@ main = do argc <- getArgs
                                   ,car
                                   ,longlog
                                   ,goal
+                                  ,goalOcc
                                   ,croc
                                   ,turtlesSurfaced
                                   ,turtlesSubmerged
@@ -46,8 +48,8 @@ main = do argc <- getArgs
                                     . diffTimeToPicoseconds               -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
                                     . utctDayTime                         -- Get the current time of day in seconds
           let r  = mkStdGen tSeed
-              sW = 448 :: Int
-              sH = 416 :: Int
+              sW = 416 :: Int
+              sH = 448 :: Int
               startLevel = assignAllSprites $ (startEnv (fromIntegral sW) (fromIntegral sH) r) {background = bg, spriteList = initSpriteList}
           putStrLn $ show argc
           putStrLn $ show tSeed
