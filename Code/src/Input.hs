@@ -23,7 +23,7 @@ gameInput ev en@E {gameState = gs} = case gs of PreStart      -> inputPreStart e
 -- | The function for dealing with inputs before the game has started proper.
 --   Pressing any key down will start the game, other input is ignored.
 inputPreStart :: Event -> Env -> Env
-inputPreStart (EventKey _ Down _ _) e = e {player = newPlayer, gameState = Playing}
+inputPreStart (EventKey _ Down _ _) e = assignAllSprites $ e {gameState = Playing}
 inputPreStart _ e = e
 
 -- | The function for dealing with inputs during gameplay.
@@ -40,11 +40,13 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'S') = e {player = jumpY (-boostSpeed) p {facing = 180}}
   | c == (Char 'A') = e {player = jumpX (-boostSpeed) p {facing = 270}}
   | c == (SpecialKey KeySpace)  = e {gameState = Paused}
+  | c == (Char 'l') = e {gameState = LevelComplete}
   | otherwise                   = e
   where setPrevs f = f {prev_dX = getdX f, prev_dY = getdY f}
+        stepAbs = lanes !! 1 - lanes !! 0
         ignoringJump fn n pl = if is_Jumping pl then pl else fn n pl
-        jumpX pl = ignoringJump (\n f -> let step = 200 * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
-        jumpY pl = ignoringJump (\n f -> let step = 200 * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
+        jumpX pl = ignoringJump (\n f -> let step = stepAbs * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
+        jumpY pl = ignoringJump (\n f -> let step = stepAbs * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
 inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.
@@ -57,8 +59,17 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) E {sWidth = sW, sHeight = sH, rGen = r}
-  = startEnv sW sH r
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) lev
+  = assignAllSprites $ lev {player = newPlayer
+                           ,goals = goalGen 1
+                           ,riverEnemies = map resEnemy $ riverEnemies lev
+                           ,roadEnemies = map resEnemy $ roadEnemies lev
+                           ,time = 0
+                           ,gameState = PreStart
+                           ,gameScore = 0
+                           ,level = 1
+                           }
+   where resEnemy e = setdX (getdX e / (1.2 ^ (level lev - 1))) e
 inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
@@ -67,12 +78,12 @@ inputDead _ e = e
 inputComplete :: Event -> Env -> Env
 inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = lev}
   = let l' = lev + 1
-     in e {player = newPlayer
-          ,roadEnemies = map moddX $ roadEnemies e
-          ,riverEnemies = map moddX $ riverEnemies e
-          ,goals = goalGen l'
-          ,level = l'
-          ,gameState = Playing
-          }
+     in assignAllSprites $ e {player = newPlayer
+                             ,roadEnemies = map moddX $ roadEnemies e
+                             ,riverEnemies = map moddX $ riverEnemies e
+                             ,goals = goalGen l'
+                             ,level = l'
+                             ,gameState = Playing
+                             }
   where moddX m = setdX (getdX m * 1.2) m
 inputComplete _ e = e

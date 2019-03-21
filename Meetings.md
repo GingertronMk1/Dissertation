@@ -51,3 +51,22 @@
 - MUST BE EXPERIENTIAL
 - Numerical evaluation of properties
 - Primary evaluation - done by me
+
+#2019-03-13
+- Record and make notes of known differences in testing
+- PROTOCOL
+  - Write down a speech to give to testees at the beginning of the test
+  - Confidentiality; I don't plan on taking any data from people beyond their gradings of similarity
+  - Consent form, information sheet
+  - Note down experience in games for each user
+  - Checklist for every test
+  - Between gameplay sessions write notes about experience
+  - Prelim testing testing
+  - Multiple game sessions per aspect of gameplay?
+- Statistical analysis
+  - Combination of the two - "please explain your rating"
+- Aim to get 10 people through the door
+- Look at online lit regarding game comparisons
+- Likert scales
+- Alternate which game goes first
+- Look at what factors will affect people's answers

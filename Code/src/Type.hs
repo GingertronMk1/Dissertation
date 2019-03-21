@@ -8,12 +8,20 @@ import System.Random
 
 -- | The y values for each lane, starting at the first road lane
 lanes :: [Float]
-lanes = [100,300..3000]
+lanes = let l = 15
+            h = 3150
+         in takeWhile (<=h) . map (\n -> (n*h/l) - 100) $ [1,2..]
 
 -- * Type Declarations
 
 -- | 'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
 type Lane = Int
+
+-- | 'Sprite' is a type denoting a Picture (the sprite itself), and a descriptor (jumping, sat, etc)
+type Sprite = (String, Picture)
+
+-- | 'SpriteID' is a type denoting a Sprite and the type of object to which it applies
+type SpriteID = (String, Sprite)
 
 -- | The data type describing the state of the game - playing, paused, etc.
 data GameState = PreStart           -- ^ Before the start of the first level.
@@ -25,12 +33,13 @@ data GameState = PreStart           -- ^ Before the start of the first level.
 
 -- | A data type to be contained by all drawn objects
 --   Cuts down on boilerplate x, y, v, l, w values all over the place
-data Entity = Entity { x :: Float   -- ^ Position in x
-                     , y :: Float   -- ^ Position in y
-                     , dX :: Float  -- ^ Velocity in x
-                     , dY :: Float  -- ^ Velocity in y
-                     , l  :: Float  -- ^ Length
-                     , w  :: Float  -- ^ Width
+data Entity = Entity { x :: Float     -- ^ Position in x
+                     , y :: Float     -- ^ Position in y
+                     , dX :: Float    -- ^ Velocity in x
+                     , dY :: Float    -- ^ Velocity in y
+                     , l  :: Float    -- ^ Length
+                     , w  :: Float    -- ^ Width
+                     , ss :: [Sprite] -- ^ The list of sprites of the Entity
               }
               deriving (Eq, Show)
 
@@ -68,7 +77,7 @@ data RiverMover = -- | A Crocodile
                 deriving (Eq, Show)
 
 -- | The data type for the goals of each level.
-data Goal =  Goal { go_Entity   :: Entity -- ^ The Entity containing important values about the Goal
+data Goal = Goal { go_Entity   :: Entity -- ^ The Entity containing important values about the Goal
                   , is_Occupied :: Bool   -- ^ Does the goal currently have a Frogger on it?
           }
           deriving (Eq, Show)
@@ -85,6 +94,8 @@ data Env = E { player       :: Frogger      -- ^ The Frogger.
              , sWidth       :: Float        -- ^ The width of the window in pixels.
              , sHeight      :: Float        -- ^ The height of the window in pixels.
              , rGen         :: StdGen       -- ^ The random number generator used in initialisation.
+             , background   :: Picture      -- ^ The background of the game
+             , spriteList   :: [SpriteID]   -- ^ All sprites for the game
          }
          deriving Show
 
@@ -92,14 +103,20 @@ data Env = E { player       :: Frogger      -- ^ The Frogger.
 
 -- | A typeclass which will contain all objects that are drawn to the screen.
 --   This should cut down enormously on boilerplate code, and allow for some level of polymorphism whilst maintaining type clarity.
-class Drawable a where
+class Show a => Drawable a where
   -- | A function to draw the object to the screen.
   draw :: a -> Picture
+  draw d = let sp = getSprites d
+               spr = snd . head $ sp
+               (sprL, sprW) = getSpriteSize spr
+            in translate (getX d) (getY d) . scale (getL d/fromIntegral sprL) (getW d/fromIntegral sprW) $ spr
   -- | A function to draw a list of objects to the screen.
   draws :: [a] -> Picture
   draws = Pictures . map draw
   -- | Get the Entity out of the object.
   getEntity :: a -> Entity
+  -- | Set the Entity of an object
+  setEntity :: Entity -> a -> a
   -- | Set the x value of the entity within the Drawable.
   setX :: Float -> a -> a
   -- | Set the y value of the entity within the Drawable.
@@ -126,6 +143,9 @@ class Drawable a where
   -- | Get the width value out of that entity.
   getW :: a -> Float
   getW = w . getEntity
+  -- | Get the sprites out of that entity.
+  getSprites :: a -> [Sprite]
+  getSprites = ss . getEntity
   -- | Northdate the x value of an entity based on its dX value.
   updateX :: a -> a
   updateX d = setX (getX d + getdX d) d
@@ -137,6 +157,13 @@ class Drawable a where
          -> a     -- ^ The object to be updated
          -> a     -- ^ The resultant object
   update _ = updateX . updateY
+  -- | A function to get any sprites for the Drawable
+  assignSprites :: [(String, Sprite)] -> a -> a
+  assignSprites sss d = let ider = takeWhile (/=' ') $ show d
+                            sss' = map snd . filter (\x -> fst x == ider) $ sss
+                            en' = (getEntity d) {ss = sss'}
+                         in setEntity en' d
+
 
 -- * Type Constructors
 
@@ -148,6 +175,7 @@ newPlayer = Frogger {fr_Entity = Entity {x  = 2000
                                         ,dY = 0
                                         ,l  = 180
                                         ,w  = 180
+                                        ,ss = []
                                         }
                      ,is_JumpingX = False
                      ,is_JumpingY = False
@@ -170,6 +198,7 @@ newCar cx cl v = let nv = v !! cl
                                              ,dY = 0
                                              ,l = 360 * signum nv
                                              ,w = 180
+                                             ,ss = []
                                              }
                          }
 
@@ -185,6 +214,7 @@ newCroc cx cl v = let nv = v !! cl
                                                ,dY = 0
                                                ,l = 540 * signum nv
                                                ,w = 180
+                                               ,ss = []
                                                }
                            }
 
@@ -204,6 +234,7 @@ newTurtles tx tl v sd = let nv = v !! tl
                                                         ,dY = 0
                                                         ,l = 600 * signum nv
                                                         ,w = 180
+                                                        ,ss = []
                                                         }
                                     }
 
@@ -219,6 +250,7 @@ newLog lx ll v = let nv = v !! ll
                                              ,dY = 0
                                              ,l = 360 * signum nv
                                              ,w = 180
+                                             ,ss = []
                                              }
                          }
 
@@ -232,6 +264,7 @@ newGoal gx gl = Goal {go_Entity = Entity {x = gx
                                          ,dY = 0
                                          ,l = 180
                                          ,w = 180
+                                         ,ss = []
                                          }
                      ,is_Occupied = False
                      }
@@ -297,6 +330,7 @@ otherNeg = otherNeg' . filter (>0)
 
 instance Drawable RiverMover where
   getEntity = ri_Entity
+  setEntity e r = r {ri_Entity = e}
   setX x' r = let re = ri_Entity r
                   in r {ri_Entity = re {x = x'}}
   setY y' r = let re = ri_Entity r
@@ -314,41 +348,35 @@ instance Drawable RiverMover where
        in setX (loopX $ getX t + getdX t) . setY (getY t + getdY t) $ t {aboveWater = aw'
                                                                         ,submergeTimer = st'}
   update _ ri = setX (loopX $ getX ri + getdX ri) . setY (getY ri + getdY ri) $ ri
-  draw c@Croc {} = let (cHead, cBody) = splitCroc c
-                       bodyGreen = makeColor 0.0 1.0 0.0 1.0
-                       headGreen = makeColor 0.0 0.8 0.0 1.0
-                    in Pictures [color bodyGreen . translate (getX cBody) (getY cBody) $ rectangleSolid (getL cBody) (getW cBody)
-                                ,color headGreen . translate (getX cHead) (getY cHead) $ rectangleSolid (getL cHead) (getW cHead)]
-  draw t@Turtles {aboveWater = aw} = let lt = getL t
-                                         xt = getX t
-                                         yt = getY t
-                                         wt = getW t
-                                         l' = lt / 3
-                                         alphaBlue = if aw then makeColor 0.0 0.0 1.0 0.0 else makeColor 0.0 0.0 1.0 0.2
-                                         mask = [color alphaBlue . translate xt yt $ rectangleSolid lt wt]
-                                         drawTurtle x' = Pictures [
-                                                                  color green  . translate x' yt $ rectangleSolid (0.8*l') (0.8*wt)
-                                                                 ,color orange . translate x' yt $ circleSolid (wt/2)
-                                                                 ]
-                                      in Pictures $ [drawTurtle (xt + (l' * off))| off <- [-1,0,1]] ++ mask
-  draw lg@Log {} = let brown = makeColor 0.6 0.3 0.1 1.0
-                   in color brown . translate (getX lg) (getY lg) $ rectangleSolid (getL lg) (getW lg)
+  draw t@Turtles {aboveWater = aw}
+    = let spr = if aw then snd . head . filter ((=="surfaced") . fst) . getSprites $ t
+                      else snd . head . filter ((=="submerged") . fst) . getSprites $ t
+          (sprL, sprW) = getSpriteSize spr
+       in translate (getX t) (getY t) . scale (0-getL t/fromIntegral sprL) (getW t/fromIntegral sprW) $ spr
+  draw d = let sp = getSprites d
+               spr = snd . head $ sp
+               (sprL, sprW) = getSpriteSize spr
+            in translate (getX d) (getY d) . scale (getL d/fromIntegral sprL) (getW d/fromIntegral sprW) $ spr
 
 instance Drawable Goal where
   getEntity = go_Entity
+  setEntity e g = g {go_Entity = e}
   setX _ = id
   setY _ = id
   setdX _ = id
   setdY _ = id
   update _ = id
-  draw g = let gx = getX g
-               gy = getY g
-               dg = color yellow . translate gx gy $ rectangleSolid (getL g) (getW g)
-            in if is_Occupied g then Pictures [dg, draw . setX gx . setY gy $ newPlayer {facing = 180}]
-                                else dg
+  draw g = let sp = getSprites g
+               spr' = if is_Occupied g then filter ((=="occupied") . fst) $ sp
+                                       else filter ((/="occupied") . fst) $ sp
+               spr = snd . head $ spr'
+               (sprL, sprW) = getSpriteSize spr
+            in translate (getX g) (getY g) . scale (getL g/fromIntegral sprL) (getW g/fromIntegral sprW) $ spr
+
 
 instance Drawable Frogger where
   getEntity = fr_Entity
+  setEntity e f = f {fr_Entity = e}
   setX x' f = let fe = fr_Entity f
                   in f {fr_Entity = fe {x = x'}}
   setY y' f = let fe = fr_Entity f
@@ -364,19 +392,27 @@ instance Drawable Frogger where
     where updateXY = updateX . updateY
           updateResetdXdY = updateXY . setdX pdx . setdY pdy
   draw f@Frogger {facing = dir}
-    = let darkGreen = makeColor 0.2 0.8 0.2 1.0
-          xf = getX f
-          yf = getY f
-          lf = getL f
-          wf = getW f
-          (x',y',l',w') = if is_Jumping f then (xf, yf, lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
-       in translate x' y' . scale l' w' $ Pictures $ map (rotate dir) [color darkGreen $ rectangleSolid 1.0 1.0
-                                                                      ,color white . translate 0.4 0.4 $ rectangleSolid 0.1 0.1
-                                                                      ,color white . translate (-0.4) 0.4  $ rectangleSolid 0.1 0.1
-                                                                      ]
+    = case getSprites f of []  -> let darkGreen = makeColor 0.2 0.8 0.2 1.0
+                                      xf = getX f
+                                      yf = getY f
+                                      lf = getL f
+                                      wf = getW f
+                                      (x',y',l',w') = if is_Jumping f then (xf, yf, lf * 1.1, wf * 1.1) else (xf,yf,lf,wf)
+                                   in translate x' y' . scale l' w' $ Pictures $ map (rotate dir) [color darkGreen $ rectangleSolid 1.0 1.0
+                                                                                                  ,color white . translate 0.4 0.4 $ rectangleSolid 0.1 0.1
+                                                                                                  ,color white . translate (-0.4) 0.4  $ rectangleSolid 0.1 0.1
+                                                                                                  ]
+                           _  -> let spr = if is_Jumping f
+                                           then snd . head . filter ((=="jumping") . fst) . getSprites $ f
+                                           else snd . head . filter ((=="landed") . fst) . getSprites $ f
+                                     (sprL, sprW) = getSpriteSize spr
+                                  in translate (getX f) (getY f)
+                                     . scale (getL f / fromIntegral sprL) (getW f / fromIntegral sprW)
+                                     . rotate dir $ spr
 
 instance Drawable RoadMover where
   getEntity = ro_Entity
+  setEntity e r = r {ro_Entity = e}
   setX x' r = let re = ro_Entity r
                   in r {ro_Entity = re {x = x'}}
   setY y' r = let re = ro_Entity r
@@ -386,9 +422,26 @@ instance Drawable RoadMover where
   setdY dy' r = let re = ro_Entity r
                     in r {ro_Entity = re {dY = dy'}}
   update _ ro = setX (loopX $ getX ro + getdX ro) . setY (getY ro + getdY ro) $ ro
-  draw c@(Car {}) = color red . translate (getX c) (getY c) $ rectangleSolid (getL c) (getW c)
 
 -- * Additional Helper Functions
+
+-- | 'assignAllSprites' takes the sprite list from an Env and assigns sprites to all Drawables within it
+assignAllSprites :: Env -> Env
+assignAllSprites e@E {player=p,roadEnemies=roE,riverEnemies=riE,goals=g,spriteList=sprs}
+  = e {player = assignSprites sprs p
+      ,roadEnemies = map (assignSprites sprs) roE
+      ,riverEnemies = map (assignSprites sprs) riE
+      ,goals = map (assignSprites sprs) g
+      }
+
+-- | 'getSpriteSize' returns a tuple containing the Sprites length and width
+getSpriteSize :: Picture -> (Int, Int)
+getSpriteSize (BitmapSection (Rectangle {rectPos = _, rectSize = lw}) _) = lw
+getSpriteSize (Pictures xs) = getMaxSize (0,0) $ map getSpriteSize xs
+                              where getMaxSize lw []               = lw
+                                    getMaxSize (l',w') ((l,w):lws) = if l' < l && w' < w
+                                                                     then getMaxSize (l,w) lws
+                                                                     else getMaxSize (l',w') lws
 
 -- | 'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
 is_Jumping :: Frogger -> Bool
@@ -407,6 +460,7 @@ splitCroc c@Croc {} = let cx = getX c
                                                               ,w = cw
                                                               ,dX = 0
                                                               ,dY = 0
+                                                              ,ss = []
                                                               }
                                           }
                           crocBody = Croc {ri_Entity = Entity {x = cx - l'
@@ -415,6 +469,7 @@ splitCroc c@Croc {} = let cx = getX c
                                                               ,w = cw
                                                               ,dX = 0
                                                               ,dY = 0
+                                                              ,ss = []
                                                               }
                                           }
                        in (crocHead, crocBody)
