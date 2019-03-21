@@ -366,6 +366,13 @@ instance Drawable Goal where
   setdX _ = id
   setdY _ = id
   update _ = id
+  draw g = let sp = getSprites g
+               spr' = if is_Occupied g then filter ((=="occupied") . fst) $ sp
+                                       else filter ((/="occupied") . fst) $ sp
+               spr = snd . head $ spr'
+               (sprL, sprW) = getSpriteSize spr
+            in translate (getX g) (getY g) . scale (getL g/fromIntegral sprL) (getW g/fromIntegral sprW) $ spr
+
 
 instance Drawable Frogger where
   getEntity = fr_Entity
@@ -430,6 +437,11 @@ assignAllSprites e@E {player=p,roadEnemies=roE,riverEnemies=riE,goals=g,spriteLi
 -- | 'getSpriteSize' returns a tuple containing the Sprites length and width
 getSpriteSize :: Picture -> (Int, Int)
 getSpriteSize (BitmapSection (Rectangle {rectPos = _, rectSize = lw}) _) = lw
+getSpriteSize (Pictures xs) = getMaxSize (0,0) $ map getSpriteSize xs
+                              where getMaxSize lw []               = lw
+                                    getMaxSize (l',w') ((l,w):lws) = if l' < l && w' < w
+                                                                     then getMaxSize (l,w) lws
+                                                                     else getMaxSize (l',w') lws
 
 -- | 'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
 is_Jumping :: Frogger -> Bool
