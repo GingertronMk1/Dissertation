@@ -196,7 +196,7 @@ newCar cx cl v = let nv = v !! cl
                                              ,y = lanes !! cl + 10
                                              ,dX = nv
                                              ,dY = 0
-                                             ,l = 360 * signum nv
+                                             ,l = 270 * signum nv
                                              ,w = 180
                                              ,ss = []
                                              }
