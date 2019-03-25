@@ -14,7 +14,7 @@ gameDisplay e@E{sWidth = sw, sHeight = sh} = scale (sw/4000) (sh/3000) . transla
 drawGame :: Env -> Picture
 drawGame e@E{gameState = gs}
   = case gs of PreStart      -> Pictures [
-                                          translate 0 1800 . textDraw $ "Welcome to Functional Frogger!"
+                                          translate 0 1800 . textDraw $ "Welcome to Frogger!"
                                          ,translate 0 1600 . textDraw $ "W, A, S, and D are your movement keys!"
                                          ,translate 0 1400 . textDraw $ "Space to pause, and ESC to quit!"
                                          ,translate 0 1200 . textDraw $ "Press any key to start!"
