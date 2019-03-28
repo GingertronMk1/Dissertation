@@ -4,13 +4,16 @@ module Input where
 import Graphics.Gloss.Interface.Pure.Game
 import Type
 
+laneDiff :: Float
+laneDiff = lanes !! 1 - lanes !! 0
+
 -- | The base speed of the player while jumping
 baseSpeed :: Float
-baseSpeed = 10
+baseSpeed = laneDiff / 5
 
 -- | The boosted speed of the player while jumping
 boostSpeed :: Float
-boostSpeed = 40
+boostSpeed = laneDiff / 3
 
 -- | A routing function of sorts: it takes the event and the current Env and, based on the current gameState, determines which function to call to give the correct result.
 gameInput :: Event -> Env -> Env
@@ -43,10 +46,9 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'l') = e {gameState = LevelComplete}
   | otherwise                   = e
   where setPrevs f = f {prev_dX = getdX f, prev_dY = getdY f}
-        stepAbs = lanes !! 1 - lanes !! 0
         ignoringJump fn n pl = if is_Jumping pl then pl else fn n pl
-        jumpX pl = ignoringJump (\n f -> let step = stepAbs * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
-        jumpY pl = ignoringJump (\n f -> let step = stepAbs * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
+        jumpX pl = ignoringJump (\n f -> let step = laneDiff * (signum n) in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
+        jumpY pl = ignoringJump (\n f -> let step = laneDiff * (signum n) in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
 inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.
