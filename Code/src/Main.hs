@@ -48,8 +48,8 @@ main = do argc <- getArgs
                                     . diffTimeToPicoseconds               -- Convert from 'difftime' to an Integer we can use (picoseconds since midnight)
                                     . utctDayTime                         -- Get the current time of day in seconds
           let r  = mkStdGen tSeed
-              sW = 416 :: Int
-              sH = 448 :: Int
+              sW = 640 :: Int
+              sH = 480 :: Int
               startLevel = assignAllSprites $ (startEnv (fromIntegral sW) (fromIntegral sH) r) {background = bg, spriteList = initSpriteList}
           putStrLn $ show argc
           putStrLn $ show tSeed
