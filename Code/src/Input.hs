@@ -38,6 +38,10 @@ inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'd') = e {player = jumpX baseSpeed     p {facing = 90}}
   | c == (Char 's') = e {player = jumpY (-baseSpeed)  p {facing = 180}}
   | c == (Char 'a') = e {player = jumpX (-baseSpeed)  p {facing = 270}}
+  | c == (SpecialKey KeyUp) = e {player = jumpY baseSpeed     p {facing = 0}}
+  | c == (SpecialKey KeyRight) = e {player = jumpX baseSpeed     p {facing = 90}}
+  | c == (SpecialKey KeyDown) = e {player = jumpY (-baseSpeed)  p {facing = 180}}
+  | c == (SpecialKey KeyLeft) = e {player = jumpX (-baseSpeed)  p {facing = 270}}
   | c == (Char 'W') = e {player = jumpY boostSpeed    p {facing = 0}}
   | c == (Char 'D') = e {player = jumpX boostSpeed    p {facing = 90}}
   | c == (Char 'S') = e {player = jumpY (-boostSpeed) p {facing = 180}}
