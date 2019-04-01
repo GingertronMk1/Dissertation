@@ -4,3 +4,9 @@ controls,understandability,difficulty,stress level,aesthetics,general gameplay, 
 3,  9,  1,  2,  8,  6,  java,     false
 10, 10, 4,  4,  2,  5,  java,     true
 9,  10, 7,  8,  8,  8,  haskell,  true
+10, 9,  4,  3,  10, 8,  java,     true
+8,  7,  4,  5,  2,  3,  haskell,  true
+10, 8,  4,  5,  9,  7,  java,     true
+10, 10, 6,  8,  8,  8,  haskell,  true
+10, 7,  6,  9,  9,  7,  java,     true
+9,  7,  4,  10, 8,  7,  haskell,  true
