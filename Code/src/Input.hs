@@ -2,6 +2,7 @@
 module Input where
 
 import Graphics.Gloss.Interface.Pure.Game
+import System.Random (next)
 import Type
 
 laneDiff :: Float
@@ -65,17 +66,8 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) lev
-  = assignAllSprites $ lev {player = newPlayer
-                           ,goals = goalGen 1
-                           ,riverEnemies = map resEnemy $ riverEnemies lev
-                           ,roadEnemies = map resEnemy $ roadEnemies lev
-                           ,time = 0
-                           ,gameState = PreStart
-                           ,gameScore = 0
-                           ,level = 1
-                           }
-   where resEnemy e = setdX (getdX e / (1.2 ^ (level lev - 1))) e
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) E {sWidth = sW, sHeight = sH, rGen = r, background = bg, spriteList = sprl}
+  = assignAllSprites $ (startEnv sW sH (snd . next $ r)) {background = bg, spriteList = sprl}
 inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
