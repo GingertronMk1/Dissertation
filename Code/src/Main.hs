@@ -15,8 +15,8 @@ import System.Random
 import Data.List
 import Data.Time.Clock
 
--- | 'main' takes the arguments given on program launch and (currently) only prints them
---   It then takes the height and width of the window, creates an initial Env with those, and starts the game
+-- | 'main' takes the arguments given on program launch and (currently) only prints them.
+--   It then takes the height and width of the window, creates an initial Env with those, and starts the game.
 main :: IO ()
 main = do argc <- getArgs
           putStrLn $ show lanes
@@ -66,7 +66,7 @@ main = do argc <- getArgs
             gameUpdate        -- The function that updates the game
         where defSprite pxy sxy d = BitmapSection (Rectangle {rectPos = pxy, rectSize = sxy}) d
 
--- | A function to print the dX values of a list of Drawables
+-- | A function to print the dX values of a list of Drawables.
 printSpeeds :: Drawable a => [a] -> IO ()
 printSpeeds = putStrLn                                -- Print it
             . show                                    -- Show that value
