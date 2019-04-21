@@ -5,7 +5,7 @@ import Graphics.Gloss
 import Type
 
 -- | A function to draw an 'Env' to the screen.
---   It scales and translates the 'drawGame' function to the correct window size.
+--   It scales and translates the 'drawGame' function to the correct window size, and translates it such that coordinates start at the bottom-left of the screen.
 gameDisplay :: Env -> Picture
 gameDisplay e@E{sWidth = sw, sHeight = sh} = scale (sw/4000) (sh/3000) . translate (-2000) (-1500) $ drawGame e
 
@@ -77,5 +77,3 @@ drawSides :: Picture
 drawSides = let wi = 2000
              in color black $ Pictures [translate (0-(wi/2)) 1500 $ rectangleSolid wi 3000
                                        ,translate (4000+(wi/2)) 1500 $ rectangleSolid wi 3000]
-
-

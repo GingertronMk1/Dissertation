@@ -17,10 +17,10 @@ lanes = let l = 15
 -- | 'Lane' is a type synonym for 'Int', and is shorthand for the index within 'lanes'
 type Lane = Int
 
--- | 'Sprite' is a type denoting a Picture (the sprite itself), and a descriptor (jumping, sat, etc)
+-- | 'Sprite' is a type denoting a Picture (the sprite itself), and a descriptor (jumping, sat, etc).
 type Sprite = (String, Picture)
 
--- | 'SpriteID' is a type denoting a Sprite and the type of object to which it applies
+-- | 'SpriteID' is a type denoting a Sprite and the type of object to which it applies.
 type SpriteID = (String, Sprite)
 
 -- | The data type describing the state of the game - playing, paused, etc.
@@ -31,8 +31,8 @@ data GameState = PreStart           -- ^ Before the start of the first level.
                | LevelComplete      -- ^ The level is complete.
                deriving (Eq, Show)
 
--- | A data type to be contained by all drawn objects
---   Cuts down on boilerplate x, y, v, l, w values all over the place
+-- | A data type to be contained by all drawn objects.
+--   Cuts down on boilerplate x, y, v, l, w values all over the place.
 data Entity = Entity { x :: Float     -- ^ Position in x
                      , y :: Float     -- ^ Position in y
                      , dX :: Float    -- ^ Velocity in x
@@ -167,7 +167,7 @@ class Show a => Drawable a where
 
 -- * Type Constructors
 
--- | Constructing a Frogger at the default start position
+-- | Constructing a Frogger at the default start position.
 newPlayer :: Frogger
 newPlayer = Frogger {fr_Entity = Entity {x  = 2000
                                         ,y  = lanes!!0
@@ -186,7 +186,7 @@ newPlayer = Frogger {fr_Entity = Entity {x  = 2000
                      ,facing = 0
                      }
 
--- | Generating a new Car
+-- | Generating a new Car.
 newCar :: Float     -- ^ The initial x position of the Car
        -> Lane      -- ^ The lane the Car should occupy
        -> [Float]   -- ^ The list of velocities from which the Car will take its velocity
@@ -202,7 +202,7 @@ newCar cx cl v = let nv = v !! cl
                                              }
                          }
 
--- | Generating a new Croc
+-- | Generating a new Croc.
 newCroc :: Float      -- ^ The initial x position of the Croc
         -> Lane       -- ^ The lane the Croc should occupy
         -> [Float]    -- ^ The list of velocities from which the Croc will take its velocity
@@ -218,7 +218,7 @@ newCroc cx cl v = let nv = v !! cl
                                                }
                            }
 
--- | Generating some new Turtles
+-- | Generating some new Turtles.
 newTurtles :: Float       -- ^ The initial x position of the Turtles
            -> Lane        -- ^ The lane the Turtles should occupy
            -> [Float]     -- ^ The list of velocities from which the Turtles will take their velocity
@@ -238,7 +238,7 @@ newTurtles tx tl v sd = let nv = v !! tl
                                                         }
                                     }
 
--- | Generating a new Log
+-- | Generating a new Log.
 newLog :: Float       -- ^ The initial x position of the Log
        -> Lane        -- ^ The lane the Log should occupy
        -> [Float]     -- ^ The list of velocities from which the Log will take its velocity
@@ -254,7 +254,7 @@ newLog lx ll v = let nv = v !! ll
                                              }
                          }
 
--- | Constructing a new Goal
+-- | Constructing a new Goal.
 newGoal :: Float  -- ^ The x position of the Goal
         -> Lane   -- ^ The lane the Goal should occupy
         -> Goal   -- ^ The resultant Goal
@@ -269,7 +269,7 @@ newGoal gx gl = Goal {go_Entity = Entity {x = gx
                      ,is_Occupied = False
                      }
 
--- | Generating the initial Env given a screen width and height
+-- | Generating the initial Env given a screen width and height.
 startEnv :: Float   -- ^ The width of the screen
          -> Float   -- ^ The height of the screen
          -> StdGen  -- ^ The random number generator
@@ -425,7 +425,7 @@ instance Drawable RoadMover where
 
 -- * Additional Helper Functions
 
--- | 'assignAllSprites' takes the sprite list from an Env and assigns sprites to all Drawables within it
+-- | 'assignAllSprites' takes the sprite list from an Env and assigns sprites to all Drawables within it.
 assignAllSprites :: Env -> Env
 assignAllSprites e@E {player=p,roadEnemies=roE,riverEnemies=riE,goals=g,spriteList=sprs}
   = e {player = assignSprites sprs p
@@ -434,7 +434,7 @@ assignAllSprites e@E {player=p,roadEnemies=roE,riverEnemies=riE,goals=g,spriteLi
       ,goals = map (assignSprites sprs) g
       }
 
--- | 'getSpriteSize' returns a tuple containing the Sprites length and width
+-- | 'getSpriteSize' returns a tuple containing the Sprites length and width.
 getSpriteSize :: Picture -> (Int, Int)
 getSpriteSize (BitmapSection (Rectangle {rectPos = _, rectSize = lw}) _) = lw
 getSpriteSize (Pictures xs) = getMaxSize (0,0) $ map getSpriteSize xs
@@ -442,12 +442,13 @@ getSpriteSize (Pictures xs) = getMaxSize (0,0) $ map getSpriteSize xs
                                     getMaxSize (l',w') ((l,w):lws) = if l' < l && w' < w
                                                                      then getMaxSize (l,w) lws
                                                                      else getMaxSize (l',w') lws
+getSpriteSize _ = (0,0)
 
--- | 'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping
+-- | 'is_Jumping' does as the name suggests, returning a Bool with whether or not the Frogger is jumping.
 is_Jumping :: Frogger -> Bool
 is_Jumping f = is_JumpingX f || is_JumpingY f
 
--- | A function to split a Croc into its head and body - used in collision detection and drawing
+-- | A function to split a Croc into its head and body - used in collision detection.
 splitCroc :: RiverMover               -- ^ The intial Croc
           -> (RiverMover, RiverMover) -- ^ Its head and body
 splitCroc c@Croc {} = let cx = getX c
@@ -475,7 +476,7 @@ splitCroc c@Croc {} = let cx = getX c
                        in (crocHead, crocBody)
 splitCroc rm = (rm,rm)
 
--- | 'loopX' is used to loop the x-value of moving objects
+-- | 'loopX' is used to loop the x-value of moving objects.
 loopX :: Float -> Float
 loopX n
   | n < leftMost  = n + 5760
@@ -484,7 +485,7 @@ loopX n
   where leftMost  = -880
         rightMost = 4880
 
--- | Generating goals for a given level
+-- | Generating goals for a given level.
 goalGen :: Int    -- ^ The level for which to generate the Goals
         -> [Goal]
 goalGen lev

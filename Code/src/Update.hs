@@ -3,7 +3,7 @@ module Update where
 
 import Type
 
--- | The function which updates the game on every 'tick'
+-- | The function which updates the game on every 'tick'.
 gameUpdate :: Float -- ^ Delta-t in milliseconds
            -> Env   -- ^ The current Env
            -> Env   -- ^ The updated Env
@@ -19,12 +19,12 @@ updateEnv n e = let p = player e
                  in scoreUpdate . coll . updateMovers n $ e
 
 
--- | scoreUpdate, if the level is complete, increases the score by an amount proportional to the current level
+-- | scoreUpdate, if the level is complete, increases the score by an amount proportional to the current level.
 scoreUpdate :: Env -> Env
 scoreUpdate e = if gameState e == LevelComplete then e {gameScore = gameScore e + (1000 * level e)}
                                                 else e
 
--- | updateMovers applies the update function required of all Drawables to all moving objects
+-- | updateMovers applies the update function required of all Drawables to all moving objects.
 updateMovers :: Float -> Env -> Env
 updateMovers n e = e {player = update n . player $ e
                      ,roadEnemies = map (update n) . roadEnemies $ e
@@ -102,7 +102,7 @@ hitGoal g e = if is_Occupied g
                                                                         ,goals = gs'
                                                                         }
 
--- | Detecting whether or not the Frogger has collided with another Drawable
+-- | Detecting whether or not the Frogger has collided with another Drawable.
 hasCollided :: Drawable a => Frogger -> a -> Bool
 hasCollided f d = let lf = getL f               -- The length of the Frogger
                       wf = getW f               -- The width of the Frogger

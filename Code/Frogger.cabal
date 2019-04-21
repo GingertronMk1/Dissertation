@@ -1,10 +1,10 @@
 name:               Frogger
-version:            0.95.0.0
+version:            1.0.0
 synopsis:           A recreation of the video game Frogger using Haskell
 license:            GPL-3
 license-file:       LICENSE
-author:             Jack
-maintainer:         jackellis1504@gmail.com
+author:             4262333
+maintainer:         psyje5@nottingham.ac.uk
 category:           Game
 build-type:         Simple
 extra-source-files: ChangeLog.md

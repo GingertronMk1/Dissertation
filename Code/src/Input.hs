@@ -2,8 +2,10 @@
 module Input where
 
 import Graphics.Gloss.Interface.Pure.Game
+import System.Random (next)
 import Type
 
+-- | The gap between lanes
 laneDiff :: Float
 laneDiff = lanes !! 1 - lanes !! 0
 
@@ -31,7 +33,7 @@ inputPreStart _ e = e
 
 -- | The function for dealing with inputs during gameplay.
 --   'w', 'a', 's', and 'd' cause the player to jump up, left, down, and right respectively at the speed denoted by 'baseSpeed'.
---   Shift + the above cause the player to move at the speed denoted by 'boostSpeed'
+--   Shift + the above cause the player to move at the speed denoted by 'boostSpeed'.
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
   | c == (Char 'w')             = e {player = jumpY baseSpeed     p {facing = 0}}
@@ -65,21 +67,12 @@ inputPaused _ e = e
 --   Pressing space starts a new game with the actual screen dimensions being passed through to the new Env.
 --   Other input is ignored.
 inputDead :: Event -> Env -> Env
-inputDead (EventKey (SpecialKey KeySpace) Down _ _) lev
-  = assignAllSprites $ lev {player = newPlayer
-                           ,goals = goalGen 1
-                           ,riverEnemies = map resEnemy $ riverEnemies lev
-                           ,roadEnemies = map resEnemy $ roadEnemies lev
-                           ,time = 0
-                           ,gameState = PreStart
-                           ,gameScore = 0
-                           ,level = 1
-                           }
-   where resEnemy e = setdX (getdX e / (1.2 ^ (level lev - 1))) e
+inputDead (EventKey (SpecialKey KeySpace) Down _ _) E {sWidth = sW, sHeight = sH, rGen = r, background = bg, spriteList = sprl}
+  = assignAllSprites $ (startEnv sW sH (snd . next $ r)) {background = bg, spriteList = sprl}
 inputDead _ e = e
 
 -- | The function for dealing with input when a level is complete.
---   Pressing space increases the level by 1, generates new goals based on the level and the 'goalGen' function in 'Type', increases all enemy speeds by a factor of 1.2, and resets the player position.
+--   Pressing space increases the level by 1, generates new goals based on the level and the 'goalGen' function in 'Type', increases all enemy speeds by a factor of 1.2, resets the player position, and reassigns sprites.
 --   All other input is ignored.
 inputComplete :: Event -> Env -> Env
 inputComplete (EventKey (SpecialKey KeySpace) Down _ _) e@E {level = lev}

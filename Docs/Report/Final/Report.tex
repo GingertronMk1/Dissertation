@@ -14,7 +14,8 @@
 \usepackage{listings}
 \usepackage{mathtools}
 \lstset{
-  basicstyle=\ttfamily\
+   basicstyle=\ttfamily\tiny
+  ,language=Haskell
 }
 
 \graphicspath{ {Images/} }
@@ -98,7 +99,7 @@ However, some notable individuals in video game development have commented on th
 The motivation behind recreating \textit{Frogger} in particular stems from the fact that \textit{Frogger} is a deceptively simple game.
 At its heart it is just a "road-crossing simulator", however in practice there are many more aspects to it.
 The random generation of obstacles in particular is something that Haskell, while not struggling with, requires one to implement in a particular way.
-Likewise the number of lives the player has remaining, the idea of pausing and resuming the game, and in general the non-deterministic nature of a game's result (which is to say that for one specific input, there are multiple possible outputs) generally require some kind of global variable.
+Likewise the number of lives the player has remaining, the idea of pausing and resuming the game, and in general the non-deterministic nature of a game's result (which is to say, that for one specific input, there are multiple possible outputs) generally require some kind of global variable.
 These are all concepts which, from my experience in the aforementioned university modules and my own experience programming in Haskell, the language requires further development to implement.
 I find this challenge to be quite appealing in the context of a final-year project.
 
@@ -130,12 +131,12 @@ Ex-UoN student Ivan Perez launched Keera Studios in 2013, a games studio focusse
 Much has been done with respect to the porting of a video game to a new architecture or language.
 While more recent programming languages (C++, etc.) can output byte code that will work on a number of machines, it used to be the case that a game had to be reworked from the ground up for compatibility with other systems.
 Indeed, \textit{Frogger} itself was the subject of a number of ports in the early 80s, with external companies publishing editions for home consoles.
-More recently, Michael Tonks recreated Atari's \textit{Pac-Man} using Java as part of his undergraduate dissertation; whilst not formalising the specifications and requirements of the game itself he chose to discuss and implement the experiential features of the game (the ghosts' pathfinding algorithms, point value of objectives, and so on)\cite{michaeltonks}.
+More recently, Michael Tonks recreated Atari's \textit{Pac-Man} using Java as part of his undergraduate dissertation; whilst not formalising the specifications and requirements of the game itself, he chose to discuss and implement the experiential features of the game (the ghosts' pathfinding algorithms, point value of objectives, and so on)\cite{michaeltonks}.
 This is the approach I will likely take for developing a plan to create my version of \textit{Frogger}.
 
 
 \section{Description of Work}
-In the initial stages (i.e. until the end of December) I intend to research the game, investigating extant open-source implementations which make use of OO styles, and planning how I intend to map some of those OO features to an FP style.
+In the initial stages (i.e. until the end of December 2018) I intended to research the game, investigating extant open-source implementations which make use of OO styles, and planning how I would go about mapping some of those OO features to an FP style.
 This research will extend to an experiential level, in which I will investigate the "feel" of these current versions of the game.
 After this I will plan out the initial stages of development and, over the Christmas break, I hope to have a first "alpha" version of the game for user testing.
 This will likely be a somewhat naive implementation, which may not leverage the benefits of the FP style properly and, consequently, I will ask my external sponsor, Henrik Nilsson, for feedback on this "alpha" version.
@@ -156,7 +157,7 @@ I intend to use the OpenGL window system, in particular the Haskell GLUT library
 This is because the G53GRA Computer Graphics module has increased my knowlege of the way this library functions, in particular the translation and scaling features, and because it works on most platforms (Windows and Mac specifically) with a good degree of performance.
 Haskell's GLUT library operates based on a system of callbacks\cite{glutpage}, which abstract many of the issues Haskell usually faces when trying to natively deal with time-dependent and global "variables".
 Eventually I would hope to move away from this GLUT system to a model based on Functional Reactive Programming.
-However in the early stages I feel that using GLUT is a logical way of ensuring that I understand and appreciate the key concepts required for creating a game using Haskell, before progressing to a more complex rendering system.
+However in the "early stages" I feel that using GLUT is a logical way of ensuring that I understand and appreciate the key concepts required for creating a game using Haskell, before progressing to a more complex rendering system.
 
 \par
 
@@ -165,7 +166,7 @@ I intend to use this to essentially replicate the various "objects" that will be
 I believe it will be possible, at least in the initial stage, to make use of Haskell's \verb|data| declaration; this differs from the \verb|type| declarations described above, in that \verb|data| allows one to make a new algebraic data type as opposed to \verb|type| which does little more than make your new type a "shortcut" to the old one (not dissimilar to a \verb|#define| in C).
 \verb|data| declarations can take many forms, with the following record-style syntax being the one I intend to use for the project due to its readability, and the fact that it automatically creates "methods" (to use Object-Oriented terminology) to access "member data".
 
-\begin{lstlisting}[language=Haskell]
+\begin{lstlisting}[]
 data Object = p {x :: Float,
                  y :: Float,
                  velocity :: (Float, Float),  -- (x,y)
@@ -183,7 +184,7 @@ Type classes are a system in which multiple types can have a version of a functi
 An example of a type class is that of \verb|Show|, the \verb|Show| instance of a type being how a variable of that type is printed to the screen.
 So the \verb|Show| instance of the \verb|Object| type above would look as follows:
 
-\begin{lstlisting}[language=Haskell]
+\begin{lstlisting}[]
 instance Show Object where
   show p = "x: " ++ (show . x) p
            ++ "y: " ++ (show . y) p
@@ -198,7 +199,7 @@ This idea of type classes can be thought of as superclass methods in Object-Orie
 Guarded type definitions involve multiple definitions of the same class with different fields.
 The \verb|Object| definition above is for the player "object", so if we wanted some enemy \verb|Object| with a \verb|target| field - but otherwise the same fields - we can do so as follows:
 
-\begin{lstlisting}[language=Haskell]
+\begin{lstlisting}[]
 data Object = p {x :: Float,      -- Player
                  y :: Float,
                  velocity :: (Float, Float),  -- (x,y)
@@ -266,30 +267,26 @@ The proposed specifications and requirements for this program are as follows:
   \item The game shall have no defined end-point, only becoming progressively more difficult as it goes on by way of obstacles moving more quickly.
 \end{itemize}
 
-\section{Developing The Game}
-
-\subsection{Initial Steps}
-
-The first stage was to draw a window with an object in it.
-I created the file \verb|Main.hs|, which will be the "entry point" to the program once compiled and run.
+\section{The development process}
 
 \subsection{Drawing A Window}
 
 The first stage of development for the game is to draw a window.
 Per the specifications set out in my interim report, this window is to be 640 pixels wide by 480 pixels tall.
-I first created a file called \verb|Main.hs|; this can be thought of as analagous to the \verb|main| function often found in imperative languages as the "point of entry" for a given program.
-Here I first declared it as a module called \verb|Main|, and then declared the \verb|main| function itself.
+We first create a file called \verb|Main.hs|; this can be thought of as analagous to the \verb|main| function often found in imperative languages as the "point of entry" for a given program.
+Within this file we first declare it as a module called \verb|Main|, and then declare the \verb|main| function itself.
 Again similar to an imperative language, this is the function that will be called once the program is compiled and run.
-It is a function of type \verb|IO()|, meaning that ultimately all it does is perform some \verb|IO| action, some action with a side effect; it takes no arguments and returns no value that can be passed into another function.
-These functions often consist of multiple commands chained in a manner that could look imperative to some however, as we shall see, this is not necessarily the case.
+It is a function of type \verb|IO()|, meaning that ultimately all it does is perform some \verb|IO| action - some action with a side effect - it takes no arguments and returns no value that can be passed into another function.
+These functions often consist of multiple commands chained in a manner that could look imperative to some.
+However, as we shall see, this is not necessarily the case.
 To begin with we must initialise GLUT; this allows it to begin working and set up a session with the window system in use.
 The function \verb|getArgsAndInitialize| also returns a tuple, with a string representing argument 0 (the program name) as the first element, and a list of strings representing the remaining arguments as the second.
 To again liken it to an imperative language, this is the \verb|(int argc, char* argv)| seen so often in C and C-style \verb|main| functions.
 
 \par
 
-Now that the window session is initialised we must provide it with some parameters with which to draw a window.
-In my motivation for doing this I said that Haskell does not provide users with the ability to declare global variables.
+Now that the window session is initialised we need to provide it with some parameters with which to draw a window.
+In my motivation for doing this project I said that Haskell does not provide users with the ability to declare global variables.
 The GLUT library however does, via a module called \verb|StateVar|.
 The library has a number of such \verb|StateVar| variables, many of which will be explored as this program becomes more and more complex, but for the moment the one that is of use to us is the \verb|initialWindowSize| variable.
 This is of type \verb|StateVar Size|, where \verb|Size| is a type defined in the GLUT library as little more than a wrapper for two numbers - a more readily understood tuple.
@@ -297,11 +294,11 @@ We can use the \verb|$=| operator as a "setter" for \verb|StateVar| variables, a
 
 \par
 
-With the required settings now correct we can call \verb|createWindow|, passing the string "Frogger" as the window's title, and the program should compile and run.
+With the required settings now correct, we can call \verb|createWindow|, passing the string "Frogger" as the window's title, and the program should compile and run.
 It does not, however, because we are missing something.
 If we try to compile the code we get the following error:
 
-\begin{lstlisting}[language=sh, xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+\begin{lstlisting}[language=sh]
 GLUT Warning: The following is a new check for GLUT 3.0; update your code.
 GLUT Fatal Error: redisplay needed for window 1, but no display callback.
 \end{lstlisting}
@@ -309,27 +306,6 @@ GLUT Fatal Error: redisplay needed for window 1, but no display callback.
 We need to set a \verb|DisplayCallback|, essentially a function describing how to draw things within the created window at each refresh.
 In order to keep things clean this function will be declared in its own module, \verb|Display|.
 Currently we're only interested in drawing the window in the first place, so we can just tell it to first clear the \verb|ColorBuffer| - setting the whole content of the window to black - and then \verb|flush|, which empties all command buffers, executing the commands as quickly as possible so as to ensure the image is as expected by the user.
-
-\begin{lstlisting}
--- In Main.hs
-module Main where
-
-main :: IO ()
-main = do (_progName, _args) <- getArgsAndInitialize
-          initialWindowSize $= Size 640 480
-          createWindow "Frogger"
-          displayCallBack $= display
-          mainLoop
-
--- In Display.hs
-module Display where
-
-import Graphics.UI.GLUT
-
-display :: DisplayCallback
-display = do clear [ColorBuffer]
-             flush
-\end{lstlisting}
 
 \par
 
@@ -355,11 +331,11 @@ Let's first represent him as a green unit square, just to get to grips with the 
 First we need to set the current drawing colour to green, which is easily done using GLUT's \verb|color| function.
 
 \begin{lstlisting}
-color $ Color3 0.0 1.0 0.0
+color $ Color3 0.0 1.0 0.0 $
 \end{lstlisting}
 
 This function sets the current drawing colour to whatever is passed into it, which in our case is a \verb|Color3| type (similar to the \verb|Size| type described earlier), with the 3 values representing red, green, and blue values.
-Worth noting is that in Haskell anything that follows a lone \$ is thought of as being in parentheses, so the above is semantically identical to this:
+It is worth noting that in Haskell anything that follows a lone \$ is thought of as being in parentheses, so the above is semantically identical to this:
 
 \begin{lstlisting}
 color (Color3 0.0 1.0 0.0)
@@ -367,29 +343,27 @@ color (Color3 0.0 1.0 0.0)
 
 Now that we have the correct colour selected we can draw a quadrilateral, which we can do with the \verb|renderPrimitive Quads| function, as follows:
 
-\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+\begin{lstlisting}[]
 let p = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)] :: [(Float,Float,Float)]
-renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
+in renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
 \end{lstlisting}
 
-Let's unpack this a little bit.
-The \verb|let| command is more or less the same as a variable declaration on the "global" scope, like declaring a variable \verb|myVar :: Int| with a value of \verb|5|, only limited to the scope of the function in which it is declared.
+To expand on this code fragment somewhat, the \verb|let| command is more or less the same as a variable declaration on the "global" scope, like declaring a variable \verb|myVar :: Int| with a value of \verb|5|, only limited to the scope of the function in which it is declared.
 It is a local variable, essentially.
 \verb|p| is a list of tuples, each containing 3 \verb|Float| values.
 These values are the x, y, and z coordinates for each of the points of the quadrilateral we're drawing, respectively.
-The reason their type is declared explicitly here is that otherwise the compiler throws an error relating to ambiguous types, and because we don't want to clog up the rest of the program with values that no other function is ever going to need to know exists we append to the "local variable declaration" an explicit type declaration.
+The reason their type is declared explicitly here is that otherwise the compiler throws an error relating to ambiguous types.
+From a stylistic perspective we don't want to clog up the rest of the program with values that no other function is ever going to need to know exists we append to the "local variable declaration" an explicit type declaration.
 The coordinates described by \verb|p| denote a unit square extending from what would be considered the origin on a mathematical graph in positive x and y.
-The next line is the fun one, let's go through it piece by piece.
 \verb|renderPrimitive| is the foundation for this; it does the actual drawing of what is fed into it.
-\verb|Quads| is one of the options for "ways to draw", it means draw the following as a closed quadrilateral or series or separate closed quadrilaterals.
+\verb|Quads| is one of the options for "ways to draw": it means draw the following as a closed quadrilateral or series or separate closed quadrilaterals.
 Other options here include drawing something as a wire frame, triangles, a single polygon, or just points.
 The argument passed in here is a version of \verb|p| that has had a lambda function\footnote{lambda functions are anonymous functions written in the style of the lambda calculus. They are convenient when you need to do something slightly complicated but that will only ever get used in that one place.} mapped over it.
 This lambda function takes a tuple of three values and, using two of the GLUT library's provided data constructors, converts them into a type accepted by \verb|renderPrimitive|.
 
 \par
 
-So with all of these in place we should have a unit square drawn nicely on the screen, right?
-Let's see.
+In theory, with all this in place GLUT should draw a unit square on the screen.
 
 \begin{figure}[ht]
   \centering
@@ -398,30 +372,26 @@ Let's see.
   \label{fig:drawingacharacter}
 \end{figure}
 
-Oh dear.
-As we can see in Figure \ref{fig:drawingacharacter} this square is much too large, and begins centered on the screen, rather than how it should be - in my opinion - specifically starting at the bottom left of the window.
+As we can see in Figure \ref{fig:drawingacharacter} this square is much too large, and begins centered on the screen.
+Instead it should - in my opinion - start at the bottom left of the window.
 Conveniently GLUT provides functions for both scaling and translating, so this shouldn't be a problem!
 
 \par
 
-Something worth noting before we continue is that it is very important to scale and translate in the correct order; in general translation should be done first, because scaling actually affects translation.
-Mathematically speaking they are not commutative actions, this is because they are both examples of matrix multiplication.
+Something worth noting before I continue is that it is very important to scale and translate in the correct order; in general translation should be done first, because scaling actually affects translation.
+Mathematically speaking they are not commutative actions; this is because they are both examples of matrix multiplication.
 
 \par
 
 The translation and scaling should be done before any other part of the display, given that they directly impact all other parts of drawing.
-They are both one-line functions taking similar forms:
-
-\begin{lstlisting}
-translate $ Vector3 (-1.0) (-1.0) 0.0
-scale (1.0/32.0) (1.0/24.0) 0.0
-\end{lstlisting}
+They are both one-line functions taking similar forms.
 
 The main difference is that \verb|translate| takes a \verb|Vector3| data type as an argument, whereas \verb|scale| takes only 3 \verb|Float|s.
 \verb|translate| moves the drawing "origin" in a way described by the coordinates in its argument; before any scaling happens a GLUT window essentially consists of 4 "1x1" quadrants (these are stretched to fill the aspect ratio of the window they're in).
-The \verb|scale| function scales everything drawn after it is called by a factor of the first argument in x, second argument in y, and third argument in z.
-Here the scale factors are \verb|1/32| in x and \verb|1/24| in y, these are both based on the window size in their respective direction and, because the window is effectively 2 units both across and tall, it should be scaled to $2/$ that value, and the fractions have been reduced manually.
-Here one unit size is equivalent to 10 pixels, and so now we have a unit square as shown in Figure \ref{fig:drawingacharacterproperly}
+The \verb|scale| function takes 4 arguments: the scale factors in \verb|x|, \verb|y|, and \verb|z|, and the thing to be scaled.
+Here the scale factors are \verb|1/32| in x and \verb|1/24| in y.
+These are both based on the window size in their respective direction and - because the window is effectively 2 units both across and tall - it should be scaled to $2/$ that value, and the fractions have been reduced manually.
+Here one unit size is equivalent to 10 pixels, and so now we have a unit square as shown in Figure \ref{fig:drawingacharacterproperly}.
 
 \begin{figure}[ht]
   \centering
@@ -430,66 +400,27 @@ Here one unit size is equivalent to 10 pixels, and so now we have a unit square 
   \label{fig:drawingacharacterproperly}
 \end{figure}
 
-\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
-display :: DisplayCallback
-display
-  = do clear [ColorBuffer]
-       translate $ Vector3 (-1.0) (-1.0) 0.0
-       scale (1.0/32.0) (1.0/24.0) 0.0
-       color $ Color3 0.0 1.0 0.0
-       let p = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)]
-       renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
-       flush
-\end{lstlisting}
-
 Now we have a character drawn and scaled appropriately.
-Next let's give him some movement, by way of keyboard input.
+Next we need to give him some movement, by way of keyboard input.
 
 \subsection{Keyboard Input}
 
-Keyboard input is handled by way of another callback in the Haskell GLUT system, however implementing it will require some additional plumbing being added first.
+Keyboard input is handled by way of another callback in the Haskell GLUT system, however implementing it will require some additional foundation code being added first.
 Specifically it will require the introduction of one of the major building blocks of this program, the \verb|IORef|.
 This is Haskell's way of making use of the IO Monad to do things that it, as a language, would rather not, in this instance global variables and states.
-Firstly however we must declare what kind of variable it is we want to be global.
+Firstly, however, we must declare what kind of variable it is we want to be global.
 We do that in a new file, \verb|Type.hs|, which will be the point from which we declare all new types and functions relating to them.
 For now we will only have one type, the \verb|Mover|, based on the \verb|MovingEntity| superclass in the GitHub project reported on elsewhere.
-
-\begin{lstlisting}
-data Mover = Frogger {x :: Float,
-                      y :: Float
-                     }
-\end{lstlisting}
 
 This is a "record-style" data type with two fields: x and y, denoting the x and y coordinates of the \textit{Frogger}.
 With this in place we can add the \verb|Type| module to \verb|Main| and, after creating the window, create a new \verb|IORef Mover| with \verb|x| and \verb|y| both set to 0.0.
 
-\begin{lstlisting}
-f <- newIORef $ Frogger {x = 0.0, y = 0.0}
-\end{lstlisting}
-
 Finally before we set up the \verb|keyboardMouseCallback|, we modify the \verb|display| function to take as an argument an \verb|IORef Mover|, and draw the character based on it.
-This requires that we change 3 lines of the function, resulting in:
-
-\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
-display :: IORef Mover -> DisplayCallback
-display m =
-  do clear [ColorBuffer]
-     loadIdentity
-     fr <- get m
-     translate $ Vector3 (-1.0) (-1.0) 0.0
-     scale (1.0/320.0) (1.0/240.0) 0.0
-     color $ Color3 0.0 1.0 0.0
-     let p = [(x fr + 10,y fr,0),
-              (x fr + 10,y fr + 10,0),
-              (x fr,y fr + 10,0),
-              (x fr,y fr,0)]
-     renderPrimitive Quads $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) p
-     swapBuffers
-\end{lstlisting}
+This requires that we change 3 lines of the function, resulting in the following.
 
 \verb|loadIdentity| is a very important function in all of this - it resets the modification matrix, which is to say that it resets the scaling and translation applied in the last call to the function.
 If this function is forgotten the screen is simply left blank with no explanation as to why, and all of the objects are translated and scaled from the previous frame.
-As well, the change from \verb|flush| to \verb|swapBuffers| is similarly important; the way the GLUT system works is with a pair of buffers (this is automatic on a Mac, but on other platforms will require modifying \verb|Main.hs| to add the line \verb|initialDisplayMode $= [DoubleBuffered]|).
+Moreover, the change from \verb|flush| to \verb|swapBuffers| is similarly important; the way the GLUT system works is with a pair of buffers (this is automatic on a Mac, but on other platforms will require modifying \verb|Main.hs| to add the line \verb|initialDisplayMode $= [DoubleBuffered]|).
 This pair of buffers is swapped between constantly, with one being displayed and the other "behind" it.
 The "behind" buffer is the next one to be drawn, and so is the updated version.
 \verb|swapBuffer|, as the name suggests, swaps the buffers.
@@ -498,11 +429,11 @@ If \verb|flush| was not replaced there could therefore be no animation.
 \par
 
 With all of that done, we can now create the file \verb|Input.hs|, which will contain all of the functions required to deal with keyboard and mouse inputs.
-In our case we want the WASD keys to be responsible for movement, which we can by defining a function \verb|input| which takes as an argument an \verb|IORef Mover| and returns a \verb|KeyboadMouseCallback|, which we will set the global \verb|keyboardMouseCallback| to in \verb|Main.hs|.
+In our case we want the WASD keys to be responsible for movement, which we can achieve by defining a function \verb|input| which takes as an argument an \verb|IORef Mover| and returns a \verb|KeyboadMouseCallback|, which we will set the global \verb|keyboardMouseCallback| to in \verb|Main.hs|.
 A \verb|keyboardMouseCallback| takes 5 arguments: our Mover variable, the key being pressed, that key's state (up or down), any modifier keys (Shift, Ctrl, Alt), and a position.
 Our \verb|input| function can thus be described as follows.
 
-\begin{lstlisting}[xleftmargin=-0.1\textwidth, xrightmargin=-0.1\textwidth]
+\begin{lstlisting}[]
 input :: IORef Mover -> KeyboardMouseCallback
 input m c Down _ _
   | c == (Char 'w') || c == (Char 'W') = m $~! \f -> f {y = y f + step}
@@ -516,10 +447,10 @@ input _ _ _ _ _ = return ()
 
 With this we now have a \textit{Frogger} who will move continuously about as long as either W, A, S, or D are being pressed.
 
-There is an additional callback required for this all to work however: \verb|idleCallback|.
+There is an additional callback required for this all to work, however: \verb|idleCallback|.
 This callback deals with background events and is required for continuous animation.
 It can handle background tasks such as updating the positions of non-player characters (a function that will have great use later on in this process).
-For now however it will simply take the following form.
+For now however it will simply take the following form:
 
 \begin{lstlisting}
 idle :: IORef Mover -> IdleCallback
@@ -550,10 +481,11 @@ data Mover = Frogger {x :: Float
 \verb|v| is the velocity of the car, with the positive direction being left-to-right, or increasing in x.
 This will be used in conjunction with a modified version of the \verb|idle| function, discussed later.
 
+\par
 
 We now have to create a containing data type for both the Frogger and the obstacles, such that they can all be stored as one \verb|IORef|.
 This is to be the environment variable, and in due course will contain all relevant information about the game, including scores, number of lives, time remaining, and so on.
-For now though, it only need include two things: the Frogger and a list of other obstacles.
+For now, though, it only need include two things: the Frogger and a list of other obstacles.
 It can therefore be defined thus:
 
 \begin{lstlisting}
@@ -565,53 +497,16 @@ data Env = E {player :: Mover
 We can then extend \verb|Display| to include a helper function to draw any \verb|Mover| to the screen.
 This will be a two-step function, the first step being a call to \verb|preservingMatrix|, a function in GLUT that stores all of the current transformation information (in this instance the translation and scaling discussed when we first drew a character to the screen).
 We can then call a function of our own definition, using pattern matching to ensure the appropriate version of it is called based on what kind of \verb|Mover| we are dealing with - it would not work if we drew the player character identically to a car.
-Something to consider is that for all moving objects with a given velocity is that the positivity of that velocity denotes the direction of that object's movement.
+Something to consider is that for all moving objects with a given velocity, the positivity of that velocity denotes the direction of that object's movement.
 Therefore we can use that value in conjunction with the Haskell Prelude function \verb|signum| to appropriately "rotate" the object (in reality this is a scale being used to flip the image 180 degrees).
 
-\begin{lstlisting}
-drawMover :: Mover -> IO()
-drawMover m = preservingMatrix $ drawMover' m
-
-drawMover' :: Mover -> IO()
-drawMover' Frogger {x = fx, y = fy, s = fs}
-  = do color $ Color3 0.0 1.0 0.0
-       translate $ Vector3 fx fy 0.0
-       scale fs fs 1.0
-       unitSquare
-
-drawMover' Car {x = cx, y = cy, l = cl, w = cw, v = cv}
-  = do color $ Color3 1.0 0.0 0.0
-       translate $ Vector3 cx cy 0.0
-       scale (cl*signum cv) cw 1.0
-       unitSquare
-
-unitSquare :: IO()
-unitSquare
-  = let us = [(1,0,0),(1,1,0),(0,1,0),(0,0,0)]
-     in (renderPrimitive Quads . mapM_ makeVertex) us
-
-makeVertex :: (Float, Float, Float) -> IO ()
-makeVertex (x,y,z) -> vertex $ Vertex3 x y z
-\end{lstlisting}
-
-Note the additional helper function \verb|unitSquare| - this will be replaced in due course as the game's art becomes more complex however for now we can use it to draw a square of size 1x1 pixel, which we can translate and scale as we wish.
+Note the additional helper function \verb|unitSquare| - this will be replaced in due course as the game's art becomes more complex.
+However for now we can use it to draw a square of size 1x1 pixel, which we can translate and scale as we wish.
 The helper \verb|makeVertex| on the other hand will likely only become more useful as the complexity of drawing increases - it is a useful constructor, taking 3 points and converting them into the data type used by \verb|renderPrimitive|.
 
 \par
 
-Now that we have these we can extend \verb|display| to take as an argument an \verb|IORef Env| rather than an \verb|IORef Mover|, and replace much of the drawing code with the \verb|drawMover| function applied to parts of the environment variable.
-
-\begin{lstlisting}
-display :: IORef Env -> DisplayCallback
-display m = do clear [ColorBuffer]
-               loadIdentity
-               fr <- get m
-               translate $ Vector3 (-1.0) (-1.0) 0.0
-               scale (1.0/320.0) (1.0/240.0) 0.0
-               (drawMover . player) fr
-               (sequence . map drawMover . enemies) fr
-               swapBuffers
-\end{lstlisting}
+Now that we have these, we can extend \verb|display| to take as an argument an \verb|IORef Env| rather than an \verb|IORef Mover|, and replace much of the drawing code with the \verb|drawMover| function applied to parts of the environment variable.
 
 \begin{figure}[ht]
   \centering
@@ -662,7 +557,7 @@ input m c Down _ _
 input _ _ _ _ _ = return ()
 \end{lstlisting}
 
-The repetition of \verb|let p = player e in e {...| throughout the middle of those guarded functions is both ugly and not especially useful; if that function were to change each individual instance of it would have to, and the more of them that there are, the more likelihood one will be missed.
+The repetition of \verb|let p = player e in e {...| throughout the middle of those guarded functions is both ugly and not especially useful; if that function were to change each individual instance of the function would have to, and the more instances of the function that there are, the more likelihood one will be missed.
 This has major negative impact on the maintainability of this code, and will have to be addressed.
 For now however, we are focussed on getting the game to a point where it is playable.
 
@@ -671,32 +566,10 @@ For now however, we are focussed on getting the game to a point where it is play
 This will again consist mostly of modifications to the \verb|idle| function - at this stage in development any kind of detection is the desired goal; acting upon this detection is a task for later.
 The function \verb|hasCollided| will do this; it will take as an input two \verb|Mover|s (one being the \verb|Frogger|) and, taking into account the direction of the enemy mover, will return whether or not their two hitboxes intersect.
 If they do, the \textit{Frogger} will die.
-
-\begin{lstlisting}
-hasCollided :: Mover -> Mover -> Bool
-hasCollided f m
-  = case signum (l m) of 1  -> x m + l m > x f &&
-                               y m + w m > y f &&
-                               x f + s f > x m &&
-                               y f + s f > y m
-                         -1 -> x m > x f &&
-                               y m + w m > y f &&
-                               x f + s f > x m + l m &&
-                               y f + s f > y m
-                         otherwise -> False
-\end{lstlisting}
-
 This function simply determines whether or not any combination of the top/bottom and left/right boundaries of the \textit{Frogger} intersect those of the \verb|Mover| it is being checked against.
 We can then map this function over the \verb|enemies| field of the environment, checking the \textit{Frogger} against every enemy.
 We can then create a function \verb|hitCheck| to do exactly that, returning a list of \verb|Bool|s, which we can apply \verb|or| over to determine if any enemy has hit the \textit{Frogger}.
 If any have, at the moment it simply prints "Hit!", otherwise does nothing.
-
-\begin{lstlisting}
-hitCheck :: Env -> IO ()
-hitCheck env = if or $ map (hasCollided (player env)) (enemies env)
-                  then putStrLn "Hit!"
-               else return ()
-\end{lstlisting}
 
 As it stands I am pleased that simple rectangular hitboxes are an adequate option.
 
@@ -712,8 +585,8 @@ data GameState = PreStart | Playing | Paused | PlayerDead
                  deriving (Eq, Show)
 \end{lstlisting}
 
-Now we add a field to \verb|Env| which will contain a \verb|GameState| variable, and that's it.
-Not quite, of course, we still have to do the relevant plumbing to make sure things are actually playing and pausing as they should.
+Now we add a field to \verb|Env| which will contain a \verb|GameState| variable, and that should be sufficient for the game.
+This is not quite the case though, as of course we still have to insert code elsewhere to make sure things are actually playing and pausing as they should.
 
 \par
 
@@ -722,51 +595,7 @@ Here we can add a check, an if statement querying the current state of the game 
 If the game is currently in the \verb|Playing| state we can continue to update everything as normal.
 Otherwise pause all updating, using \verb|return()| as the empty case.
 
-\begin{lstlisting}
-idle e = do e' <- get e
-            if gameState e' == Playing
-            then do e $~! \env -> let es = enemies env
-                                  in env {enemies = map updateMover es}
-            else return ()
-            postRedisplay Nothing
-\end{lstlisting}
-
 To move between the states we must update \verb|Input.hs|, adding cases for the various new \verb|GameState|s.
-
-\begin{lstlisting}
-input :: IORef Env -> KeyboardMouseCallback
-input m k ks mo p
-  = do m' <- get m
-       case (gameState m') of Playing   -> inputPlaying m k ks mo p
-                              Paused    -> inputPaused m k ks mo p
-                              otherwise -> return ()
-
-inputPaused :: IORef Env -> KeyboardMouseCallback
-inputPaused m c Down _ _
-  | c == (Char ' ') = m $~! \e -> e {gameState = Playing}
-  | otherwise       = return ()
-inputPaused _ _ _ _ _ = return ()
-
-inputPlaying :: IORef Env -> KeyboardMouseCallback
-inputPlaying m c Down _ _
-  | c == (Char 'w') || c == (Char 'W')
-      = m $~! \e -> let p = player e
-                     in e {player = p {y = y p + step}}
-  | c == (Char 'a') || c == (Char 'A')
-      = m $~! \e -> let p = player e
-                     in e {player = p {x = x p - step}}
-  | c == (Char 's') || c == (Char 'S')
-      = m $~! \e -> let p = player e
-                     in e {player = p {y = y p - step}}
-  | c == (Char 'd') || c == (Char 'D')
-      = m $~! \e -> let p = player e
-                     in e {player = p {x = x p + step}}
-  | c == (Char ' ')
-      = m $~! \e -> e {gameState = Paused}
-  | otherwise                          = return ()
-  where step = 32
-inputPlaying _ _ _ _ _ = return ()
-\end{lstlisting}
 
 \subsection{Collision Detection 2 - Detection on the River}
 
@@ -778,16 +607,6 @@ They are collections of types which support certain operations, and allow for ad
 This typeclass will have two operations, \verb|draw :: a -> IO()|, with which we can replace the \verb|drawMover| function, and \verb|update :: a -> a|, with which we can replace the \verb|updateMover| function.
 It will also include operations to draw the object to the screen whilst preserving the current transformation matrix, and to do so to a list of objects.
 Both of the latter operations will have default definitions.
-
-\begin{lstlisting}
-class Drawable a where
-  update :: a -> a
-  draw :: a -> IO()
-  preservingDraw :: a -> IO()
-  preservingDraw = preservingMatrix . draw
-  preservingDraws :: [a] -> IO [()]
-  preservingDraws = sequence . map preservingDraw
-\end{lstlisting}
 
 This will allow us to break the \verb|Mover| type down, improving readability and giving us the ability to create functions for more specific instances of a type.
 In particular, we can split it into 4 new types:
@@ -811,54 +630,15 @@ With this we can split the \verb|hitCheck| function into three parts:
   \item \verb|roadCollision :: Frogger -> RoadMover -> GameState|\\
     If the Frogger has collided with the road object, it returns \verb|PlayerDead|, otherwise it returns \verb|Playing|.
     We can use this to build a function \verb|hitCheckRoad|,
-    \begin{lstlisting}
-      hitCheckRoad :: Frogger -> [RoadMover] -> GameState
-      hitCheckRoad f rs
-        = let cs = map (roadCollision f) rs
-          in hcro' collisions
-          where hcro' [] = Playing
-                hcro' (s:ss) = if s == PlayerDead then s
-                                                  else hcro' ss
-    \end{lstlisting}
   \item \verb|riverCollision :: Frogger -> RiverMover -> GameState|\\
     Essentially the opposite: if there is a collision it will return \verb|Playing|, else \verb|Playing|.
-    \begin{lstlisting}
-      hitCheckRiver :: Frogger -> [RoadMover] -> GameState
-      hitCheckRiver f rs
-        = let cs = map (riverCollision f) rs
-           in hcri' collisions
-          where hcri' [] = PlayerDead
-                hcri' (s:ss) = if s /= PlayerDead then s
-                                                  else hcri' ss
-    \end{lstlisting}
   \item \verb|goalCollision :: Frogger -> Goal -> Bool|\\
     A simple boolean check to see if a goal has been collided with.
     This function can then be used in a larger function \verb|hitCheckGoal|, which at this point simply \verb|or|s the list of collided goals, and returns \verb|LevelComplete| if that is \verb|True|.
-    \begin{lstlisting}
-      hitCheckGoals f gs
-        = let cs = map (goalCollision f) rs
-           in if or cs then LevelComplete
-                       else Playing
-    \end{lstlisting}
+
 \end{itemize}
 
 \verb|hitCheck| now becomes a "routing" function, calling \verb|roadCollision|, \verb|riverCollision|, or \verb|goalCollsion| depending upon where on the map the player is, while checking that the player is within the screen bounds (if they go beyond the screen they die).
-
-\begin{lstlisting}
-hitCheck :: Env -> GameState
-hitCheck e
-  = let frogger = player e
-        fx = f_X frogger
-        fy = f_Y frogger
-     in if inRange (0,initSizeX) fx && inRange (0,initSizeY) fy
-        then if inRange ((head lanes),(lanes !! 4)) fy
-                then hitCheckRoad frogger (roadEnemies e)
-             else if inRange ((lanes !! 6),(lanes !! 11)) fy
-                then hitCheckRiver frogger (riverEnemies e)
-             else hitCheckGoals frogger (goals e)
-        else PlayerDead
-        where inRange (l,u) n = u >= n && n >= l
-\end{lstlisting}
 
 \verb|lanes| is a data object exported by \verb|Type| containing the y-values of all lanes - lanes 1-5 (index 0-4) are the road lanes, and lanes 7-10 (index 6-11) are the river lanes.
 
@@ -866,14 +646,10 @@ We now have support for determining death both on the road and on the river.
 However if the player is sat on a log they currently do not move.
 Fixing this will be the next step.
 
-\subsection{Rolling on the River}
+\subsection{Tracking River Objects}
 
 The first step to this will be updating the \verb|Frogger| data type with a velocity element, \verb|f_V|.
 We then change the \verb|update| function in its \verb|Drawable| instance from the identity function to something resembling the definition for the other moving objects, specifically
-
-\begin{lstlisting}
-update f@({f_X = fx, f_V = fv}) = f {f_X = fx + fv}
-\end{lstlisting}
 
 With that done, and updating the Frogger's position added to the idle callback, we can implement the "follow" functionality.
 
@@ -881,11 +657,7 @@ With that done, and updating the Frogger's position added to the idle callback, 
 
 To do this we make use of Haskell's \verb|Either| type, which allows a function to return results of one of two types, given as the \verb|Left| type and \verb|Right| type.
 
-Therefore \verb|hitCheck|'s type signature will now be
-
-\begin{lstlisting}
-hitCheck :: Env -> Either GameState Float
-\end{lstlisting}
+Therefore \verb|hitCheck|'s type signature will now be \verb|hitCheck :: Env -> Either GameState Float|.
 
 Thanks to the breaking down of the \verb|hitCheck| function into its road, river, and goal elements we need only concern ourselves with changing the \verb|hitCheckRiver| function, simply prepending \verb|Left| to the other returned \verb|GameState|s.
 
@@ -904,15 +676,14 @@ Importantly if a \verb|Float| is returned it can be assumed that the player is n
 \par
 
 All updating of the main \verb|Env| variable has now been moved to a function \verb|updateEnv|, which is only called when the \verb|gameState| is \verb|Playing|.
-
-Within this update is applied to all applicable fields, and the \verb|Either| returned by \verb|hitCheck| is now dealt with as follows
+Within this, \verb|update| is applied to all applicable fields, and the \verb|Either| returned by \verb|hitCheck| is now dealt with as follows:
 
 \begin{lstlisting}
 (f_V', gameState') = case hitCheck e of Left gs -> (0.0, gs)
                                         Right v -> (v, Playing)
 \end{lstlisting}
 
-\subsection{Cause of death}
+\subsection{Cause Of Death}
 
 It would be nice if the player knew what killed them - \textit{Frogger} after all has the most ways to die of any game - so that will be the next thing implemented.
 
@@ -934,43 +705,31 @@ First we update the \verb|display| function to show different things depending o
 
 This can be accomplished by adding a \verb|case gameState e of ...| statement to \verb|display|, with the different options being applied as necessary.
 
-\begin{lstlisting}
-case (gameState fr) of PreStart      -> -- Draw a welcome message
-                       PlayerDead _  -> -- Describe how the player died and their score
-                       LevelComplete -> -- Show the players score
-                       otherwise     -> -- Draw the game as before
-\end{lstlisting}
-
 \subsection{Numbered Levels}
 
 The next step is to add numbered levels, such that the user can keep track of their progress without needing an on-screen score.
-This is a simple addition, adding to the \verb|Env| type a field \verb|level :: Int| and initialising that to 1 in \verb|startEnv|
+This is a simple addition, adding to the \verb|Env| type a field \verb|level :: Int| and initialising that to 1 in \verb|startEnv|.
 
 \subsection{Entities}
 
 The code was at this point becoming quite complex, with each different type (\verb|Frogger|, \verb|RoadMover|, \verb|RiverMover|, \verb|Goal|) having a different definition and descriptor for their positions in \verb|x| and \verb|y|, their length and width, and their velocities in both directions.
 This makes the definitions for the typeclass \verb|Drawable| somewhat more complex than is necessary, with explicit definitions having to be made for every function in every new instance of the typeclass.
 Haskell supports default definitions in its typeclasses, and to take advantage of this will make the code much easier to read and understand.
-Consequently I implemented the \verb|Entity| type, another record-style type defined as follows:
+Consequently we can implement a new custom type, \verb|Entity|, another record-style type defined as follows:
 
 \begin{lstlisting}
-data Entity = Entity { -- Position in x
-                       x :: Float
-                       -- Position in y
+data Entity = Entity { x :: Float
                      , y :: Float
-                       -- Velocity in x
                      , dX :: Float
-                       -- Velocity in y
                      , dY :: Float
-                       -- Length
                      , l  :: Float
-                       -- Width
                      , w  :: Float
-                     }
+              }
+
 \end{lstlisting}
 
-I then assigned an \verb|Entity| to each instance of the \verb|Drawable| class, and removed all existing instances of values representing x and y positions and velocities, length, and width.
-From this I was able to extend the \verb|Drawable| typeclass, implementing a user-defined function to get the \verb|Entity| out of the \verb|Drawable|, and several functions with default definitions to, from that, get the position, speed, and length values out of that \verb|Entity|.
+We can then assign an \verb|Entity| to each instance of the \verb|Drawable| class, and removed all existing instances of values representing x and y positions and velocities, length, and width.
+From this we are able to extend the \verb|Drawable| typeclass, implementing a user-defined function to get the \verb|Entity| out of the \verb|Drawable|, and several functions with default definitions to, from that, get the position, speed, and length values out of that \verb|Entity|.
 
 \par
 
@@ -979,44 +738,30 @@ With the implementation of some user-defined functions to set various values in 
 
 \begin{lstlisting}
 class Drawable a where
-  -- A function to update the object over time
   update :: a -> a
   update = updateX . updateY
-  -- A function to draw the object to the screen
   draw :: a -> IO()
-  -- A function to draw the object, preserving
-  -- the current transformation matrix
   preservingDraw :: a -> IO()
   preservingDraw = preservingMatrix . draw
-  -- Preserved drawing multiple items in a list
   preservingDraws :: [a] -> IO[()]
   preservingDraws = sequence . map preservingDraw
-  -- Get the Entity out of the object
   getEntity :: a -> Entity
-  -- Get the x value out of that entity
   getX :: a -> Float
   getX = x . getEntity
-  -- Get the y value out of that entity
   getY :: a -> Float
   getY = y . getEntity
-  -- Get the dX value out of that entity
   getdX :: a -> Float
   getdX = dX . getEntity
-  -- Get the dY value out of that entity
   getdY :: a -> Float
   getdY = dY . getEntity
-  -- Get the l value out of that entity
   getL :: a -> Float
   getL = l . getEntity
-  -- Get the w value out of that entity
   getW :: a -> Float
   getW = w . getEntity
-  -- Update values in entities
   updateX :: a -> a
   updateX d = setX (getX d + getdX d) d
   updateY :: a -> a
   updateY d = setY (getY d + getdY d) d
-  -- Set values in entities
   setX :: Float -> a -> a
   setY :: Float -> a -> a
   setdX :: Float -> a -> a
@@ -1035,21 +780,253 @@ As the user progresses through the levels of Frogger, not only do the enemies ge
   \item Level 5+: 5 goals
 \end{itemize}
 
-To do this I modified \verb|startEnv| to take as an argument the level to generate, and modified the goal creator with a \verb|case... of| statement, which based on the level given generates the relevant number of goals by way of a list comprehension, thus
-
-\begin{lstlisting}
-goals
-  = case l of 1 -> [newGoal ((initSizeX/2) - 12) 0]
-              2 -> [newGoal ((initSizeX/2) - x) 0 | x <- [-22, 44]]
-              3 -> [newGoal ((initSizeX/2) - x) 0 | x <- [-84, 12, 108]]
-              4 -> [newGoal ((initSizeX/2) - x) 0 | x <- [-96, -24, 48, 120]]
-              _ -> [newGoal ((initSizeX/2) - x) 0 | x <- [-180, -84, 12, 108, 204]]
-\end{lstlisting}
+To do this we modify \verb|startEnv| to take as an argument the level to generate, and modified the goal creator with a \verb|case... of| statement, which - based on the level given - generates the relevant number of goals by way of a list comprehension.
 
 \subsection{Froggers Occupying Goals}
 
-With multiple goals now implemented, another way to die in Frogger is to try and jump on a Goal that is already occupied (i.e. one which you've already got a Frogger to).
+With multiple goals now implemented, another way to die in Frogger is to try and jump on a Goal that is already occupied - i.e. one which you've already got a Frogger to.
+To implement this we add an additional case to the river part of the collision detection function to look up, using Haskell's \verb|Maybe| data type, whether or not the Frogger has collided with a \verb|RiverMover| or a \verb|Goal|.
+If they have collided with a \verb|Goal| it now goes to a second stage of processing: determining if that \verb|Goal| is occupied.
+If it is, the Frogger dies, otherwise the \verb|Goal| is marked occupied and the Frogger's position reset.
+If all \verb|Goal|s in the level are marked as occupied, the level is deemed completed.
 
+\subsection{Crocodile Death}
+
+Continuing in the vein of "adding ways to die", it should be that if the Frogger jumps into a \verb|Croc|'s mouth they die.
+The \verb|Croc|'s mouth can be considered to be the entire front third of its body.
+This again requires that we modify the collision detection function, specifically adding a case for if the \verb|RiverMover| is a \verb|Croc|.
+In this case, the \verb|Croc| is now logically split into two smaller \verb|Croc|s, one representing the body and the other the head.
+If the player collides with only the head they die, otherwise they ride the \verb|Croc| as if it is a \verb|Log|.
+
+\subsection{Jumping}
+
+Currently the Frogger does not jump.
+Instead, when the user presses a directional button the Frogger teleports to the new location rather than jumping towards it.
+This makes the game considerably easier than it should be; the user can always outrun road enemies and catch up to useful \verb|RiverMover|s.
+Hence the next step is for us to implement non-instantaneous jumping.
+The first step was to add all of the requisite record fields to the \verb|Frogger|, specifically a two \verb|Boolean|s denoting whether or not the \verb|Frogger| is jumping in x or y, and four \verb|Float|s denoting the \verb|Frogger|s target position and previous speed in x and y.
+Next I updated the \verb|Frogger|s instance of \verb|update| with a conditional that checks if the \verb|Frogger| is jumping in a specific direction.
+If it is, \verb|update| then checks if it has reached its target coordinate in that direction, and if that is true it stops the jump and resets the \verb|Frogger|'s speed in x and y.
+This does lead to a minor problem whereby if the \verb|Frogger|s speed during the jump is not a divisor of the distance it is jumping (e.g. the speed is 3 and the distance is 10) it will never stop.
+This is easy enough to deal with however, by simply ensuring that the speed is an even divisor of the distance.
+We can do this using the \verb|lanes| variable defined earlier, and basing the \verb|Frogger|'s speed on some divisor of the difference between the first and second element of that list.
+
+\begin{lstlisting}
+laneDiff :: Float
+laneDiff = lanes !! 1 - lanes !! 0
+
+baseSpeed :: Float
+baseSpeed = laneDiff / 5
+\end{lstlisting}
+
+Here the speed is 1/5 of the distance between lanes - this means that the \verb|Frogger| will take 5 frames to move 1 lane up or across.
+
+\par
+
+Additionally we should modify the collision detection function such that the \verb|Frogger| will never die while it is mid-jump - only when it lands.
+
+\par
+
+The final step of this addition is to modify the input function such that when a movement key is pressed it sets the \verb|Frogger| off jumping.
+Importantly, if the \verb|Frogger| is already jumping any input is ignored, otherwise the user could just spam movement keys with potentially game-ruining consequences.
+
+\subsection{Migrating from GLUT to gloss}
+
+Haskell is a pure language by default - this means that every input will give the same output every time it is applied to a particular function.
+It does however have some impure elements, one being the \verb|IORef|.
+\verb|IORef|s are references, similar to pointers in imperative languages, which can be used to store some piece of information that is used in multiple parts of a program\cite{iorefs}.
+This is a convenient workaround for the fact that Haskell does not allow for global variables, but it has its drawbacks.
+In particular \verb|IORef|s are impure, existing within the impure \verb|IO| monad.
+This means that modifying and using them can have side effects that may impact future computations, leading to errors and bugs within the program.
+
+\par
+
+The next step of this project is therefore to remove \verb|IORef|s, which required changing the entire drawing system.
+Gloss is a Haskell library based on the GLUT backend, but with options for pure gameplay.
+This means that the game will function more predictably, and be better suited to take advantage of the benefits of Haskell as a language.
+
+\par
+
+The migration process is fairly straightforward: the update functions translated almost directly, and the display functions were only slightly more difficult to translate to the new library.
+One major difference is that the coordinate system for drawing shapes is center-based rather than bottom-left based, so for functions like collision detection the objects now need to be logically "translated" up and right by half of their height and width respectively.
+
+\subsection{Randomness}
+
+Randomly generating the speeds of the \verb|Mover|s is the next objective; the game would become too easy for a user if it was exactly the same every time.
+Random number generation in Haskell relies on the IO monad to get the initial number generator, and consequently the first step of implementing this was to modify \verb|main| to create a random number generator.
+This is a somewhat involved process, because the specific seeding method we want to use was to get the current time and generate the seed from that.
+In Haskell, this requires that you get the current time of day, which is of a type that is more or less unusable in any computation, convert that to picoseconds since midnight, and divide that value by $10^{12}$.
+Now that we have the seed generated we can pass it as an argument to \verb|mkStdGen|, and the random number generator is implemented.
+
+\par
+
+We can then extend the \verb|Env| type to have a space for a \verb|StdGen| (the type of a number generator), and the \verb|startEnv| function.
+\verb|startEnv| is modified to generate a list of initial velocities for the \verb|Mover|s to have, and those velocities are now applied to said \verb|Mover|s on generation.
+
+\par
+
+Finally we modify \verb|inputDead| to, on player death, generate a new \verb|Env| with a different velocity list such that a user would not get stuck on one particularly difficult seed for an extended period of time.
+
+\subsection{Sprites}
+
+The game is now nearly finished, the only remaining thing to do was to add sprites for a greater level of graphical fidelity.
+We should use \verb|vitalius|' spritesheet for this, in the main to ensure that in the user testing phase the graphics are as similar as possible between the two versions of the game and consequently people's experience of the games is as similar as possible.
+
+\par
+
+In order to do this we first have to define two new types: \verb|Sprite| and \verb|SpriteID|.
+A \verb|Sprite| is a tuple containing a \verb|String| and a \verb|Picture| (gloss' representation of an image), where the \verb|String| denotes the situation in which the \verb|Sprite| will be used.
+For example the \verb|Frogger| will have two \verb|Sprite|s, one for when it is stationary and one for when it is moving, and they would be labelled as such.
+A \verb|SpriteID| is a tuple containing a \verb|String| and a \verb|Sprite|, where the \verb|String| denotes what type of object the \verb|Sprite| should be mapped to.
+
+\par
+
+Then we update the \verb|Entity| type to add a field \verb|ss :: [Sprite]|, and \verb|Drawable| to add a function to return the list of \verb|Sprite|s belonging to a \verb|Drawable|.
+Next we add a \verb|SpriteID| list and two \verb|Picture| fields to \verb|Env|, here denoting the full list of ID'd sprites, the background of the game, and the complete spritemap.
+The full list of ID'd sprites will be used on each new level generation to ensure that everything has a sprite assigned to it.
+
+\par
+
+We then modify the \verb|draw| functions of all of the \verb|Drawables| with a conditional: if there exists a sprite for this object and the current "situation" of the object (i.e. Turtles are underwater, Frogger is jumping) then use that sprite, else fall back on the primitive drawing being used previously.
+We add a function to assign a list of \verb|Sprite|s to an object next, which I did by making \verb|Drawable| a subclass of \verb|Show|, and using the record constructor (e.g. \verb|Frogger {...|) as the identifier.
+All \verb|SpriteID|s have the constructor as the ID \verb|String|, so a function to assign \verb|Sprite|s to objects now only needs to pair those up.
+
+\par
+
+Finally we add to \verb|main| a section to get the initial sprite list, chop it up into the relevant sprites for all objects, and assign them all to \verb|SpriteID|s.
+
+\subsection{Haddock}
+
+The program is now finished; the game is playable and complex enough so as not to be boring.
+The final thing to do within the back end of the game is add proper commentary and documentation, such that another user can take the source code and extend or modify it.
+Normal commentary (denoted in Haskell by prepending it with \verb|--|) is fine for most purposes, but something more intelligent is - in my opinion - necessary for a project of this scale.
+For more intelligent commentary we can use Haddock.
+
+\par
+
+Haddock is a system used to document the core libraries of GHC\cite{haddocksite}, and can automatically generate a rich HTML website with details about all exposed (user-facing) functions, types, and classes.
+To implement Haddock, we can simply add a small amount of syntax to the beginning of comments, specifically a pipe ($\vert$) character, which Haddock will process as the leading comment for the function/class/type definition.
+
+\par
+
+We add comments as necessary to every defined function explaining their purpose and expanding on what each argument is used for.
+An example of the Haddock-generated documentation can be seen in Figure \ref{fig:haddock}.
+
+\begin{figure}[ht]
+  \centering
+  \caption{A screenshot showing the Haddock-generated documentation for the file Update.hs}
+  \includegraphics[width=\textwidth]{Haddock.png}
+  \label{fig:haddock}
+\end{figure}
+
+
+\section{The Finished Program}
+
+The final program quite closely resembles an object-oriented design.
+The super (type) class \verb|Drawable| has 4 subclasses: \verb|Frogger|, \verb|RoadMover|, \verb|RiverMover|, and \verb|Goal|.
+There are centralised \verb|update| and \verb|draw| functions, with each of the above classes having their own definitions and implementations for them.
+
+\par
+
+Despite architecturally resembling an OO program, this program does make heavy use of functional and Haskell-specific features.
+In particular, the use of \verb|lookup| and the \verb|Maybe| type in the collision detection allows for a particularly efficient handling of possible collisions.
+
+\par
+
+The game works as follows: the user is first presented with a splash screen welcoming them to the game and detailing the basic control system, then they are told to press any key to proceed.
+Once they do they are into the main body of the game: pressing the arrow keys will move the Frogger around and they must, as per the original, avoid road obstacles and use the floating objects in the river to fill all lilypads at the top of the screen with Froggers.
+Once all pads are filled, the level is complete.
+On level completion, all objects become faster as a way of increasing difficulty.
+There is no "game complete" state - it is an arcade game and consequently will go for as long as the user can stay alive.
+
+\begin{figure}[ht]
+  \centering
+  \caption{Screenshots showing the stages of the game. Clockwise from the top-left: the splash screen, main gameplay, the screen shown when the user dies, and the screen shown when the user completes a level.}
+  \includegraphics[width=\textwidth]{Screenshots.png}
+  \label{fig:screenshots}
+\end{figure}
+
+\section{User Testing}
+
+The testing process for this project was done in the form of a user study, conducted as follows (initially):
+\begin{enumerate}
+  \item User plays one version of the game for 10 minutes.
+  \item User writes down notes about their experience for up to 5 minutes.
+  \item User plays the other version of the game for 10 minutes.
+  \item User fills out a short questionnaire rating aspects of the two games for similarity (0 indicating that the aspect was completely different and 10 indicating that it was identical).
+\end{enumerate}
+
+I planned to get around 15 users to complete this study, with the first three being used to determine what worked well with the study and what needed changing.
+After the first 3 rounds of testing I determined that 10 minutes was too long for a user - they would become bored and fail to pay attention to the game.
+Consequently for the remaining rounds of testing I cut the play time down to 5 minutes.
+Additionally a piece of feedback I received from all three initial participants was that my game was too hard; in particular the Frogger moved too slowly.
+For the remaining rounds I increased its speed by a factor of ~2, enough that it can now outrun all but the fastest \verb|Car|s.
+
+\par
+
+The remaining rounds of testing were all done under these new parameters.
+I processed the results using R and the \verb|ggplot2| library to visualise them.
+The box plots denoting the spread of ratings for the initial 5 aspects of gameplay can be seen in Figure \ref{fig:boxes}.
+In it we can see that there was a very wide spread of ratings for the aesthetics of the game, a surprise given that they used the same spritesheet.
+The controls for both games are identical, so the generally high score given there makes a good deal of sense.
+Difficulty resulted in a wide spread of ratings initially, however filtering the results to only take into account the Studies post-tuning shows a much narrower spread of ratings.
+Despite the tuning however, the difficulty was the most different aspect between the two games.
+Stress level is, in my view, an interesting measure; one would assume that it would be scaled roughly the same as the difficulty, however this is shown to not be true.
+Additionally, there is little difference in the spreads for all results and only post-tune results.
+Finally understandability is generally very high - this is not a surprise as the game is relatively simple.
+
+\begin{figure}[ht]
+  \centering
+  \caption{Box plots showing the ratings for the 5 aspects of gameplay recorded in the User Study}
+  \includegraphics[width=0.6\textwidth]{../../Testing/Processing/boxes.png}
+  \includegraphics[width=0.6\textwidth]{../../Testing/Processing/boxesPost.png}
+  \label{fig:boxes}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \caption{Scatter graph showing the means of the 5 aspects compared to the general gameplay rating}
+  \includegraphics[width=0.6\textwidth]{../../Testing/Processing/meanVGeneral.png}
+  \label{fig:meanVGeneral}
+\end{figure}
+
+In Figure \ref{fig:meanVGeneral} I have plotted the mean of the 5 aspects represented in the box plots in Figure \ref{fig:boxes} against the score that user assigned to the "Overall Gameplay" category.
+
+\subsection{Critical Evaluation}
+
+Looking at this user study critically, there are some issues present.
+The main one is that there is very little in the way of detail within the answers - the two games are rated as very different in terms of difficulty but from the results there is no way of determining which game was the more difficult.
+Similarly with aesthetics - what aesthetic differences are there?
+One user rated the aesthetic similarity a 1, but with no way to express themselves beyond numbers we cannot know what differences they noticed.
+Were I to run this study again I would have a notes section where the user could write a short paragraph explaining their answer.
+
+\section{Summary and Reflections}
+
+Broadly speaking I believe this project has been a success.
+I believe that the game of Frogger I have created is a good example of the game, and the results of the User Study suggest that it is close in feel to the original.
+I do believe that it could be better - implementing lives, a countdown timer, and sounds would take it from being close to being near-identical.
+
+\par
+
+In my opinion also I have used some features of Haskell very effectively in creating this game - specifically the use of \verb|Maybe|s for collisions, many list comprehensions used for generating objects, and at one point I was using the \verb|Either| type for giving the Frogger a speed in x or y (however this has since been deprecated).
+The \verb|cabal| system I feel helped greatly with development, mainly because it allowed for continuous integration testing via Travis CI.
+
+\par
+
+Moving to the gloss drawing system was not something I originally planned on doing, but the process of moving to it was considerably easier than I anticipated.
+In particular the update function translated directly, and the display function required markedly less modification than I expected it would.
+I believe this migration was overall useful, in particular because of the control over the frame rate it affords, as well as abstracting away the impure parts of the code from the user.
+
+\par
+
+With regard to my management of the project, I feel that it has been mostly good.
+The Gantt chart I showed in my proposal has by and large been followed well, with the exception of the "FP-specfic" sections - it was easier to simply add these in during the development process than to tack them on at the end.
+The user study was carried out later than I would have liked, which meant that some of the more in-depth analysis I had wanted to do was unfeasible, but with regard to almost every other aspect of the initial plan, it has been followed quite tightly.
+
+\par
+
+In summary this project has been a success, and the experience has been a positive one.
+I have learned and made use of a number of useful Haskell features (in particular typeclasses, \verb|Maybe| functions, and the cabal system), and to an extent recreated the object-oriented paradigm within a functional language.
 
 \begin{thebibliography}{0}
   \bibitem{cufp}
@@ -1103,6 +1080,14 @@ With multiple goals now implemented, another way to die in Frogger is to try and
     Undergraduate Dissertation\\
     University of Nottingham\\
     Nottingham, England
+  \bibitem{iorefs}
+    The Hackage page for \verb|IORef|s\\
+    \verb|hackage.haskell.org/package/base-4.12.0.0/docs/Data-IORef.html|\\
+    Accessed 2019-04-08
+  \bibitem{haddocksite}
+    The Haddock homepage\\
+    \verb|www.haskell.org/haddock/|\\
+    Accessed 2019-04-21
 \end{thebibliography}
 
 \end{document}
