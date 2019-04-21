@@ -1,5 +1,5 @@
 name:               Frogger
-version:            0.95.0.0
+version:            1.0.0
 synopsis:           A recreation of the video game Frogger using Haskell
 license:            GPL-3
 license-file:       LICENSE
