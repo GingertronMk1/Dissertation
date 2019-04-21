@@ -715,7 +715,7 @@ This is a simple addition, adding to the \verb|Env| type a field \verb|level :: 
 The code was at this point becoming quite complex, with each different type (\verb|Frogger|, \verb|RoadMover|, \verb|RiverMover|, \verb|Goal|) having a different definition and descriptor for their positions in \verb|x| and \verb|y|, their length and width, and their velocities in both directions.
 This makes the definitions for the typeclass \verb|Drawable| somewhat more complex than is necessary, with explicit definitions having to be made for every function in every new instance of the typeclass.
 Haskell supports default definitions in its typeclasses, and to take advantage of this will make the code much easier to read and understand.
-Consequently I implemented the \verb|Entity| type, another record-style type defined as follows:
+Consequently we can implement a new custom type, \verb|Entity|, another record-style type defined as follows:
 
 \begin{lstlisting}
 data Entity = Entity { x :: Float
@@ -728,8 +728,8 @@ data Entity = Entity { x :: Float
 
 \end{lstlisting}
 
-I then assigned an \verb|Entity| to each instance of the \verb|Drawable| class, and removed all existing instances of values representing x and y positions and velocities, length, and width.
-From this I was able to extend the \verb|Drawable| typeclass, implementing a user-defined function to get the \verb|Entity| out of the \verb|Drawable|, and several functions with default definitions to, from that, get the position, speed, and length values out of that \verb|Entity|.
+We can then assign an \verb|Entity| to each instance of the \verb|Drawable| class, and removed all existing instances of values representing x and y positions and velocities, length, and width.
+From this we are able to extend the \verb|Drawable| typeclass, implementing a user-defined function to get the \verb|Entity| out of the \verb|Drawable|, and several functions with default definitions to, from that, get the position, speed, and length values out of that \verb|Entity|.
 
 \par
 
@@ -780,12 +780,12 @@ As the user progresses through the levels of Frogger, not only do the enemies ge
   \item Level 5+: 5 goals
 \end{itemize}
 
-To do this I modified \verb|startEnv| to take as an argument the level to generate, and modified the goal creator with a \verb|case... of| statement, which - based on the level given - generates the relevant number of goals by way of a list comprehension.
+To do this we modify \verb|startEnv| to take as an argument the level to generate, and modified the goal creator with a \verb|case... of| statement, which - based on the level given - generates the relevant number of goals by way of a list comprehension.
 
 \subsection{Froggers Occupying Goals}
 
 With multiple goals now implemented, another way to die in Frogger is to try and jump on a Goal that is already occupied - i.e. one which you've already got a Frogger to.
-To implement this I added an additional case to the river part of the collision detection function to look up, using Haskell's \verb|Maybe| data type, whether or not the Frogger has collided with a \verb|RiverMover| or a \verb|Goal|.
+To implement this we add an additional case to the river part of the collision detection function to look up, using Haskell's \verb|Maybe| data type, whether or not the Frogger has collided with a \verb|RiverMover| or a \verb|Goal|.
 If they have collided with a \verb|Goal| it now goes to a second stage of processing: determining if that \verb|Goal| is occupied.
 If it is, the Frogger dies, otherwise the \verb|Goal| is marked occupied and the Frogger's position reset.
 If all \verb|Goal|s in the level are marked as occupied, the level is deemed completed.
@@ -794,29 +794,40 @@ If all \verb|Goal|s in the level are marked as occupied, the level is deemed com
 
 Continuing in the vein of "adding ways to die", it should be that if the Frogger jumps into a \verb|Croc|'s mouth they die.
 The \verb|Croc|'s mouth can be considered to be the entire front third of its body.
-This again required that I modify the collision detection function, specifically adding a case for if the \verb|RiverMover| is a \verb|Croc|.
+This again requires that we modify the collision detection function, specifically adding a case for if the \verb|RiverMover| is a \verb|Croc|.
 In this case, the \verb|Croc| is now logically split into two smaller \verb|Croc|s, one representing the body and the other the head.
-If the player collides with only the head they die, otherwise they ride the \verb|Croc|.
+If the player collides with only the head they die, otherwise they ride the \verb|Croc| as if it is a \verb|Log|.
 
 \subsection{Jumping}
 
 Currently the Frogger does not jump.
 Instead, when the user presses a directional button the Frogger teleports to the new location rather than jumping towards it.
 This makes the game considerably easier than it should be; the user can always outrun road enemies and catch up to useful \verb|RiverMover|s.
-Hence the next step was for me to implement non-instantaneous jumping.
+Hence the next step is for us to implement non-instantaneous jumping.
 The first step was to add all of the requisite record fields to the \verb|Frogger|, specifically a two \verb|Boolean|s denoting whether or not the \verb|Frogger| is jumping in x or y, and four \verb|Float|s denoting the \verb|Frogger|s target position and previous speed in x and y.
 Next I updated the \verb|Frogger|s instance of \verb|update| with a conditional that checks if the \verb|Frogger| is jumping in a specific direction.
 If it is, \verb|update| then checks if it has reached its target coordinate in that direction, and if that is true it stops the jump and resets the \verb|Frogger|'s speed in x and y.
 This does lead to a minor problem whereby if the \verb|Frogger|s speed during the jump is not a divisor of the distance it is jumping (e.g. the speed is 3 and the distance is 10) it will never stop.
 This is easy enough to deal with however, by simply ensuring that the speed is an even divisor of the distance.
+We can do this using the \verb|lanes| variable defined earlier, and basing the \verb|Frogger|'s speed on some divisor of the difference between the first and second element of that list.
+
+\begin{lstlisting}
+laneDiff :: Float
+laneDiff = lanes !! 1 - lanes !! 0
+
+baseSpeed :: Float
+baseSpeed = laneDiff / 5
+\end{lstlisting}
+
+Here the speed is 1/5 of the distance between lanes - this means that the \verb|Frogger| will take 5 frames to move 1 lane up or across.
 
 \par
 
-Additionally I modified the collision detection function such that the \verb|Frogger| will never die while it is mid-jump - only when it lands.
+Additionally we should modify the collision detection function such that the \verb|Frogger| will never die while it is mid-jump - only when it lands.
 
 \par
 
-The final step of this addition was to modify the input function such that when a movement key is pressed it sets the \verb|Frogger| off jumping.
+The final step of this addition is to modify the input function such that when a movement key is pressed it sets the \verb|Frogger| off jumping.
 Importantly, if the \verb|Frogger| is already jumping any input is ignored, otherwise the user could just spam movement keys with potentially game-ruining consequences.
 
 \subsection{Migrating from GLUT to gloss}
@@ -830,59 +841,84 @@ This means that modifying and using them can have side effects that may impact f
 
 \par
 
-The next step of this project was therefore to remove \verb|IORef|s, which required changing the entire drawing system.
+The next step of this project is therefore to remove \verb|IORef|s, which required changing the entire drawing system.
 Gloss is a Haskell library based on the GLUT backend, but with options for pure gameplay.
 This means that the game will function more predictably, and be better suited to take advantage of the benefits of Haskell as a language.
 
 \par
 
-The migration process was fairly straightforward: the update functions translated almost directly, and the display functions were only slightly more difficult to translate to the new library.
+The migration process is fairly straightforward: the update functions translated almost directly, and the display functions were only slightly more difficult to translate to the new library.
 One major difference is that the coordinate system for drawing shapes is center-based rather than bottom-left based, so for functions like collision detection the objects now need to be logically "translated" up and right by half of their height and width respectively.
 
 \subsection{Randomness}
 
-Randomly generating the speeds of the \verb|Mover|s was the next objective; the game would become too easy for a user if it was exactly the same every time.
+Randomly generating the speeds of the \verb|Mover|s is the next objective; the game would become too easy for a user if it was exactly the same every time.
 Random number generation in Haskell relies on the IO monad to get the initial number generator, and consequently the first step of implementing this was to modify \verb|main| to create a random number generator.
-This is a somewhat involved process, because the specific seeding method I wanted to use was to get the current time and generate the seed from that.
+This is a somewhat involved process, because the specific seeding method we want to use was to get the current time and generate the seed from that.
 In Haskell, this requires that you get the current time of day, which is of a type that is more or less unusable in any computation, convert that to picoseconds since midnight, and divide that value by $10^{12}$.
-Now that I had the seed generated I could pass it as an argument to \verb|mkStdGen|, and the random number generator is implemented.
+Now that we have the seed generated we can pass it as an argument to \verb|mkStdGen|, and the random number generator is implemented.
 
 \par
 
-I then extended the \verb|Env| type to have a space for a \verb|StdGen| (the type of a number generator), and the \verb|startEnv| function.
-\verb|startEnv| was modified to generate a list of initial velocities for the \verb|Mover|s to have, and those velocities are now applied to said \verb|Mover|s on generation.
+We can then extend the \verb|Env| type to have a space for a \verb|StdGen| (the type of a number generator), and the \verb|startEnv| function.
+\verb|startEnv| is modified to generate a list of initial velocities for the \verb|Mover|s to have, and those velocities are now applied to said \verb|Mover|s on generation.
 
 \par
 
-Finally I modified \verb|inputDead| to, on player death, generate a new \verb|Env| with a different velocity list such that a user would not get stuck on one particularly difficult seed for an extended period of time.
+Finally we modify \verb|inputDead| to, on player death, generate a new \verb|Env| with a different velocity list such that a user would not get stuck on one particularly difficult seed for an extended period of time.
 
 \subsection{Sprites}
 
-The game was now nearly finished, the only remaining thing to do was to add sprites for a greater level of graphical fidelity.
-I opted to use \verb|vitalius|' spritesheet for this, in the main to ensure that in the user testing phase the graphics were as similar as possible between the two versions of the game and consequently people's experience of the games was as similar as possible.
+The game is now nearly finished, the only remaining thing to do was to add sprites for a greater level of graphical fidelity.
+We should use \verb|vitalius|' spritesheet for this, in the main to ensure that in the user testing phase the graphics are as similar as possible between the two versions of the game and consequently people's experience of the games is as similar as possible.
 
 \par
 
-In order to do this I first had to define two new types: \verb|Sprite| and \verb|SpriteID|.
+In order to do this we first have to define two new types: \verb|Sprite| and \verb|SpriteID|.
 A \verb|Sprite| is a tuple containing a \verb|String| and a \verb|Picture| (gloss' representation of an image), where the \verb|String| denotes the situation in which the \verb|Sprite| will be used.
 For example the \verb|Frogger| will have two \verb|Sprite|s, one for when it is stationary and one for when it is moving, and they would be labelled as such.
 A \verb|SpriteID| is a tuple containing a \verb|String| and a \verb|Sprite|, where the \verb|String| denotes what type of object the \verb|Sprite| should be mapped to.
 
 \par
 
-Then I updated the \verb|Entity| type to add a field \verb|ss :: [Sprite]|, and \verb|Drawable| to add a function to return the list of \verb|Sprite|s belonging to a \verb|Drawable|.
-Next I added a \verb|SpriteID| list and two \verb|Picture| fields to \verb|Env|, here denoting the full list of ID'd sprites, the background of the game, and the complete spritemap.
+Then we update the \verb|Entity| type to add a field \verb|ss :: [Sprite]|, and \verb|Drawable| to add a function to return the list of \verb|Sprite|s belonging to a \verb|Drawable|.
+Next we add a \verb|SpriteID| list and two \verb|Picture| fields to \verb|Env|, here denoting the full list of ID'd sprites, the background of the game, and the complete spritemap.
 The full list of ID'd sprites will be used on each new level generation to ensure that everything has a sprite assigned to it.
 
 \par
 
-I then modified the \verb|draw| functions of all of the \verb|Drawables| with a conditional: if there exists a sprite for this object and the current "situation" of the object (i.e. Turtles are underwater, Frogger is jumping) then use that sprite, else fall back on the primitive drawing being used previously.
-I added a function to assign a list of \verb|Sprite|s to an object next, which I did by making \verb|Drawable| a subclass of \verb|Show|, and using the record constructor (e.g. \verb|Frogger {...|) as the identifier.
+We then modify the \verb|draw| functions of all of the \verb|Drawables| with a conditional: if there exists a sprite for this object and the current "situation" of the object (i.e. Turtles are underwater, Frogger is jumping) then use that sprite, else fall back on the primitive drawing being used previously.
+We add a function to assign a list of \verb|Sprite|s to an object next, which I did by making \verb|Drawable| a subclass of \verb|Show|, and using the record constructor (e.g. \verb|Frogger {...|) as the identifier.
 All \verb|SpriteID|s have the constructor as the ID \verb|String|, so a function to assign \verb|Sprite|s to objects now only needs to pair those up.
 
 \par
 
-Finally I added to \verb|main| a section to get the initial sprite list, chop it up into the relevant sprites for all objects, and assign them all to \verb|SpriteID|s.
+Finally we add to \verb|main| a section to get the initial sprite list, chop it up into the relevant sprites for all objects, and assign them all to \verb|SpriteID|s.
+
+\subsection{Haddock}
+
+The program is now finished; the game is playable and complex enough so as not to be boring.
+The final thing to do within the back end of the game is add proper commentary and documentation, such that another user can take the source code and extend or modify it.
+Normal commentary (denoted in Haskell by prepending it with \verb|--|) is fine for most purposes, but something more intelligent is - in my opinion - necessary for a project of this scale.
+For more intelligent commentary we can use Haddock.
+
+\par
+
+Haddock is a system used to document the core libraries of GHC\cite{haddocksite}, and can automatically generate a rich HTML website with details about all exposed (user-facing) functions, types, and classes.
+To implement Haddock, we can simply add a small amount of syntax to the beginning of comments, specifically a pipe ($\vert$) character, which Haddock will process as the leading comment for the function/class/type definition.
+
+\par
+
+We add comments as necessary to every defined function explaining their purpose and expanding on what each argument is used for.
+An example of the Haddock-generated documentation can be seen in Figure \ref{fig:haddock}.
+
+\begin{figure}[ht]
+  \centering
+  \caption{A screenshot showing the Haddock-generated documentation for the file Update.hs}
+  \includegraphics[width=\textwidth]{Haddock.png}
+  \label{fig:haddock}
+\end{figure}
+
 
 \section{The Finished Program}
 
@@ -1048,6 +1084,10 @@ I have learned and made use of a number of useful Haskell features (in particula
     The Hackage page for \verb|IORef|s\\
     \verb|hackage.haskell.org/package/base-4.12.0.0/docs/Data-IORef.html|\\
     Accessed 2019-04-08
+  \bibitem{haddocksite}
+    The Haddock homepage\\
+    \verb|www.haskell.org/haddock/|\\
+    Accessed 2019-04-21
 \end{thebibliography}
 
 \end{document}
