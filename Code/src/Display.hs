@@ -75,5 +75,5 @@ drawLane n = translate 2000 (lanes!!n + 5) $ rectangleSolid 4000 190
 -- | Drawing the sides of the map - the moving objects go beyond the width of the lanes and this hides them from view.
 drawSides :: Picture
 drawSides = let wi = 2000
-             in color black $ Pictures [translate (0-(wi/2)) 1500 $ rectangleSolid wi 3000
+             in color black $ Pictures [translate (negate (wi/2)) 1500 $ rectangleSolid wi 3000
                                        ,translate (4000+(wi/2)) 1500 $ rectangleSolid wi 3000]

@@ -7,7 +7,7 @@ import Type
 
 -- | The gap between lanes
 laneDiff :: Float
-laneDiff = lanes !! 1 - lanes !! 0
+laneDiff = lanes !! 1 - head lanes
 
 -- | The base speed of the player while jumping
 baseSpeed :: Float
@@ -36,25 +36,25 @@ inputPreStart _ e = e
 --   Shift + the above cause the player to move at the speed denoted by 'boostSpeed'.
 inputPlaying :: Event -> Env -> Env
 inputPlaying (EventKey c Down _ _) e@E {player = p}
-  | c == (Char 'w')             = e {player = jumpY baseSpeed     p {facing = 0}}
-  | c == (Char 'd')             = e {player = jumpX baseSpeed     p {facing = 90}}
-  | c == (Char 's')             = e {player = jumpY (-baseSpeed)  p {facing = 180}}
-  | c == (Char 'a')             = e {player = jumpX (-baseSpeed)  p {facing = 270}}
-  | c == (SpecialKey KeyUp)     = e {player = jumpY baseSpeed     p {facing = 0}}
-  | c == (SpecialKey KeyRight)  = e {player = jumpX baseSpeed     p {facing = 90}}
-  | c == (SpecialKey KeyDown)   = e {player = jumpY (-baseSpeed)  p {facing = 180}}
-  | c == (SpecialKey KeyLeft)   = e {player = jumpX (-baseSpeed)  p {facing = 270}}
-  | c == (Char 'W')             = e {player = jumpY boostSpeed    p {facing = 0}}
-  | c == (Char 'D')             = e {player = jumpX boostSpeed    p {facing = 90}}
-  | c == (Char 'S')             = e {player = jumpY (-boostSpeed) p {facing = 180}}
-  | c == (Char 'A')             = e {player = jumpX (-boostSpeed) p {facing = 270}}
-  | c == (SpecialKey KeySpace)  = e {gameState = Paused}
-  | c == (Char 'l')             = e {gameState = LevelComplete}
+  | c == Char 'w'             = e {player = jumpY baseSpeed     p {facing = 0}}
+  | c == Char 'd'             = e {player = jumpX baseSpeed     p {facing = 90}}
+  | c == Char 's'             = e {player = jumpY (-baseSpeed)  p {facing = 180}}
+  | c == Char 'a'             = e {player = jumpX (-baseSpeed)  p {facing = 270}}
+  | c == SpecialKey KeyUp     = e {player = jumpY baseSpeed     p {facing = 0}}
+  | c == SpecialKey KeyRight  = e {player = jumpX baseSpeed     p {facing = 90}}
+  | c == SpecialKey KeyDown   = e {player = jumpY (-baseSpeed)  p {facing = 180}}
+  | c == SpecialKey KeyLeft   = e {player = jumpX (-baseSpeed)  p {facing = 270}}
+  | c == Char 'W'             = e {player = jumpY boostSpeed    p {facing = 0}}
+  | c == Char 'D'             = e {player = jumpX boostSpeed    p {facing = 90}}
+  | c == Char 'S'             = e {player = jumpY (-boostSpeed) p {facing = 180}}
+  | c == Char 'A'             = e {player = jumpX (-boostSpeed) p {facing = 270}}
+  | c == SpecialKey KeySpace  = e {gameState = Paused}
+  | c == Char 'l'             = e {gameState = LevelComplete}
   | otherwise                   = e
   where setPrevs f = f {prev_dX = getdX f, prev_dY = getdY f}
-        ignoringJump fn n pl = if is_Jumping pl then pl else fn n pl
-        jumpX pl = ignoringJump (\n f -> let step = laneDiff * signum n in setdX n . setPrevs $ f {is_JumpingX = True, targetX = getX f + step}) pl
-        jumpY pl = ignoringJump (\n f -> let step = laneDiff * signum n in setdY n . setPrevs $ f {is_JumpingY = True, targetY = getY f + step}) pl
+        ignoringJump fn n pl = if isJumping pl then pl else fn n pl
+        jumpX pl = ignoringJump (\n f -> let step = laneDiff * signum n in setdX n . setPrevs $ f {isJumpingX = True, targetX = getX f + step}) pl
+        jumpY pl = ignoringJump (\n f -> let step = laneDiff * signum n in setdY n . setPrevs $ f {isJumpingY = True, targetY = getY f + step}) pl
 inputPlaying _ e = e
 
 -- | The function for dealing with inputs while the game is paused.

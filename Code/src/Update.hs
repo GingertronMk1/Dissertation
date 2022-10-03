@@ -13,7 +13,7 @@ gameUpdate n e@E{gameState = gs, time = t} = if gs == Playing then updateEnv n $
 -- | updateEnv is a composition of 3 functions which update the positions of moving objects, detect collision between the player and those objects, detect a collision between the player and a goal, and update the score respectively.
 updateEnv :: Float -> Env -> Env
 updateEnv n e = let p = player e
-                    coll = if is_Jumping p
+                    coll = if isJumping p
                            then id
                            else hitCheck
                  in scoreUpdate . coll . updateMovers n $ e
